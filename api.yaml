@@ -17,8 +17,17 @@ paths:
               properties:
                 username:
                   type: string
+                  required: true
                 password:
                   type: string
+                  required: true
+                email:
+                  type: string
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+
       responses:
         "201":
           description: User registered successfully
@@ -37,8 +46,10 @@ paths:
               properties:
                 username:
                   type: string
+                  required: true
                 password:
                   type: string
+                  required: true
       responses:
         "200":
           description: Login successful
@@ -75,7 +86,10 @@ paths:
                 type: object
                 properties:
                   access_token:
-                    type: string
+                    type: string # проверяем подпись
+                  refresh_token:
+                    type: string # храним в бд id и в payload
+
         "401":
           description: Unauthorized (e.g., invalid refresh token)
 
@@ -99,6 +113,8 @@ paths:
                 username:
                   type: string
                 password:
+                  type: string
+                password_old:
                   type: string
       responses:
         "200":
@@ -140,6 +156,7 @@ paths:
       responses:
         "201":
           description: Role created successfully
+          # Добавить вывод атрибутов элемента {id и name}
         "400":
           description: Bad request (e.g., missing required fields)
 
