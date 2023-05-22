@@ -13,7 +13,7 @@ class Role(TableMixin):
     __tablename__ = 'role'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    name = db.Column(db.db.String, nullable=False)
+    name = db.Column(db.String, nullable=False)
 
     def __repr__(self):
         return f'<Role {self.id} : {self.name}>'
