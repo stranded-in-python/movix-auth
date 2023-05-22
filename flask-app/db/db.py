@@ -7,6 +7,5 @@ db = SQLAlchemy()
 
 
 def init_db(app: Flask):
-    # username and password need to be replaced by env
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://<username>:<password>@<host>/<database_name>'
     db.init_app(app)
