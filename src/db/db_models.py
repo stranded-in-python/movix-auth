@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 
 from db import db
 
+
 class TableMixin(db.Model):
     __table_args__ = {'schema': 'users'}
 
