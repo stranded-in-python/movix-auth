@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users.role (
     name    VARCHAR NOT NULL
 )
 
-CREATE TABLE IF NOT EXISTS users.sensetive (
+CREATE TABLE IF NOT EXISTS users.sensitive (
     id          uuid PRIMARY KEY,
     username    VARCHAR NOT NULL,
     email       VARCHAR NULL,

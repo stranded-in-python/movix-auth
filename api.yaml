@@ -101,6 +101,13 @@ paths:
           description: Logout successful
 
   /user:
+    get:
+      summary: Get sensitive data of current user
+      responses:
+        "200":
+          description: Data get successfully
+        "403":
+          description: Forbidden
     put:
       summary: Change login or password
       requestBody:
