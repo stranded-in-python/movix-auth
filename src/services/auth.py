@@ -1,20 +1,29 @@
-from flask_jwt_extended import create_access_token
+from functools import lru_cache
+
+from fastapi_jwt_auth import AuthJWT
 
 import src.models.models as m
 from src.services.abc import BaseAuthService
 
 
 class AuthService(BaseAuthService):
-    def register(self, params: m.UserRegistrationParamsIn) -> None:
-        return
+    def __init__(self, jwt_manager: AuthJWT):
+        self.jwt_manager = jwt_manager()
 
-    def login(self, params: m.LoginParamsIn) -> m.LoginParamsOut:
+    async def login(self, params: m.LoginParamsIn) -> m.LoginParamsOut:
         user_id = params.username # Заменить на получение id из базы
 
         return m.LoginParamsOut(
-            access_token=create_access_token(identity=user_id),
+            access_token=self.jwt_manager.create_access_token(subject=user_id),
             refresh_token="refresh_token"
         )
 
-    def logout(self, params: m.UserPayload) -> None:
+    async def logout(self, params: m.UserPayload) -> None:
         ...
+
+    async def refresh_token(self, refresh_token) -> m.TokenPair:
+        ...
+
+@lru_cache
+def get_auth_service() -> AuthService:
+    return AuthService(jwt_manager=AuthJWT)

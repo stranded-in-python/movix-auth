@@ -1,34 +1,35 @@
-from flask import Flask
-from flask_jwt_extended import JWTManager
-from flask_restful import Resource, Api
-from flask_injector import FlaskInjector
+import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import ORJSONResponse
 
-from api.v1.user import UserResource
-from db.db import init_db
-from src.api.v1.auth import RegistrationResource, LoginResource
-from src.services.abc import BaseAuthService, BaseUserService
-from src.services.auth import AuthService
-from src.services.user import UserService
+from api.v1 import auth, roles, user
+from core.config import settings
 
 
-def configure(binder):
-    # Привязка класса сервиса к интерфейсу
-    binder.bind(BaseUserService, to=UserService)
-    binder.bind(BaseAuthService, to=AuthService)
-    binder.bind(BaseAuthService, to=AuthService)
+app = FastAPI(
+    title=settings.project_name,
+    docs_url="/api/openapi",
+    openapi_url="/api/openapi.json",
+    default_response_class=ORJSONResponse,
+)
 
 
-app = Flask(__name__)
+@app.on_event("startup")
+async def startup():
+    ...
 
-app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
 
-api_v1 = Api(app, prefix='/api/v1')
-api_v1.add_resource(UserResource, '/user')
-api_v1.add_resource(RegistrationResource, '/register')
-api_v1.add_resource(LoginResource, '/login')
+@app.on_event("shutdown")
+async def shutdown():
+    ...
 
-if __name__ == '__main__':
-    FlaskInjector(app=app, modules=[configure])
-    JWTManager(app)
 
-    app.run()
+app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
+app.include_router(roles.router, prefix="/api/v1", tags=["roles"])
+app.include_router(user.router, prefix="/api/v1", tags=["persons"])
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app", host="0.0.0.0", port=8000, reload=True, reload_dirs=['/app']
+    )

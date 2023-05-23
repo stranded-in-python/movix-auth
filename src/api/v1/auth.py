@@ -1,70 +1,54 @@
-from http import HTTPStatus
+from fastapi import APIRouter, Depends
 
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from pydantic import ValidationError
+import models.models as m
+from services.abc import BaseAuthService
+from services.auth import get_auth_service
 
-from flask import request
-from flask_restful import Resource
-from injector import inject
-
-import src.models.models as m
-from src.services.abc import BaseAuthService
+router = APIRouter()
 
 
-class RegistrationResource(Resource):
-    @inject
-    def __init__(self, auth_service: BaseAuthService):
-        self.auth_service = auth_service
-
-    def post(self):
-        """Register a new user"""
-        request_data = request.get_json()
-
-        try:
-            registration_request = m.UserRegistrationParamsIn(**request_data)
-
-        except ValidationError as e:
-            return {'message': 'Validation errors', 'errors': e},\
-                   HTTPStatus.BAD_REQUEST
-
-        self.auth_service.register(registration_request)
-
-        return {'message': f'User {registration_request.username} registered successfully'},\
-            HTTPStatus.CREATED
+@router.post(
+    "/login",
+    response_model=m.LoginParamsOut,
+    summary="Login to the account",
+    description="Login to the account of Movix-Auth",
+    response_description="login, password",
+    tags=['Auth'],
+)
+async def login(
+        params: m.LoginParamsIn,
+        auth_service: BaseAuthService = Depends(get_auth_service)
+) -> m.LoginParamsOut:
+    return await auth_service.login(params)
 
 
-class LoginResource(Resource):
-    @inject
-    def __init__(self, auth_service: BaseAuthService):
-        self.auth_service = auth_service
+@router.post(
+    "/logout",
+    response_model=m.LogoutParamsOut,
+    summary="Login to the account",
+    description="Login to the account of Movix-Auth",
+    response_description="login, password",
+    tags=['Auth'],
+)
+async def logout(
+    auth_service: BaseAuthService = Depends(get_auth_service)
+) -> m.LogoutParamsOut:
+    """Logout of the account"""
+    current_user = m.UserPayload()
 
-    def post(self):
-        """Login to the account"""
-
-        request_data = request.get_json()
-
-        try:
-            login_request = m.LoginParamsIn(**request_data)
-
-        except ValidationError as e:
-            return {'message': 'Validation errors', 'errors': e}, \
-                HTTPStatus.BAD_REQUEST
-
-        login_response = self.auth_service.login(login_request)
-
-        return login_response.json()
+    return auth_service.logout(current_user)
 
 
-class LogoutResource(Resource):
-    @inject
-    def __init__(self, auth_service: BaseAuthService):
-        self.auth_service = auth_service
-
-    @jwt_required()
-    def post(self):
-        """Logout of the account"""
-        current_user = m.UserPayload(get_jwt_identity())
-
-        self.auth_service.logout(current_user)
-
-        return {'message': 'Logout successful'}, HTTPStatus.NO_CONTENT
+@router.post(
+    "/token/refresh",
+    response_model=m.LogoutParamsOut,
+    summary="Refresh access token",
+    description="Refresh access token",
+    response_description="Refresh token",
+    tags=['Auth'],
+)
+async def refresh(
+        refresh_token: str,
+        auth_service: BaseAuthService = Depends(get_auth_service)
+) -> m.TokenPair:
+    return auth_service.refresh_token(refresh_token)

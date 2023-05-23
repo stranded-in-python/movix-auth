@@ -3,6 +3,11 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
+class TokenPair(BaseModel):
+    access_token: str
+    refresh_token: str
+
+
 class UserDetailed(BaseModel):
     id: UUID
     username: str
@@ -34,11 +39,36 @@ class UserRegistrationParamsIn(BaseModel):
     last_name: str
 
 
+class UserRegistrationParamsOut(BaseModel):
+    id: UUID
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+
+
 class LoginParamsIn(BaseModel):
     username: str
     password: str
 
 
-class LoginParamsOut(BaseModel):
-    access_token: str
-    refresh_token: str
+class LoginParamsOut(TokenPair):
+    ...
+
+
+class LogoutParamsOut(BaseModel):
+    ...
+
+
+class RoleIn(BaseModel):
+    name: str
+
+
+class RoleOut(BaseModel):
+    id: UUID
+    name: str
+
+
+class Message(BaseModel):
+    text: str
+    code: int

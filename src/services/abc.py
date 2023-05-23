@@ -3,26 +3,31 @@ from uuid import UUID
 
 import src.models.models as m
 
+
 class BaseUserService(ABC):
+    @abstractmethod
+    async def register(
+            self,
+            params: m.UserRegistrationParamsIn
+    ) -> m.UserRegistrationParamsOut:
+        ...
+
     @abstractmethod
     def get(self, user_id: UUID) -> m.UserDetailed:
         ...
 
     @abstractmethod
-    def put(self, params: m.UserUpdateIn) -> m.UserUpdateOut:
+    def change_password(self, params: m.UserUpdateIn) -> m.UserUpdateOut:
         ...
 
 
 class BaseAuthService(ABC):
     @abstractmethod
-    def register(self, params: m.UserRegistrationParamsIn) -> None:
-        ...
-    @abstractmethod
-    def login(self, params: m.LoginParamsIn) -> m.LoginParamsOut:
+    async def login(self, params: m.LoginParamsIn) -> m.LoginParamsOut:
         ...
 
     @abstractmethod
-    def logout(self, params: m.UserPayload) -> None:
+    async def logout(self, params: m.UserPayload) -> None:
         ...
 
 

@@ -93,6 +93,7 @@ paths:
         "401":
           description: Unauthorized (e.g., invalid refresh token)
 
+
   /logout:
     post:
       summary: Logout of the account
@@ -100,14 +101,32 @@ paths:
         "204":
           description: Logout successful
 
+
   /user:
     get:
       summary: Get sensitive data of current user
       responses:
         "200":
           description: Data get successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  first_name:
+                    type: string
+                  last_name:
+                    type: string
+
         "403":
           description: Forbidden
+
     put:
       summary: Change login or password
       requestBody:
@@ -129,6 +148,7 @@ paths:
         "400":
           description: Bad request (e.g., missing required fields)
 
+
   /user/sign-in-history:
     get:
       summary: Get user's account sign-in history
@@ -148,6 +168,7 @@ paths:
                     ip:
                       type: string
 
+
   /roles:
     post:
       summary: Create a role
@@ -163,9 +184,19 @@ paths:
       responses:
         "201":
           description: Role created successfully
-          # Добавить вывод атрибутов элемента {id и name}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+
         "400":
           description: Bad request (e.g., missing required fields)
+
 
     get:
       summary: View all roles
@@ -200,6 +231,9 @@ paths:
             schema:
               type: object
               properties:
+                id:
+                  type:
+                    integer
                 name:
                   type: string
       responses:
@@ -271,3 +305,6 @@ paths:
                       type: string
         "404":
           description: User not found
+
+components:
+  schemas:

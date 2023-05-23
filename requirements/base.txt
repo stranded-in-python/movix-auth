@@ -1,9 +1,8 @@
+redis==4.5.4
+elasticsearch[async]==8.7.0
+fastapi==0.95.1
+orjson==3.8.10
 pydantic==1.10.7
-gevent==22.10.2
-Flask==2.2.5
-flask_sqlalchemy==3.0.3
-flask-restful==0.3.10
-flask-jwt-extended==4.4.4
-injector==0.20.1
-flask-injector==0.14.0
+uvicorn==0.21.1
+httpx==0.24.0
 uvloop==0.17.0 ; sys_platform != "win32" and implementation_name == "cpython"
