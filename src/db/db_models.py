@@ -1,64 +1,117 @@
 import uuid
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.schema import ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 
-from db import db
-
-
-class TableMixin(db.Model):
-    __table_args__ = {'schema': 'users'}
+from database import Base
+from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
+from sqlalchemy.orm import relationship
 
 
-class Role(TableMixin):
+class Role(Base):
     __tablename__ = 'role'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    name = db.Column(db.String, nullable=False)
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+    name = Column(String, nullable=False)
+
+    user_role = relationship("UserRole", back_populates="roles")
 
     def __repr__(self):
         return f'<Role {self.id} : {self.name}>'
 
 
-class UserSensitive(TableMixin):
+class UserSensitive(Base):
     __tablename__ = 'sensitive'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    username = db.Column(db.String, unique=True, nullable=False)
-    email = db.Column(db.String, unique=True, nullable=False)
-    first_name = db.Column(db.String, nullable=False)
-    last_name = db.Column(db.String, nullable=False)
-    password = db.Column(db.String, nullable=False)
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    password = Column(String, nullable=False)
+
+    user_role = relationship("UserRole", back_populates="users")
+    user_history = relationship("SignInHistory", back_populates="users")
 
     def __repr__(self):
         return f'<User {self.username}>'
-    
 
-class UserRole(TableMixin):
+
+class UserRole(Base):
     __tablename__ = 'user_role'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), ForeignKey("sensitive.id", onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
-    role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id", onupdate="CASCADE"), nullable=False)
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("sensitive.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    )
+    role_id = Column(
+        UUID(as_uuid=True), ForeignKey("role.id", onupdate="CASCADE"), nullable=False
+    )
+
+    users = relationship("UserSensitive", back_populates="items")
+    roles = relationship("Role", back_populates="user_role")
 
     def __repr__(self):
         return f'<UserRole {self.user_id} : {self.role_id}>'
-    
 
-class SignInHistory(TableMixin):
+
+class SignInHistory(Base):
     __tablename__ = 'sign_in_history'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), ForeignKey("sensitive.id", onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
-    user_agent = db.Column(db.String, nullable=False)
-    sign_in_at = mapped_column(TIMESTAMP(timezone=True), nullable=False)
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("sensitive.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_agent = Column(String, nullable=False)
+    sign_in_at = Column(TIMESTAMP(timezone=True), nullable=False)
+
+    users = relationship("UserSensitive", back_populates="user_history")
+    refresh_tokens = relationship("RefreshToken", back_populates="sessions")
 
     def __repr__(self):
         return f'<SignInHistory: {self.user_id} at {self.sign_in_at} from {self.user_agent}'
-    
 
-class RefreshToken(TableMixin):
+
+class RefreshToken(Base):
     __tablename__ = 'sessions'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    session_id = db.Column(UUID(as_uuid=True), ForeignKey("sign_in_history.id", onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+    session_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("sign_in_history.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    sessions = relationship("SignInHistory", back_populates="refresh_tokens")
