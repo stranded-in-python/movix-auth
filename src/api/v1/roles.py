@@ -1,6 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-import models.models as m
+import models as m
 from core.pagination import PaginateQueryParams
 
 router = APIRouter()
@@ -26,7 +26,7 @@ async def create_role(params: m.RoleIn) -> m.RoleOut:
     response_description="Role entities",
     tags=['Roles'],
 )
-async def get_all(pag_params: PaginateQueryParams) -> list[m.RoleOut]:
+async def get_all(pag_params: PaginateQueryParams = Depends(PaginateQueryParams)) -> list[m.RoleOut]:
     ...
 
 

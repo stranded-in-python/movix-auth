@@ -2,8 +2,8 @@ from functools import lru_cache
 
 from fastapi_jwt_auth import AuthJWT
 
-import src.models.models as m
-from src.services.abc import BaseAuthService
+import models as m
+from services.abc import BaseAuthService
 
 
 class AuthService(BaseAuthService):

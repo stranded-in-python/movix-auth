@@ -1,6 +1,9 @@
+from typing import Protocol, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
+
+ID = TypeVar("ID", bound=UUID)
 
 
 class TokenPair(BaseModel):
@@ -31,12 +34,21 @@ class UserUpdateOut(BaseModel):
     ...
 
 
-class UserRegistrationParamsIn(BaseModel):
-    username: str
-    password: str
+class UserProtocol(Protocol[ID]):
+    """User protocol that ORM model should follow."""
+
+    id: ID
     email: str
-    first_name: str
-    last_name: str
+    hashed_password: str
+    is_active: bool
+    is_superuser: bool
+    is_verified: bool
+
+    def __init__(self, *args, **kwargs) -> None:
+        ...
+
+
+UP = TypeVar("UP", bound=UserProtocol)
 
 
 class UserRegistrationParamsOut(BaseModel):

@@ -1,14 +1,19 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-import src.models.models as m
+from fastapi import Request, Response
+
+import models as m
+import schemas as schemas
 
 
 class BaseUserService(ABC):
     @abstractmethod
-    async def register(
-            self,
-            params: m.UserRegistrationParamsIn
+    async def create(
+        self,
+        user_create: schemas.UC,
+        safe: bool = False,
+        request: Request | None = None
     ) -> m.UserRegistrationParamsOut:
         ...
 

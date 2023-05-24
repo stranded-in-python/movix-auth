@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-import models.models as m
+import models as m
 from services.abc import BaseAuthService
 from services.auth import get_auth_service
 
