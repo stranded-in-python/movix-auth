@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-import core.exceptions as ex
+import src.core.exceptions as ex
 
 ID = TypeVar("ID")
 

@@ -1,8 +1,7 @@
 import typing as t
 
-from core.dependency_types import DependencyCallable
-from models import ID, UP, RP, ARP
-
+from ..core.dependency_types import DependencyCallable
+from ..models import ID, UP, RP, ARP
 
 class BaseUserDatabase(t.Generic[UP, ID]):
     """Base adapter for retrieving, creating and updating users from a database."""

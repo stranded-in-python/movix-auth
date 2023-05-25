@@ -2,14 +2,14 @@
 import uuid
 from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type
 
-from db.base import BaseUserDatabase
-from models import ID, UP
+from .base import BaseUserDatabase
+from ..models import ID, UP
 from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 from sqlalchemy.sql import Select
 
-from generics import GUID
+from .generics import GUID
 
 __version__ = "5.0.0"
 
