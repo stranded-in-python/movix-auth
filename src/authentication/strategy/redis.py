@@ -7,7 +7,7 @@ import core.exceptions as exceptions
 import models as models
 
 from authentication.strategy.base import Strategy
-from services.user import BaseUserService
+from services.user import BaseUserManager
 
 
 class RedisStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID]):

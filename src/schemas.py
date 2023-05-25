@@ -37,6 +37,8 @@ class BaseUser(Generic[ID], CreateUpdateDictModel):
     class Config:
         orm_mode = True
 
+    # TODO is self.from_orm method needed?
+
 
 class BaseUserCreate(CreateUpdateDictModel):
     username: str
@@ -75,6 +77,6 @@ class BaseOAuthAccount(Generic[ID], BaseModel):
         orm_mode = True
 
 
-class UserSigninHistoryEvent(BaseModel):
+class SignInHistoryEvent(BaseModel):
     timestamp: datetime.datetime
     ip: str

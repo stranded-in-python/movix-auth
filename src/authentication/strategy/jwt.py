@@ -8,8 +8,8 @@ from authentication.strategy.base import (
     Strategy,
     StrategyDestroyNotSupportedError,
 )
-from jwt_utils import SecretType, decode_jwt, generate_jwt
-from services.user import BaseUserService
+from core.jwt_utils import SecretType, decode_jwt, generate_jwt
+from services.user import BaseUserManager
 
 
 class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID]):
@@ -36,7 +36,7 @@ class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID])
         return self.public_key or self.secret
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserService[models.UP, models.ID]
+        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
     ) -> Optional[models.UP]:
         if token is None:
             return None

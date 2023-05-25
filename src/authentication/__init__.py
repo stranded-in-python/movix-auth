@@ -3,7 +3,7 @@ from authentication.backend import AuthenticationBackend
 from authentication.strategy import JWTStrategy, Strategy
 
 try:
-    from fastapi_users.authentication.strategy import RedisStrategy
+    from authentication.strategy import RedisStrategy
 except ImportError:  # pragma: no cover
     pass
 

@@ -7,12 +7,16 @@ from services.auth import get_auth_service
 router = APIRouter()
 
 
+def get_auth_router():
+    ...
+
+
 @router.post(
     "/login",
     response_model=m.LoginParamsOut,
     summary="Login to the account",
     description="Login to the account of Movix-Auth",
-    response_description="login, password",
+    response_description="login, pw",
     tags=['Auth'],
 )
 async def login(
@@ -27,7 +31,7 @@ async def login(
     response_model=m.LogoutParamsOut,
     summary="Login to the account",
     description="Login to the account of Movix-Auth",
-    response_description="login, password",
+    response_description="login, pw",
     tags=['Auth'],
 )
 async def logout(

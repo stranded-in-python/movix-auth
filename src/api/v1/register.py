@@ -10,6 +10,10 @@ from api.v1.common import ErrorCode, ErrorModel
 router = APIRouter()
 
 
+def get_register_router():
+    ...
+
+
 @router.post(
     "/register",
     response_model=m.UserRegistrationParamsOut,

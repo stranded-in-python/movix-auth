@@ -128,7 +128,7 @@ paths:
           description: Forbidden
 
     put:
-      summary: Change login or password
+      summary: Change login or pw
       requestBody:
         required: true
         content:
@@ -144,7 +144,7 @@ paths:
                   type: string
       responses:
         "200":
-          description: Login or password changed successfully
+          description: Login or pw changed successfully
         "400":
           description: Bad request (e.g., missing required fields)
 

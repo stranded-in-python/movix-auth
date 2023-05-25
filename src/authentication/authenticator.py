@@ -9,7 +9,7 @@ import models
 from authentication.backend import AuthenticationBackend
 from authentication.strategy import Strategy
 from core.dependency_types import DependencyCallable
-from services.user import BaseUserService, UserServiceDependency
+from services.user import BaseUserManager, UserManagerDependency
 
 
 INVALID_CHARS_PATTERN = re.compile(r"[^0-9a-zA-Z_]")
@@ -52,7 +52,7 @@ class Authenticator:
     def __init__(
         self,
         backends: Sequence[AuthenticationBackend],
-        get_user_manager: UserServiceDependency[models.UP, models.ID],
+        get_user_manager: UserManagerDependency[models.UP, models.ID],
     ):
         self.backends = backends
         self.get_user_manager = get_user_manager
@@ -137,7 +137,7 @@ class Authenticator:
     async def _authenticate(
         self,
         *args,
-        user_service: BaseUserService[models.UP, models.ID],
+        user_service: BaseUserManager[models.UP, models.ID],
         optional: bool = False,
         active: bool = False,
         verified: bool = False,

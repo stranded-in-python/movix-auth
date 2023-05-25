@@ -7,7 +7,7 @@ else:
     from typing import Protocol  # pragma: no cover
 
 import models
-from services.user import BaseUserService
+from services.user import BaseUserManager
 
 
 class StrategyDestroyNotSupportedError(Exception):
@@ -16,7 +16,7 @@ class StrategyDestroyNotSupportedError(Exception):
 
 class Strategy(Protocol, Generic[models.UP, models.ID]):
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserService[models.UP, models.ID]
+        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
     ) -> Optional[models.UP]:
         ...  # pragma: no cover
 

@@ -7,7 +7,7 @@ import models as models
 from authentication.strategy.base import Strategy
 from authentication.strategy.db.adapter import AccessTokenDatabase
 from authentication.strategy.db.models import AP
-from services.user import BaseUserService
+from services.user import BaseUserManager
 
 
 class DatabaseStrategy(
@@ -20,7 +20,7 @@ class DatabaseStrategy(
         self.lifetime_seconds = lifetime_seconds
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserService[models.UP, models.ID]
+        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
     ) -> Optional[models.UP]:
         if token is None:
             return None

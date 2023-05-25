@@ -1,9 +1,12 @@
-from typing import Protocol, TypeVar
+from datetime import datetime
+from typing import Protocol, TypeVar, Any
 from uuid import UUID
 
 from pydantic import BaseModel
 
-ID = TypeVar("ID", bound=UUID)
+import core.exceptions as ex
+
+ID = TypeVar("ID")
 
 
 class TokenPair(BaseModel):
@@ -72,6 +75,19 @@ class LogoutParamsOut(BaseModel):
     ...
 
 
+class RoleProtocol(Protocol[ID]):
+    """Role protocol that ORM model should follow."""
+
+    id: ID
+    name: str
+
+    def __init__(self, *args, **kwargs) -> None:
+        ...
+
+
+RP = TypeVar("RP", bound=RoleProtocol)
+
+
 class RoleIn(BaseModel):
     name: str
 
@@ -81,6 +97,44 @@ class RoleOut(BaseModel):
     name: str
 
 
+class AccessRightProtocol(Protocol[ID]):
+    """Access right protocol that ORM model should follow."""
+
+    id: ID
+    name: str
+    roles: list[RP]
+
+    def __init__(self, *args, **kwargs) -> None:
+        ...
+
+
+ARP = TypeVar("RP", bound=RoleProtocol)
+
 class Message(BaseModel):
     text: str
     code: int
+
+
+class SignInHistoryEvent(BaseModel):
+    timestamp: datetime.datetime
+    ip: str
+
+
+class UUIDIDMixin:
+    def parse_id(self, value: Any) -> UUID:
+        if isinstance(value, UUID):
+            return value
+        try:
+            return UUID(value)
+        except ValueError as e:
+            raise ex.InvalidID() from e
+
+
+class IntegerIDMixin:
+    def parse_id(self, value: Any) -> int:
+        if isinstance(value, float):
+            raise ex.InvalidID()
+        try:
+            return int(value)
+        except ValueError as e:
+            raise ex.InvalidID() from e

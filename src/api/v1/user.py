@@ -1,20 +1,19 @@
-from http import HTTPStatus
 from typing import Type
 
-from fastapi import APIRouter, Depends, status
-from fastapi_jwt_auth import AuthJWT
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 
-import models as m
+import models as models
 import schemas as schemas
+import core.exceptions as exceptions
+
+from api.v1.common import ErrorCode, ErrorModel
 from core.pagination import PaginateQueryParams
-from services.auth import get_auth_service
-from services.abc import BaseUserService, BaseAuthService
-from services.user import UserServiceDependency
+from services.user import UserManagerDependency, BaseUserManager
 from authentication import Authenticator
 
 
 def get_users_router(
-    get_user_service: UserServiceDependency[m.UP, m.ID],
+    get_user_manager: UserManagerDependency[models.UP, models.ID],
     authenticator: Authenticator,
     user_schema: Type[schemas.U] = schemas.U,
     user_update_schema: Type[schemas.UU] = schemas.UU,
@@ -22,10 +21,16 @@ def get_users_router(
 ) -> APIRouter:
 
     router = APIRouter()
+    router.prefix = "/api/v1"
+
+    get_current_active_user = authenticator.current_user(
+        active=True, verified=requires_verification
+    )
 
     @router.get(
-        "/user",
+        "/me",
         response_model=schemas.U,
+        dependencies=[Depends(get_current_active_user)],
         name="users:current_user",
         summary="Get current user",
         description="Get sensitive data of current user",
@@ -38,52 +43,93 @@ def get_users_router(
             },
     )
     async def get_current_user(
-        user_service: BaseUserService = Depends(get_user_service),
-        auth_service: BaseAuthService = Depends(get_auth_service),
-        jwt_manager: AuthJWT = Depends()
-    ) -> m.UserDetailed:
+        user: models.UP = Depends(get_current_active_user),
+    ) -> user_schema:
 
-        jwt_manager.jwt_required()
-
-        current_user = m.UserPayload(id=jwt_manager.get_jwt_subject())   # Получить из payload идентификатор
-
-        return await user_service.get(current_user.id)
-
+        return user_schema.from_orm(user)
 
     @router.put(
-        "/user",
-        response_model=m.UserUpdateOut,
+        "/me",
+        response_model=user_schema,
+        dependencies=[Depends(get_current_active_user)],
+        name="users:patch_current_user",
         summary="Update current user",
         description="Update sensitive data of current user",
         response_description="sensitive data",
+        responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                "description": "Missing token or inactive user.",
+            },
+            status.HTTP_400_BAD_REQUEST: {
+                "model": ErrorModel,
+                "content": {
+                    "application/json": {
+                        "examples": {
+                            ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS: {
+                                "summary": "A user with this email already exists.",
+                                "value": {
+                                    "detail": ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS
+                                },
+                            },
+                            ErrorCode.UPDATE_USER_INVALID_PASSWORD: {
+                                "summary": "Password validation failed.",
+                                "value": {
+                                    "detail": {
+                                        "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
+                                        "reason": "Password should be"
+                                                  "at least 3 characters",
+                                    }
+                                },
+                            },
+                        }
+                    }
+                },
+            },
+        },
         tags=['User'],
     )
-    async def change_password_of_current_user(
-        params: m.UserUpdateIn,
-        user_service: BaseUserService = Depends(get_user_service),
-        auth_service: BaseAuthService = Depends(get_auth_service)
-    ) -> m.UserUpdateOut:
+    async def update_current_user(
+            request: Request,
+            user_update: user_update_schema,
+            user: models.UP = Depends(get_current_active_user),
+            user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+    ) -> user_schema:
 
-        return await user_service.change_password(params)
+        try:
+            user = await user_manager.update(
+                user_update, user, safe=True, request=request
+            )
+            return user_schema.from_orm(user)
 
+        except exceptions.InvalidPasswordException as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
+                    "reason": e.reason,
+                },
+            )
+
+        except exceptions.UserAlreadyExists:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+            )
 
     @router.get(
-        "/user/sign-in-history",
-        response_model=list[schemas.UserSigninHistoryEvent],
+        "/me/sign-in-history",
+        response_model=list[schemas.SignInHistoryEvent],
         summary="Get sign-in history",
         description="Get user's account sign-in history",
         response_description="list of sign-ins",
         tags=['User'],
     )
     async def sign_in_history(
-        paginate_params: PaginateQueryParams = Depends(PaginateQueryParams),
-        user_service: BaseUserService = Depends(get_user_service),
-        auth_service: BaseAuthService = Depends(get_auth_service),
-    ) -> list[schemas.UserSigninHistoryEvent]:
-        # TODO Проверить валидность токена
-        # TODO Получить из токена данные пользователя
-        user = None
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        user: models.UP = Depends(get_current_active_user),
+        paginate_params: PaginateQueryParams = Depends(PaginateQueryParams)
+    ) -> list[schemas.SignInHistoryEvent]:
 
-        return await user_service.get_sign_in_history(user, paginate_params)
+        return await user_manager.get_sign_in_history(user, paginate_params)
 
     return router
