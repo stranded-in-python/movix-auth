@@ -7,11 +7,9 @@ from services.user import UserManagerDependency
 
 
 class BaseAccessRightManager(
-    Generic[models.ARP, models.ID],
-    UserManagerDependency,
-    RoleManagerDependency
+    Generic[models.ARP, models.ID]
 ):
     pass
 
 
-AccessRightManagerDependency = DependencyCallable[BaseAccessRightManager[models.UP, models.RP, models.ARP, models.ID]]
+AccessRightManagerDependency = DependencyCallable[BaseAccessRightManager[models.ARP, models.ID]]

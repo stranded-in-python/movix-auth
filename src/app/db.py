@@ -4,13 +4,15 @@ from typing import AsyncGenerator
 
 from fastapi import Depends
 
+from core.config import settings
 from db.access_rights import SQLAlchemyBaseAccessRightTableUUID, SQLAlchemyAccessRightDatabase
 from db.roles import SQLAlchemyBaseRoleTableUUID, SQLAlchemyRoleDatabase
 from db.users import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = settings.database_url
+# TODO Упаковать в env или settings
 
 UUID = uuid.UUID
 
@@ -22,13 +24,18 @@ class Base(DeclarativeBase):
 class User(SQLAlchemyBaseUserTableUUID, Base):
     pass
 
-
-class Role(SQLAlchemyBaseRoleTableUUID, Base):
+class Role:
     pass
+# class Role(SQLAlchemyBaseRoleTableUUID, Base):
+#     pass
+# TODO specified __table__ or __tablename__ as User
 
 
-class AccessRight(SQLAlchemyBaseAccessRightTableUUID):
+class AccessRight:
     pass
+# class AccessRight(SQLAlchemyBaseAccessRightTableUUID, Base):
+#     pass
+# TODO specified __table__ or __tablename__ as User
 
 
 engine = create_async_engine(DATABASE_URL)

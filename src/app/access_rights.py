@@ -1,27 +1,26 @@
-from typing import Optional
+from fastapi import Depends
 
+from api.access_rights import APIAccessRight
 from api.roles import APIRoles
-from app.db import User, Role, UUID
+from app.db import User, Role, AccessRight, UUID, get_access_right_db
+from app.roles import get_role_manager
+from app.users import auth_backend, get_user_manager
+from db.roles import SQLAlchemyRoleDatabase
 from models import UUIDIDMixin
+from services.rights import BaseAccessRightManager
 from services.role import BaseRoleManager
 
 
-class RoleManager(UUIDIDMixin, BaseRoleManager[Role, UUID]):
-    async def on_after_register(self, user: User, request: Optional[Request] = None):
-        print(f"User {user.id} has registered.")
-
-    async def on_after_forgot_password(
-        self, user: User, token: str, request: Optional[Request] = None
-    ):
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
-
-    async def on_after_request_verify(
-        self, user: User, token: str, request: Optional[Request] = None
-    ):
-        print(f"Verification requested for user {user.id}. Verification token: {token}")
+class AccessRightManager(UUIDIDMixin, BaseAccessRightManager[AccessRight, UUID]):
+    pass
 
 
-async def get_role_manager(role_db: SQLAlchemyRoleDatabase = Depends(get_role_db)):
-    yield RoleManager(user_db)
+async def get_access_right_manager(role_db: SQLAlchemyRoleDatabase = Depends(get_access_right_db)):
+    yield AccessRightManager(get_access_right_db)
 
-api_access_rights = APIRoles[User, Role, UUID](get_role_manager, [auth_backend])
+api_access_rights = APIAccessRight[AccessRight, UUID](
+    get_user_manager,
+    get_role_manager,
+    get_access_right_manager,
+    [auth_backend]
+)

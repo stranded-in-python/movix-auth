@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     redis_port: int = 6379
     cache_expiration_in_seconds: int = 300
 
-    # Настройки Elasticsearch
-    elastic_endpoint: str = 'http://127.0.0.1:9200'
+    # Настройки PSQL
+    database_url: str = 'postgresql+asyncpg://yamp_dummy:$POSTGRES_PASSWORD@qweasd123:5432/yamp_movies_db'
 
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))

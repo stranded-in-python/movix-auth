@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 from sqlalchemy.sql import Select
 
-from generics import GUID
+from db.generics import GUID
 
 __version__ = "5.0.0"
 

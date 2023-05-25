@@ -80,3 +80,27 @@ class BaseOAuthAccount(Generic[ID], BaseModel):
 class SignInHistoryEvent(BaseModel):
     timestamp: datetime.datetime
     ip: str
+
+
+class BaseRole(Generic[ID], CreateUpdateDictModel):
+    """Base Role model."""
+
+    id: m.ID
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
+class BaseRoleCreate(CreateUpdateDictModel):
+    name: str
+
+
+class BaseRoleUpdate(CreateUpdateDictModel):
+    id: m.ID
+    name: str
+
+
+R = TypeVar("R", bound=BaseRole)
+RC = TypeVar("RC", bound=BaseRoleCreate)
+RU = TypeVar("RU", bound=BaseRoleUpdate)

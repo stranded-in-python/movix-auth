@@ -49,7 +49,7 @@ class AccessRightProtocol(Protocol[ID]):
         ...
 
 
-ARP = TypeVar("RP", bound=RoleProtocol)
+ARP = TypeVar("ARP", bound=AccessRightProtocol)
 
 
 class SignInHistoryEvent(BaseModel):
