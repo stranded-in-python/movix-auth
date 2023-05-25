@@ -1,3 +1,5 @@
+from typing import Optional
+
 from api.roles import APIRoles
 from app.db import User, Role, UUID
 from models import UUIDIDMixin
@@ -5,9 +7,6 @@ from services.role import BaseRoleManager
 
 
 class RoleManager(UUIDIDMixin, BaseRoleManager[Role, UUID]):
-    reset_password_token_secret = SECRET
-    verification_token_secret = SECRET
-
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
 
@@ -25,4 +24,4 @@ class RoleManager(UUIDIDMixin, BaseRoleManager[Role, UUID]):
 async def get_role_manager(role_db: SQLAlchemyRoleDatabase = Depends(get_role_db)):
     yield RoleManager(user_db)
 
-api_users = APIRoles[User, Role, UUID](get_role_manager, [auth_backend])
+api_access_rights = APIRoles[User, Role, UUID](get_role_manager, [auth_backend])

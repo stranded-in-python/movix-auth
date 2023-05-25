@@ -4,8 +4,8 @@ from typing import AsyncGenerator
 
 from fastapi import Depends
 
-from db.access_rights import SQLAlchemyBaseAccessRightTableUUID
-from db.roles import SQLAlchemyBaseRoleTableUUID
+from db.access_rights import SQLAlchemyBaseAccessRightTableUUID, SQLAlchemyAccessRightDatabase
+from db.roles import SQLAlchemyBaseRoleTableUUID, SQLAlchemyRoleDatabase
 from db.users import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -47,3 +47,11 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield SQLAlchemyUserDatabase(session, User)
+
+
+async def get_role_db(session: AsyncSession = Depends(get_async_session)):
+    yield SQLAlchemyRoleDatabase(session, Role)
+
+
+async def get_access_right_db(session: AsyncSession = Depends(get_async_session)):
+    yield SQLAlchemyAccessRightDatabase(session, AccessRight)

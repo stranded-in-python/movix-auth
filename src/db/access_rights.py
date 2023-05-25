@@ -13,3 +13,7 @@ class SQLAlchemyBaseAccessRightTable(Generic[ID]):
 
 class SQLAlchemyBaseAccessRightTableUUID(SQLAlchemyBaseAccessRightTable[UUID_ID]):
     pass
+
+
+class SQLAlchemyAccessRightDatabase:
+    pass

@@ -13,3 +13,7 @@ class SQLAlchemyBaseRoleTable(Generic[ID]):
 
 class SQLAlchemyBaseRoleTableUUID(SQLAlchemyBaseRoleTable[UUID_ID]):
     pass
+
+
+class SQLAlchemyRoleDatabase:
+    ...

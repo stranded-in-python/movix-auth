@@ -99,22 +99,18 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 
     :param session: SQLAlchemy session instance.
     :param user_table: SQLAlchemy user model.
-    :param oauth_account_table: Optional SQLAlchemy OAuth accounts model.
     """
 
     session: AsyncSession
     user_table: Type[UP]
-    oauth_account_table: Optional[Type[SQLAlchemyBaseOAuthAccountTable]]
 
     def __init__(
         self,
         session: AsyncSession,
-        user_table: Type[UP],
-        oauth_account_table: Optional[Type[SQLAlchemyBaseOAuthAccountTable]] = None,
+        user_table: Type[UP]
     ):
         self.session = session
         self.user_table = user_table
-        self.oauth_account_table = oauth_account_table
 
     async def get(self, user_id: ID) -> Optional[UP]:
         statement = select(self.user_table).where(self.user_table.id == id)
@@ -124,18 +120,6 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         statement = select(self.user_table).where(
             func.lower(self.user_table.email) == func.lower(email)
         ) # TODO Fix type error
-        return await self._get_user(statement)
-
-    async def get_by_oauth_account(self, oauth: str, account_id: str) -> Optional[UP]:
-        if self.oauth_account_table is None:
-            raise NotImplementedError()
-
-        statement = (
-            select(self.user_table)
-            .join(self.oauth_account_table)
-            .where(self.oauth_account_table.oauth_name == oauth)  # type: ignore
-            .where(self.oauth_account_table.account_id == account_id)  # type: ignore
-        )
         return await self._get_user(statement)
 
     async def create(self, create_dict: Dict[str, Any]) -> UP:
