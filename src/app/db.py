@@ -1,11 +1,18 @@
+import os
+import uuid
 from typing import AsyncGenerator
 
 from fastapi import Depends
+
+from db.access_rights import SQLAlchemyBaseAccessRightTableUUID
+from db.roles import SQLAlchemyBaseRoleTableUUID
 from db.users import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+UUID = uuid.UUID
 
 
 class Base(DeclarativeBase):
@@ -13,6 +20,14 @@ class Base(DeclarativeBase):
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
+    pass
+
+
+class Role(SQLAlchemyBaseRoleTableUUID, Base):
+    pass
+
+
+class AccessRight(SQLAlchemyBaseAccessRightTableUUID):
     pass
 
 
