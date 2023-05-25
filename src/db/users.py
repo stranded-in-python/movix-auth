@@ -21,13 +21,12 @@ class SQLAlchemyBaseUserTable(Generic[ID]):
 
     __tablename__ = "user"
 
-    if TYPE_CHECKING:  # pragma: no cover
+    if TYPE_CHECKING:
         id: ID
         email: str
         hashed_password: str
         is_active: bool
         is_superuser: bool
-        is_verified: bool
     else:
         email: Mapped[str] = mapped_column(
             String(length=320), unique=True, index=True, nullable=False
@@ -39,14 +38,12 @@ class SQLAlchemyBaseUserTable(Generic[ID]):
         is_superuser: Mapped[bool] = mapped_column(
             Boolean, default=False, nullable=False
         )
-        is_verified: Mapped[bool] = mapped_column(
-            Boolean, default=False, nullable=False
-        )
 
 
 class SQLAlchemyBaseUserTableUUID(SQLAlchemyBaseUserTable[UUID_ID]):
-    if TYPE_CHECKING:  # pragma: no cover
+    if TYPE_CHECKING:
         id: UUID_ID
+
     else:
         id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
 

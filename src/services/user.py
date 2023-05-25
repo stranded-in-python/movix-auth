@@ -69,7 +69,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
             if safe
             else user_create.create_update_dict_superuser()
         )
-        password = user_dict.pop("pw")
+        password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
 
         created_user = await self.user_storage.create(user_dict)

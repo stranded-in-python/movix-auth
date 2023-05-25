@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
 from app.auth import auth_backend
+from app.db import create_db_and_tables
 from core.config import settings
 
 from app.users import api_users
@@ -37,9 +38,10 @@ app.include_router(
 #     tags=["access rights"]
 # )
 
+
 @app.on_event("startup")
-async def startup():
-    ...
+async def on_startup():
+    await create_db_and_tables()
 
 
 @app.on_event("shutdown")

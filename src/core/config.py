@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     cache_expiration_in_seconds: int = 300
 
     # Настройки PSQL
-    database_url: str = 'postgresql+asyncpg://yamp_dummy:$POSTGRES_PASSWORD@qweasd123:5432/yamp_movies_db'
+    database_url: str = 'postgresql+asyncpg://yamp_dummy:qweasd123@localhost:5434/yamp_movies_db'
 
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))

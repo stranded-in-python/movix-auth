@@ -14,5 +14,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 metadata_obj = MetaData(schema="users")
 
+
 class Base(DeclarativeBase):
     metadata = metadata_obj
