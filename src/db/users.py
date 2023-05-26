@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 from sqlalchemy.sql import Select
 
-from .generics import GUID
+from db.generics import GUID
 
 __version__ = "5.0.0"
 
@@ -21,13 +21,12 @@ class SQLAlchemyBaseUserTable(Generic[ID]):
 
     __tablename__ = "user"
 
-    if TYPE_CHECKING:  # pragma: no cover
+    if TYPE_CHECKING:
         id: ID
         email: str
         hashed_password: str
         is_active: bool
         is_superuser: bool
-        is_verified: bool
     else:
         email: Mapped[str] = mapped_column(
             String(length=320), unique=True, index=True, nullable=False
@@ -39,14 +38,12 @@ class SQLAlchemyBaseUserTable(Generic[ID]):
         is_superuser: Mapped[bool] = mapped_column(
             Boolean, default=False, nullable=False
         )
-        is_verified: Mapped[bool] = mapped_column(
-            Boolean, default=False, nullable=False
-        )
 
 
 class SQLAlchemyBaseUserTableUUID(SQLAlchemyBaseUserTable[UUID_ID]):
-    if TYPE_CHECKING:  # pragma: no cover
+    if TYPE_CHECKING:
         id: UUID_ID
+
     else:
         id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
 
@@ -113,12 +110,12 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         self.user_table = user_table
 
     async def get(self, user_id: ID) -> Optional[UP]:
-        statement = select(self.user_table).where(self.user_table.id == id)
+        statement = select(self.user_table).where(self.user_table.id == user_id)
         return await self._get_user(statement)
 
-    async def get_by_email(self, email: str) -> Optional[UP]:
+    async def get_by_username(self, username: str) -> Optional[UP]:
         statement = select(self.user_table).where(
-            func.lower(self.user_table.email) == func.lower(email)
+            func.lower(self.user_table.username) == func.lower(username)
         ) # TODO Fix type error
         return await self._get_user(statement)
 

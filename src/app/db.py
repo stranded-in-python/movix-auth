@@ -1,16 +1,22 @@
-import os
 import uuid
-from typing import AsyncGenerator
+from typing import AsyncGenerator, TYPE_CHECKING
 
 from fastapi import Depends
 
+from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+from sqlalchemy.sql import Select
+
+from core.config import settings
 from db.access_rights import SQLAlchemyBaseAccessRightTableUUID, SQLAlchemyAccessRightDatabase
 from db.roles import SQLAlchemyBaseRoleTableUUID, SQLAlchemyRoleDatabase
 from db.users import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = settings.database_url
+# TODO Упаковать в env или settings
 
 UUID = uuid.UUID
 
@@ -20,15 +26,33 @@ class Base(DeclarativeBase):
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
+    if TYPE_CHECKING:
+        username: str
+        first_name: str
+        last_name: str
+    else:
+        username: Mapped[str] = mapped_column(
+            String(length=20), unique=True, index=True, nullable=False
+        )
+        first_name: Mapped[str] = mapped_column(
+            String(length=32), unique=False, index=True, nullable=False
+        )
+        last_name: Mapped[str] = mapped_column(
+            String(length=32), unique=False, index=True, nullable=False
+        )
+
+class Role:
     pass
+# class Role(SQLAlchemyBaseRoleTableUUID, Base):
+#     pass
+# TODO specified __table__ or __tablename__ as User
 
 
-class Role(SQLAlchemyBaseRoleTableUUID, Base):
+class AccessRight:
     pass
-
-
-class AccessRight(SQLAlchemyBaseAccessRightTableUUID):
-    pass
+# class AccessRight(SQLAlchemyBaseAccessRightTableUUID, Base):
+#     pass
+# TODO specified __table__ or __tablename__ as User
 
 
 engine = create_async_engine(DATABASE_URL)
@@ -38,6 +62,7 @@ async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 async def create_db_and_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(User.metadata.create_all)
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:

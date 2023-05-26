@@ -83,20 +83,16 @@ class APIUsers(Generic[models.UP, models.ID]):
         self,
         user_schema: Type[schemas.U],
         user_update_schema: Type[schemas.UU],
-        requires_verification: bool = False,
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
 
         :param user_schema: Pydantic schema of a public user.
         :param user_update_schema: Pydantic schema for updating a user.
-        :param requires_verification: Whether the endpoints
-        require the users to be verified or not. Defaults to False.
         """
         return get_users_router(
             self.get_user_manager,
             user_schema,
             user_update_schema,
-            self.authenticator,
-            requires_verification,
+            self.authenticator
         )

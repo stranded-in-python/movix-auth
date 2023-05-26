@@ -10,6 +10,10 @@ class BaseUserDatabase(t.Generic[UP, ID]):
         """Get a single user by id."""
         raise NotImplementedError()
 
+    async def get_by_username(self, email: str) -> t.Optional[UP]:
+        """Get a single user by username."""
+        raise NotImplementedError()
+
     async def get_by_email(self, email: str) -> t.Optional[UP]:
         """Get a single user by email."""
         raise NotImplementedError()

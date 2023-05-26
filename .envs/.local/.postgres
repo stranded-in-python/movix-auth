@@ -1,6 +1,6 @@
 # PostgreSQL
 # ------------------------------------------------------------------------------
-POSTGRES_HOST=postgres
+POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=yamp_movies_db
 POSTGRES_USER=yamp_dummy

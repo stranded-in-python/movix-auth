@@ -13,7 +13,10 @@ class UserProtocol(Protocol[ID]):
     """User protocol that ORM model should follow."""
 
     id: ID
+    username: str
     email: str
+    first_name: str
+    last_name: str
     hashed_password: str
     is_active: bool
     is_superuser: bool
@@ -49,7 +52,7 @@ class AccessRightProtocol(Protocol[ID]):
         ...
 
 
-ARP = TypeVar("RP", bound=RoleProtocol)
+ARP = TypeVar("ARP", bound=AccessRightProtocol)
 
 
 class SignInHistoryEvent(BaseModel):

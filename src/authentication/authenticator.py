@@ -99,7 +99,6 @@ class Authenticator:
         self,
         optional: bool = False,
         active: bool = False,
-        verified: bool = False,
         superuser: bool = False,
         get_enabled_backends: Optional[EnabledBackendsDependency] = None,
     ):
@@ -128,7 +127,7 @@ class Authenticator:
 
         @with_signature(signature)
         async def current_user_dependency(*args, **kwargs):
-            user, _ = await self._authenticate(*args, optional=optional, active=active, verified=verified,
+            user, _ = await self._authenticate(*args, optional=optional, active=active,
                                                superuser=superuser, **kwargs)
             return user
 
@@ -137,10 +136,9 @@ class Authenticator:
     async def _authenticate(
         self,
         *args,
-        user_service: BaseUserManager[models.UP, models.ID],
+        user_manager: BaseUserManager[models.UP, models.ID],
         optional: bool = False,
         active: bool = False,
-        verified: bool = False,
         superuser: bool = False,
         **kwargs,
     ) -> Tuple[Optional[models.UP], Optional[str]]:
@@ -156,7 +154,7 @@ class Authenticator:
                     name_to_strategy_variable_name(backend.name)
                 ]
                 if token is not None:
-                    user = await strategy.read_token(token, user_service)
+                    user = await strategy.read_token(token, user_manager)
                     if user:
                         break
 
@@ -166,9 +164,7 @@ class Authenticator:
             if active and not user.is_active:
                 status_code = status.HTTP_401_UNAUTHORIZED
                 user = None
-            elif (
-                verified and not user.is_verified or superuser and not user.is_superuser
-            ):
+            elif superuser and not user.is_superuser:
                 user = None
         if not user and not optional:
             raise HTTPException(status_code=status_code)

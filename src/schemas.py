@@ -17,7 +17,6 @@ class CreateUpdateDictModel(BaseModel):
                 "id",
                 "is_superuser",
                 "is_active",
-                "is_verified"
             },
         )
 
@@ -32,7 +31,6 @@ class BaseUser(Generic[ID], CreateUpdateDictModel):
     email: EmailStr
     is_active: bool = True
     is_superuser: bool = False
-    is_verified: bool = False
 
     class Config:
         orm_mode = True
@@ -48,7 +46,6 @@ class BaseUserCreate(CreateUpdateDictModel):
     last_name: str
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
-    is_verified: Optional[bool] = False
 
 
 class BaseUserUpdate(CreateUpdateDictModel):
@@ -56,7 +53,6 @@ class BaseUserUpdate(CreateUpdateDictModel):
     email: Optional[EmailStr]
     is_active: Optional[bool]
     is_superuser: Optional[bool]
-    is_verified: Optional[bool]
 
 
 U = TypeVar("U", bound=BaseUser)
@@ -80,3 +76,27 @@ class BaseOAuthAccount(Generic[ID], BaseModel):
 class SignInHistoryEvent(BaseModel):
     timestamp: datetime.datetime
     ip: str
+
+
+class BaseRole(Generic[ID], CreateUpdateDictModel):
+    """Base Role model."""
+
+    id: m.ID
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
+class BaseRoleCreate(CreateUpdateDictModel):
+    name: str
+
+
+class BaseRoleUpdate(CreateUpdateDictModel):
+    id: m.ID
+    name: str
+
+
+R = TypeVar("R", bound=BaseRole)
+RC = TypeVar("RC", bound=BaseRoleCreate)
+RU = TypeVar("RU", bound=BaseRoleUpdate)

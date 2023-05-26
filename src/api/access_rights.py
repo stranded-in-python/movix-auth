@@ -7,14 +7,14 @@ from services.role import RoleManagerDependency
 from services.user import UserManagerDependency
 
 
-class APIAccessRight(Generic[models.RP, models.RP, models.ARP, models.ID]):
+class APIAccessRight(Generic[models.ARP, models.ID]):
     authenticator: Authenticator
 
     def __init__(
             self,
             get_user_manager: UserManagerDependency[models.UP, models.ID],
-            get_role_manager: RoleManagerDependency[models.UP, models.PR, models.ID],
-            get_access_rights_manager: AccessRightManagerDependency[models.UP, models.RP, models.ARP, models.ID],
+            get_role_manager: RoleManagerDependency[models.RP, models.ID],
+            get_access_rights_manager: AccessRightManagerDependency[models.ARP, models.ID],
             auth_backends: Sequence[AuthenticationBackend],
     ):
         self.get_user_manager = get_user_manager

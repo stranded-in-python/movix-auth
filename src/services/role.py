@@ -6,10 +6,10 @@ from services.user import BaseUserManager, UserManagerDependency
 
 
 class BaseRoleManager(
-    Generic[models.UP, models.RP, models.ID],
-    UserManagerDependency
+    Generic[models.RP, models.ID]
 ):
-    pass
+    def __init__(self):
+        pass
 
 
-RoleManagerDependency = DependencyCallable[BaseRoleManager[models.UP, models.RP, models.ID]]
+RoleManagerDependency = DependencyCallable[BaseRoleManager[models.RP, models.ID]]

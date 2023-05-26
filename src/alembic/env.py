@@ -19,8 +19,8 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
-from src.db.curr_db import Base
-from src.db.curr_db import User, AccessToken
+from app.db import Base
+from db.users import SQLAlchemyBaseUserTable
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 # target_metadata = None
@@ -30,17 +30,19 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 def get_url():
-    user = os.getenv("POSTGRES_USER", "postgres")
-    password = os.getenv("POSTGRES_PASSWORD", "")
-    server = os.getenv("POSTGRES_SERVER", "db")
-    db = os.getenv("POSTGRES_DB", "app")
+    user = os.getenv("POSTGRES_USER", "yamp_dummy")
+    password = os.getenv("POSTGRES_PASSWORD", "qweasd123")
+    server = os.getenv("POSTGRES_SERVER", "localhost:5434")
+    db = os.getenv("POSTGRES_DB", "yamp_movies_db")
     return f"postgresql://{user}:{password}@{server}/{db}"
+
 
 def include_object(object, name, type_, reflected, compare_to):
     if type_ == "table" and reflected and compare_to is None:
         return False
     else:
         return True
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

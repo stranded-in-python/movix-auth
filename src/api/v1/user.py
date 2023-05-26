@@ -14,22 +14,21 @@ from authentication import Authenticator
 
 def get_users_router(
     get_user_manager: UserManagerDependency[models.UP, models.ID],
-    authenticator: Authenticator,
-    user_schema: Type[schemas.U] = schemas.U,
-    user_update_schema: Type[schemas.UU] = schemas.UU,
-    requires_verification: bool = False,
+    user_schema: Type[schemas.U],
+    user_update_schema: Type[schemas.UU],
+    authenticator: Authenticator
 ) -> APIRouter:
 
     router = APIRouter()
     router.prefix = "/api/v1"
 
     get_current_active_user = authenticator.current_user(
-        active=True, verified=requires_verification
+        active=True
     )
 
     @router.get(
-        "/me",
-        response_model=schemas.U,
+        "/users/me",
+        response_model=user_schema,
         dependencies=[Depends(get_current_active_user)],
         name="users:current_user",
         summary="Get current user",
@@ -49,7 +48,7 @@ def get_users_router(
         return user_schema.from_orm(user)
 
     @router.put(
-        "/me",
+        "/users/me",
         response_model=user_schema,
         dependencies=[Depends(get_current_active_user)],
         name="users:patch_current_user",
@@ -117,7 +116,7 @@ def get_users_router(
             )
 
     @router.get(
-        "/me/sign-in-history",
+        "/users/me/sign-in-history",
         response_model=list[schemas.SignInHistoryEvent],
         summary="Get sign-in history",
         description="Get user's account sign-in history",
