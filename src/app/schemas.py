@@ -6,8 +6,6 @@ import schemas as schemas
 class UserRead(schemas.BaseUser[uuid.UUID]):
     first_name: str
     last_name: str
-    email:
-
 
 
 class UserCreate(schemas.BaseUserCreate):

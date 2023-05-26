@@ -28,7 +28,7 @@ def get_users_router(
 
     @router.get(
         "/users/me",
-        response_model=schemas.U,
+        response_model=user_schema,
         dependencies=[Depends(get_current_active_user)],
         name="users:current_user",
         summary="Get current user",
