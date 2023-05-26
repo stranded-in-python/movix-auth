@@ -5,7 +5,10 @@ from sqlalchemy import MetaData
 from fastapi import Depends
 from .users import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from .tokens import SQLAlchemyBaseAccessTokenTableUUID, SQLAlchemyAccessTokenDatabase
-from .roles import SQLAlchemyBaseRoleTableUUID, SQLAlchemyRoleDatabase
+from .roles import (SQLAlchemyBaseRoleTableUUID, SQLAlchemyRoleDatabase,
+                    SQLAlchemyBaseUserRoleTableUUID, SQLAlchemyUserRoleDatabase)
+from .access_rights import (SQLAlchemyBaseAccessRightUUID, SQLAlchemyAccessRightDatabase,
+                     SQLAlchemyBaseUserAccessRightTableUUID, SQLAlchemyUserAccessRightDatabase)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -41,11 +44,17 @@ class AccessToken(SQLAlchemyBaseAccessTokenTableUUID, Base):
 class Role(SQLAlchemyBaseRoleTableUUID, Base):
     pass
 
-class UserRole():
+
+class UserRole(SQLAlchemyBaseUserRoleTableUUID, Base):
     pass
 
 
+class AccessRight(SQLAlchemyBaseAccessRightUUID, Base):
+    pass
 
+
+class UserAccessRight(SQLAlchemyBaseUserAccessRightTableUUID, Base):
+    pass
 
 engine = create_async_engine(DATABASE_URL)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
@@ -73,3 +82,18 @@ async def get_roles_db(
     session: AsyncSession = Depends(get_async_session),
 ):
     yield SQLAlchemyRoleDatabase(session, Role)
+
+async def get_user_roles_db(
+    session: AsyncSession = Depends(get_async_session),
+):
+    yield SQLAlchemyUserRoleDatabase(session, UserRole)
+
+async def get_access_rights_db(
+    session: AsyncSession = Depends(get_async_session),
+):
+    yield SQLAlchemyAccessRightDatabase(session, AccessRight)
+
+async def get_user_access_right_db(
+    session: AsyncSession = Depends(get_async_session),
+):
+    yield SQLAlchemyUserAccessRightDatabase(session, UserAccessRight)

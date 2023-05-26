@@ -54,7 +54,6 @@ class AccessRightProtocol(Protocol[ID]):
 
     id: ID
     name: str
-    roles: list[RP]
 
     def __init__(self, *args, **kwargs) -> None:
         ...
@@ -62,6 +61,14 @@ class AccessRightProtocol(Protocol[ID]):
 
 ARP = TypeVar("ARP", bound=AccessRightProtocol)
 
+class UserAccessRightProtocol(Protocol[ID]):
+    """User/Role protocol that ORM model should follow."""
+
+    id: ID
+    user_id: ID
+    access_right_id: ID
+
+UARP = TypeVar("UARP", bound=UserAccessRightProtocol)
 
 class SignInHistoryEvent(BaseModel):
     timestamp: datetime

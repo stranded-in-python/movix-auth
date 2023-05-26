@@ -1,7 +1,7 @@
 import uuid
 from typing import Any, Dict, Generic, Optional, Type
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column
-from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey, Integer, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
@@ -79,7 +79,7 @@ class SQLAlchemyBaseUserRoleTableUUID:
 
 class SQLAlchemyUserRoleDatabase:
     session: AsyncSession
-    
+    user_role_table: Type[URP]
 
     def __init__(
         self,
@@ -90,8 +90,27 @@ class SQLAlchemyUserRoleDatabase:
         self.session = session
         self.user_role_table = user_role_table
 
-    def check_role(self, user_id: ID, role_id: ID) -> Optional[URP]:
+    async def get_user_role(self, user_id: ID, role_id: ID) -> Optional[URP]:
         statement = select(self.role_table).where(
-                                        self.user_role_table.user_id == role_id)
-        
-        return await self._get_role(statement)
+                                        (self.user_role_table.user_id == user_id) &
+                                        self.user_role_table.role_id == role_id)
+        return self._get_user_role(statement)
+    
+    async def update(self, user_role: URP, update_dict: Dict[str, Any]) -> URP:
+        for key, value in update_dict.items():
+            setattr(user_role, key, value)
+        self.session.add(user_role)
+        await self.session.commit()
+        return user_role
+
+    async def delete(self, user_role: URP) -> None:
+        await self.session.delete(user_role)
+        await self.session.commit()
+
+    async def get_all_roles_of_user(self, user_id: ID) -> Optional[list[URP]]:
+        statement = select(self.user_role_table).where(self.user_role_table.user_id == user_id)
+        return await list(self._get_role(statement)) # ?    
+
+    async def _get_user_role(self, statement: Select) -> Optional[URP]:
+        results = await self.session.execute(statement)
+        return results.unique().scalar_one_or_none()
