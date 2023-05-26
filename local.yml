@@ -1,0 +1,24 @@
+version: "3.8"
+
+name: "movix_auth"
+
+volumes:
+  postgres_data_local: {}
+  redis_data_local: {}
+
+services:
+  postgres:
+    image: postgres:14
+    env_file:
+      - ./.envs/.local/.postgres
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  redis:
+    image: redis:7.2-rc-bullseye
+    volumes:
+      - redis_data_local:/data
+    ports:
+      - "6379:6379"
