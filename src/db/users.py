@@ -119,6 +119,12 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         ) # TODO Fix type error
         return await self._get_user(statement)
 
+    async def get_by_email(self, email: str) -> Optional[UP]:
+        statement = select(self.user_table).where(
+            func.lower(self.user_table.email) == func.lower(email)
+        )
+        return await self._get_user(statement)
+
     async def create(self, create_dict: Dict[str, Any]) -> UP:
         user = self.user_table(**create_dict)
         self.session.add(user)

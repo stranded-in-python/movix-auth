@@ -27,15 +27,15 @@ class BaseUserManager(Generic[models.UP, models.ID]):
     verification_token_lifetime_seconds: int = 3600
     verification_token_audience: str = VERIFY_USER_TOKEN_AUDIENCE
 
-    user_storage: BaseUserDatabase[models.UP, models.ID]
+    user_db: BaseUserDatabase[models.UP, models.ID]
     password_helper: pw.PasswordHelperProtocol
 
     def __init__(
         self,
-        user_storage: BaseUserDatabase[models.UP, models.ID],
+        user_db: BaseUserDatabase[models.UP, models.ID],
         password_helper: Optional[pw.PasswordHelperProtocol] = None,
     ):
-        self.user_storage = user_storage
+        self.user_db = user_db
         if password_helper is None:
             self.password_helper = pw.PasswordHelper()
         else:
@@ -61,7 +61,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
 
         await self.validate_password(user_create.password, user_create)
 
-        existing_user = await self.user_storage.get_by_username(user_create.email)
+        existing_user = await self.user_db.get_by_username(user_create.email)
         if existing_user is not None:
             raise exceptions.UserAlreadyExists()
 
@@ -73,14 +73,14 @@ class BaseUserManager(Generic[models.UP, models.ID]):
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
 
-        created_user = await self.user_storage.create(user_dict)
+        created_user = await self.user_db.create(user_dict)
 
         await self.on_after_register(created_user, request)
 
         return created_user
 
     async def get(self, user_id: models.ID) -> models.UP:
-        user = await self.user_storage.get(user_id)
+        user = await self.user_db.get(user_id)
 
         if user is None:
             raise exceptions.UserNotExists()
@@ -89,7 +89,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
 
     async def get_by_username(self, username: str) -> models.UP:
 
-        user = await self.user_storage.get_by_username(username)
+        user = await self.user_db.get_by_username(username)
 
         if user is None:
             raise exceptions.UserNotExists()
@@ -98,7 +98,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
 
     async def get_by_email(self, email: str) -> models.UP:
 
-        user = await self.user_storage.get_by_email(email)
+        user = await self.user_db.get_by_email(email)
 
         if user is None:
             raise exceptions.UserNotExists()
@@ -159,7 +159,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
         if not user.is_active:
             raise exceptions.UserInactive()
 
-        updated_user = await self._update(user, {"pw": password})
+        updated_user = await self._update(user, {"password": password})
 
         await self.on_after_reset_password(user, request)
 
@@ -188,7 +188,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
     ) -> None:
 
         await self.on_before_delete(user, request)
-        await self.user_storage.delete(user)
+        await self.user_db.delete(user)
         await self.on_after_delete(user, request)
 
     async def get_sign_in_history(
