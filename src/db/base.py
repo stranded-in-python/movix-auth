@@ -1,10 +1,11 @@
 import typing as t
 
 from core.dependency_types import DependencyCallable
-from models import ID, UP, RP, ARP
+from core.pagination import PaginateQueryParams
+from models import ID, UP, RP, ARP, SIHE
 
 
-class BaseUserDatabase(t.Generic[UP, ID]):
+class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
     """Base adapter for retrieving, creating and updating users from a database."""
 
     async def get(self, user_id: ID) -> t.Optional[UP]:
@@ -29,6 +30,14 @@ class BaseUserDatabase(t.Generic[UP, ID]):
 
     async def delete(self, user: UP) -> None:
         """Delete a user."""
+        raise NotImplementedError()
+
+    async def record_in_sighin_history(self, user_id: ID, event: SIHE):
+        """Record in users sigh-in history"""
+        raise NotImplementedError()
+
+    async def get_sign_in_history(self, user_id: ID, pagination_params: PaginateQueryParams):
+        """Get recorded events in users sigh-in history"""
         raise NotImplementedError()
 
 
@@ -70,6 +79,6 @@ class BaseAccessRightDatabase(t.Generic[ARP, ID]):
 
 RETURN_TYPE = t.TypeVar("RETURN_TYPE")
 
-UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID]]
+UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID, SIHE]]
 BaseRoleDatabaseDependency = DependencyCallable[BaseRoleDatabase[RP, ID]]
 BaseAccessRightDatabaseDependency = DependencyCallable[BaseAccessRightDatabase[ARP, ID]]

@@ -27,12 +27,12 @@ class BaseUserManager(Generic[models.UP, models.ID]):
     verification_token_lifetime_seconds: int = 3600
     verification_token_audience: str = VERIFY_USER_TOKEN_AUDIENCE
 
-    user_db: BaseUserDatabase[models.UP, models.ID]
+    user_db: BaseUserDatabase[models.UP, models.ID, models.SIHE]
     password_helper: pw.PasswordHelperProtocol
 
     def __init__(
         self,
-        user_db: BaseUserDatabase[models.UP, models.ID],
+        user_db: BaseUserDatabase[models.UP, models.ID, models.SIHE],
         password_helper: Optional[pw.PasswordHelperProtocol] = None,
     ):
         self.user_db = user_db
@@ -196,7 +196,8 @@ class BaseUserManager(Generic[models.UP, models.ID]):
             user: Union[schemas.UC, models.UP],
             pagination_params: PaginateQueryParams
     ) -> list[models.SignInHistoryEvent]:
-        ...
+
+        raise NotImplementedError()
 
     async def validate_password(
             self, password: str, user: Union[schemas.UC, models.UP]

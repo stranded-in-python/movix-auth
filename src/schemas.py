@@ -27,7 +27,7 @@ class CreateUpdateDictModel(BaseModel):
 class BaseUser(Generic[ID], CreateUpdateDictModel):
     """Base User model."""
 
-    id: m.ID
+    id: ID
     email: EmailStr
     is_active: bool = True
     is_superuser: bool = False
@@ -60,22 +60,12 @@ UC = TypeVar("UC", bound=BaseUserCreate)
 UU = TypeVar("UU", bound=BaseUserUpdate)
 
 
-class BaseOAuthAccount(Generic[ID], BaseModel):
-    id: ID
-    oauth_name: str
-    access_token: str
-    expires_at: Optional[int] = None
-    refresh_token: Optional[str] = None
-    account_id: str
-    account_email: str
-
-    class Config:
-        orm_mode = True
+class BaseSignInHistoryEvent(BaseModel):
+    timestamp: datetime.datetime | None
+    fingerprint: str | None
 
 
-class SignInHistoryEvent(BaseModel):
-    timestamp: datetime.datetime
-    ip: str
+SIHE = TypeVar("SIHE", bound=BaseSignInHistoryEvent)
 
 
 class BaseRole(Generic[ID], CreateUpdateDictModel):

@@ -18,6 +18,11 @@ class UserUpdate(schemas.BaseUserUpdate):
         orm_mode = True
 
 
+class EventRead(schemas.BaseSignInHistoryEvent):
+    class Config:
+        orm_mode = True
+
+
 class RoleRead(schemas.BaseRole[uuid.UUID]):
     class Config:
         orm_mode = True

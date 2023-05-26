@@ -11,7 +11,6 @@ from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
 from api.v1.user import get_users_router
-from api.v1.verify import get_verify_router
 
 
 class APIUsers(Generic[models.UP, models.ID]):
@@ -50,14 +49,6 @@ class APIUsers(Generic[models.UP, models.ID]):
             self.get_user_manager, user_schema, user_create_schema
         )
 
-    def get_verify_router(self, user_schema: Type[schemas.U]) -> APIRouter:
-        """
-        Return a router with e-mail verification routes.
-
-        :param user_schema: Pydantic schema of a public user.
-        """
-        return get_verify_router(self.get_user_manager, user_schema)
-
     def get_reset_password_router(self) -> APIRouter:
         """Return a reset pw process router."""
         return get_reset_password_router(self.get_user_manager)
@@ -83,16 +74,19 @@ class APIUsers(Generic[models.UP, models.ID]):
         self,
         user_schema: Type[schemas.U],
         user_update_schema: Type[schemas.UU],
+        event_schema: Type[schemas.SIHE]
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
 
         :param user_schema: Pydantic schema of a public user.
         :param user_update_schema: Pydantic schema for updating a user.
+        :param event_schema: Pydantic schema for event of user sign-in.
         """
         return get_users_router(
             self.get_user_manager,
             user_schema,
             user_update_schema,
+            event_schema,
             self.authenticator
         )

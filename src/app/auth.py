@@ -3,13 +3,16 @@ from authentication import (
     BearerTransport,
     JWTStrategy,
 )
+from core.config import settings
 
-SECRET = "SECRET"
 bearer_transport = BearerTransport(token_url="auth/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+    return JWTStrategy(
+        secret=settings.verification_token_secret,
+        lifetime_seconds=3600
+)
 
 
 auth_backend = AuthenticationBackend(

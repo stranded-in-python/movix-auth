@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # Настройки PSQL
     database_url: str = 'postgresql+asyncpg://yamp_dummy:qweasd123@localhost:5434/yamp_movies_db'
 
+    # Параметры аутентификации
+    reset_password_token_secret: str = "SECRET"
+    verification_token_secret: str = "SECRET"
+
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))
 

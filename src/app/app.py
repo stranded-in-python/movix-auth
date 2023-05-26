@@ -2,13 +2,12 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
 from app.auth import auth_backend
-from app.db import create_db_and_tables
 from core.config import settings
 
 from app.users import api_users
 from app.roles import api_roles
 from app.access_rights import api_access_rights
-from app.schemas import UserCreate, UserRead, UserUpdate, RoleRead, RoleUpdate
+from app.schemas import UserCreate, UserRead, UserUpdate, EventRead, RoleRead, RoleUpdate
 
 app = FastAPI(
     title=settings.project_name,
@@ -26,7 +25,7 @@ app.include_router(
     tags=["auth"]
 )
 app.include_router(
-    api_users.get_users_router(UserRead, UserUpdate),
+    api_users.get_users_router(UserRead, UserUpdate, EventRead),
     tags=["users"],
 )
 app.include_router(

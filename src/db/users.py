@@ -1,12 +1,14 @@
 """FastAPI Users database adapter for SQLAlchemy."""
 import uuid
-from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type, Text
 
+from core.pagination import PaginateQueryParams
 from db.base import BaseUserDatabase
-from models import ID, UP
-from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select
+from models import ID, UP, SIHE
+from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select, DateTime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 from sqlalchemy.sql import Select
 
 from db.generics import GUID
@@ -41,6 +43,29 @@ class SQLAlchemyBaseUserTable(Generic[ID]):
 
 
 class SQLAlchemyBaseUserTableUUID(SQLAlchemyBaseUserTable[UUID_ID]):
+    if TYPE_CHECKING:
+        id: UUID_ID
+
+    else:
+        id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+
+
+class SQLAlchemyBaseSignInHistoryTable(Generic[ID]):
+    __tablename__ = 'signins_history'
+
+    if TYPE_CHECKING:
+        id: ID
+        timestamp: datetime
+        fingerprint: str
+
+    else:
+        timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+        fingerprint: Mapped[str] = mapped_column(
+            String(length=1024), nullable=False
+        )
+
+
+class SQLAlchemyBaseSignInHistoryTableUUID(SQLAlchemyBaseSignInHistoryTable[UUID_ID]):
     if TYPE_CHECKING:
         id: UUID_ID
 
@@ -90,7 +115,7 @@ class SQLAlchemyBaseOAuthAccountTableUUID(SQLAlchemyBaseOAuthAccountTable[UUID_I
             )
 
 
-class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
+class SQLAlchemyUserDatabase(Generic[UP, ID, SIHE], BaseUserDatabase[UP, ID, SIHE]):
     """
     Database adapter for SQLAlchemy.
 
@@ -99,15 +124,16 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
     """
 
     session: AsyncSession
-    user_table: Type[UP]
 
     def __init__(
         self,
         session: AsyncSession,
-        user_table: Type[UP]
+        user_table: Type[UP],
+        history_table: Type[SIHE]
     ):
         self.session = session
         self.user_table = user_table
+        self.history_table = history_table
 
     async def get(self, user_id: ID) -> Optional[UP]:
         statement = select(self.user_table).where(self.user_table.id == user_id)
@@ -145,3 +171,17 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
     async def _get_user(self, statement: Select) -> Optional[UP]:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+
+    async def record_in_sighin_history(self, user_id: ID, event: SIHE):
+        event = self.history_table(user_id=user_id, **dict(event))
+        self.session.add(event)
+        await self.session.commit()
+
+    async def get_sign_in_history(self, user_id: ID, pagination_params: PaginateQueryParams):
+        statement = select(self.history_table).where(self.history_table.user_id == user_id)
+        return await self._get_events(statement)
+
+    async def _get_events(self, statement: Select):
+        results = await self.session.execute(statement)
+
+        return results.fetchall()

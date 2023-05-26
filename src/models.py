@@ -2,8 +2,6 @@ from datetime import datetime
 from typing import Protocol, TypeVar, Any
 from uuid import UUID
 
-from pydantic import BaseModel
-
 import core.exceptions as ex
 
 ID = TypeVar("ID")
@@ -55,10 +53,14 @@ class AccessRightProtocol(Protocol[ID]):
 ARP = TypeVar("ARP", bound=AccessRightProtocol)
 
 
-class SignInHistoryEvent(BaseModel):
+class SignInHistoryEvent(Protocol[ID]):
+    id: ID
+    user_id: ID
     timestamp: datetime
-    ip: str
-    # TODO add attrs
+    fingerprint: str
+
+
+SIHE = TypeVar("SIHE", bound=SignInHistoryEvent)
 
 
 class UUIDIDMixin:

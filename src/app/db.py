@@ -5,13 +5,13 @@ from fastapi import Depends
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 from sqlalchemy.sql import Select
 
 from core.config import settings
 from db.access_rights import SQLAlchemyBaseAccessRightTableUUID, SQLAlchemyAccessRightDatabase
 from db.roles import SQLAlchemyBaseRoleTableUUID, SQLAlchemyRoleDatabase
-from db.users import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
+from db.users import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase, SQLAlchemyBaseSignInHistoryTableUUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -40,6 +40,17 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
         last_name: Mapped[str] = mapped_column(
             String(length=32), unique=False, index=True, nullable=False
         )
+        signin = relationship("SignInHistory")
+
+
+class SignInHistory(SQLAlchemyBaseSignInHistoryTableUUID, Base):
+    if TYPE_CHECKING:
+        user_id: UUID
+
+    else:
+        user_id: Mapped[UUID] = mapped_column("user", ForeignKey("user.id"))
+
+
 
 class Role:
     pass
@@ -71,7 +82,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyUserDatabase(session, User)
+    yield SQLAlchemyUserDatabase(session, User, SignInHistory)
 
 
 async def get_role_db(session: AsyncSession = Depends(get_async_session)):

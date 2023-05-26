@@ -16,6 +16,7 @@ def get_users_router(
     get_user_manager: UserManagerDependency[models.UP, models.ID],
     user_schema: Type[schemas.U],
     user_update_schema: Type[schemas.UU],
+    event_schema: Type[schemas.SIHE],
     authenticator: Authenticator
 ) -> APIRouter:
 
@@ -117,7 +118,7 @@ def get_users_router(
 
     @router.get(
         "/users/me/sign-in-history",
-        response_model=list[schemas.SignInHistoryEvent],
+        response_model=list[event_schema],
         summary="Get sign-in history",
         description="Get user's account sign-in history",
         response_description="list of sign-ins",
@@ -127,8 +128,11 @@ def get_users_router(
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
         user: models.UP = Depends(get_current_active_user),
         paginate_params: PaginateQueryParams = Depends(PaginateQueryParams)
-    ) -> list[schemas.SignInHistoryEvent]:
+    ) -> list[schemas.BaseSignInHistoryEvent]:
 
-        return await user_manager.get_sign_in_history(user, paginate_params)
+        return list(
+            event_schema.from_orm(event[0])
+            for event in await user_manager.get_sign_in_history(user, paginate_params)
+        )
 
     return router
