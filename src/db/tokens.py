@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type
 
 # from ..authentication.strategy.db.adapter import AP, AccessTokenDatabase
-from authentication.strategy.db.adapter import AP, AccessTokenDatabase
+from ..authentication.strategy.db.adapter import AP, AccessTokenDatabase
 from models import ID
 from sqlalchemy import ForeignKey, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
