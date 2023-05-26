@@ -27,7 +27,7 @@ def get_users_router(
     )
 
     @router.get(
-        "/me",
+        "/users/me",
         response_model=schemas.U,
         dependencies=[Depends(get_current_active_user)],
         name="users:current_user",
@@ -48,7 +48,7 @@ def get_users_router(
         return user_schema.from_orm(user)
 
     @router.put(
-        "/me",
+        "/users/me",
         response_model=user_schema,
         dependencies=[Depends(get_current_active_user)],
         name="users:patch_current_user",
@@ -116,7 +116,7 @@ def get_users_router(
             )
 
     @router.get(
-        "/me/sign-in-history",
+        "/users/me/sign-in-history",
         response_model=list[schemas.SignInHistoryEvent],
         summary="Get sign-in history",
         description="Get user's account sign-in history",

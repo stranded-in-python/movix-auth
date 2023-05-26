@@ -110,12 +110,12 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         self.user_table = user_table
 
     async def get(self, user_id: ID) -> Optional[UP]:
-        statement = select(self.user_table).where(self.user_table.id == id)
+        statement = select(self.user_table).where(self.user_table.id == user_id)
         return await self._get_user(statement)
 
-    async def get_by_email(self, email: str) -> Optional[UP]:
+    async def get_by_username(self, username: str) -> Optional[UP]:
         statement = select(self.user_table).where(
-            func.lower(self.user_table.email) == func.lower(email)
+            func.lower(self.user_table.username) == func.lower(username)
         ) # TODO Fix type error
         return await self._get_user(statement)
 

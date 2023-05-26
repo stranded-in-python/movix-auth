@@ -4,19 +4,25 @@ import schemas as schemas
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
-    pass
+    first_name: str
+    last_name: str
+    email:
+
 
 
 class UserCreate(schemas.BaseUserCreate):
-    pass
+    class Config:
+        orm_mode = True
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    pass
+    class Config:
+        orm_mode = True
 
 
 class RoleRead(schemas.BaseRole[uuid.UUID]):
-    pass
+    class Config:
+        orm_mode = True
 
 
 class RoleUpdate(schemas.BaseRoleUpdate):

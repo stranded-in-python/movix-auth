@@ -41,7 +41,7 @@ app.include_router(
 
 @app.on_event("startup")
 async def on_startup():
-    await create_db_and_tables()
+    ...
 
 
 @app.on_event("shutdown")

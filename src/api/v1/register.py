@@ -80,6 +80,6 @@ def get_register_router(
                 },
             )
 
-        return user_create.from_orm(created_user)
+        return user_schema.from_orm(created_user)
 
     return router
