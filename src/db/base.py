@@ -79,6 +79,6 @@ class BaseAccessRightDatabase(t.Generic[ARP, ID]):
 
 RETURN_TYPE = t.TypeVar("RETURN_TYPE")
 
-UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID, SIHE]]
+UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID]]
 BaseRoleDatabaseDependency = DependencyCallable[BaseRoleDatabase[RP, ID]]
 BaseAccessRightDatabaseDependency = DependencyCallable[BaseAccessRightDatabase[ARP, ID]]
