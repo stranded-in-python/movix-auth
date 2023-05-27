@@ -62,7 +62,10 @@ class Role(SQLAlchemyBaseRoleTableUUID, Base):
 
 
 class UserRole(SQLAlchemyBaseUserRoleTableUUID, Base):
-    pass
+    if TYPE_CHECKING:
+        user_id: UUID
+    else:
+        user_id: Mapped[UUID] = mapped_column("user", ForeignKey("user.id"))
 
 
 class AccessRight(SQLAlchemyBaseAccessRightUUID, Base):
@@ -70,7 +73,11 @@ class AccessRight(SQLAlchemyBaseAccessRightUUID, Base):
 
 
 class UserAccessRight(SQLAlchemyBaseUserAccessRightTableUUID, Base):
-    pass
+    if TYPE_CHECKING:
+        role_id: UUID
+
+    else:
+        role_id: Mapped[UUID] = mapped_column("role", ForeignKey("role.id"))
 
 
 engine = create_async_engine(DATABASE_URL)
