@@ -14,7 +14,7 @@ from db.tokens import SQLAlchemyBaseAccessTokenTableUUID, SQLAlchemyAccessTokenD
 from db.roles import (SQLAlchemyBaseRoleTableUUID, SQLAlchemyRoleDatabase,
                     SQLAlchemyBaseUserRoleTableUUID, SQLAlchemyUserRoleDatabase)
 from db.access_rights import (SQLAlchemyBaseAccessRightUUID, SQLAlchemyAccessRightDatabase,
-                     SQLAlchemyBaseUserAccessRightTableUUID, SQLAlchemyUserAccessRightDatabase)
+                     SQLAlchemyBaseRoleAccessRightTableUUID, SQLAlchemyRoleAccessRightDatabase)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -62,22 +62,15 @@ class Role(SQLAlchemyBaseRoleTableUUID, Base):
 
 
 class UserRole(SQLAlchemyBaseUserRoleTableUUID, Base):
-    if TYPE_CHECKING:
-        user_id: UUID
-    else:
-        user_id: Mapped[UUID] = mapped_column("user", ForeignKey("user.id"))
+    pass
 
 
 class AccessRight(SQLAlchemyBaseAccessRightUUID, Base):
     pass
 
 
-class UserAccessRight(SQLAlchemyBaseUserAccessRightTableUUID, Base):
-    if TYPE_CHECKING:
-        role_id: UUID
-
-    else:
-        role_id: Mapped[UUID] = mapped_column("role", ForeignKey("role.id"))
+class RoleAccessRight(SQLAlchemyBaseRoleAccessRightTableUUID, Base):
+    pass
 
 
 engine = create_async_engine(DATABASE_URL)
@@ -125,7 +118,7 @@ async def get_access_rights_db(
     yield SQLAlchemyAccessRightDatabase(session, AccessRight)
 
 
-async def get_user_access_right_db(
+async def get_role_access_right_db(
     session: AsyncSession = Depends(get_async_session),
 ):
-    yield SQLAlchemyUserAccessRightDatabase(session, UserAccessRight)
+    yield SQLAlchemyRoleAccessRightDatabase(session, RoleAccessRight)

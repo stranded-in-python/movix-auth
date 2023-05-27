@@ -73,8 +73,8 @@ class SQLAlchemyBaseUserRoleTableUUID:
     __tablename__ = "user_role"
 
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    user_id: mapped_column(Integer, ForeignKey("user.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
-    role_id: mapped_column(Integer, ForeignKey("role.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
+    user_id: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("user.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
+    role_id: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("role.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
 
 
 class SQLAlchemyUserRoleDatabase:

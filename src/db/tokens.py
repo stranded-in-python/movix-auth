@@ -11,13 +11,15 @@ from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
 from db.generics import GUID, TIMESTAMPAware, now_utc
 
+UUID_ID = uuid.UUID
 
 class SQLAlchemyBaseAccessTokenTable(Generic[ID]):
     """Base SQLAlchemy access token table definition."""
 
-    __tablename__ = "accesstoken"
+    __tablename__ = "access_token"
 
     if TYPE_CHECKING:  # pragma: no cover
+        id: ID
         token: str
         created_at: datetime
         user_id: ID
@@ -30,13 +32,14 @@ class SQLAlchemyBaseAccessTokenTable(Generic[ID]):
 
 class SQLAlchemyBaseAccessTokenTableUUID(SQLAlchemyBaseAccessTokenTable[uuid.UUID]):
     if TYPE_CHECKING:  # pragma: no cover
+        id: uuid.UUID
         user_id: uuid.UUID
     else:
-
+        id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
         @declared_attr
         def user_id(cls) -> Mapped[GUID]:
             return mapped_column(
-                GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False, index=True
+                GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False,
             )
 
 

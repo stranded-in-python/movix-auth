@@ -69,32 +69,32 @@ class SQLAlchemyAccessRightDatabase:
         return results.unique().scalar_one_or_none()
 
 
-class SQLAlchemyBaseUserAccessRightTableUUID:
-    __tablename__ = "user_access_right"
+class SQLAlchemyBaseRoleAccessRightTableUUID:
+    __tablename__ = "role_access_right"
 
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    user_id: mapped_column(Integer, ForeignKey("user.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
-    access_right_id: mapped_column(Integer, ForeignKey("access_right.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
+    role_id: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("role.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
+    access_right_id: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("access_right.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
 
 
-class SQLAlchemyUserAccessRightDatabase:
+class SQLAlchemyRoleAccessRightDatabase:
     session: AsyncSession
-    user_access_right_table: Type[UARP]
+    role_access_right_table: Type[UARP]
 
     def __init__(
         self,
         session: AsyncSession,
-        user_access_right_table: Type[UARP]
+        role_access_right_table: Type[UARP]
         
     ):
         self.session = session
-        self.user_access_right_table = user_access_right_table
+        self.role_access_right_table = role_access_right_table
 
-    async def get_user_access_right(self, user_id: ID, access_right_id: ID) -> Optional[UARP]:
-        statement = select(self.user_access_right_table).where(
-                                        (self.user_access_right_table.user_id == user_id) &
-                                        self.user_access_right_table.access_right_id == access_right_id)
-        return self._get_user_access_right(statement)
+    async def get_user_access_right(self, role_id: ID, access_right_id: ID) -> Optional[UARP]:
+        statement = select(self.role_access_right_table).where(
+                                        (self.role_access_right_table.role_id == role_id) &
+                                        self.role_access_right_table.access_right_id == access_right_id)
+        return self._get_role_access_right(statement)
     
     async def update(self, access_right: UARP, update_dict: Dict[str, Any]) -> UARP:
         for key, value in update_dict.items():
@@ -107,10 +107,10 @@ class SQLAlchemyUserAccessRightDatabase:
         await self.session.delete(access_right)
         await self.session.commit()
 
-    async def get_all_access_rights_of_user(self, user_id: ID) -> Optional[list[UARP]]:
-        statement = select(self.user_access_right_table).where(self.user_access_right_table.user_id == user_id)
-        return await list(self._get_user_access_right(statement)) # ?    
+    async def get_all_access_rights_of_user(self, role_id: ID) -> Optional[list[UARP]]:
+        statement = select(self.role_access_right_table).where(self.role_access_right_table.role_id == role_id)
+        return await list(self._get_role_access_right(statement)) # ?    
 
-    async def _get_user_access_right(self, statement: Select) -> Optional[UARP]:
+    async def _get_role_access_right(self, statement: Select) -> Optional[UARP]:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
