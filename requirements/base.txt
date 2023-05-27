@@ -9,4 +9,5 @@ uvicorn==0.21.1
 httpx==0.24.0
 python-multipart==0.0.6
 bcrypt==4.0.1
+passlib==1.7.4
 uvloop==0.17.0 ; sys_platform != "win32" and implementation_name == "cpython"

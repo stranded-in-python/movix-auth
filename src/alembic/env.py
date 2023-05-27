@@ -20,7 +20,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 from app.db import Base
-from db.users import SQLAlchemyBaseUserTable
+# from db.users import SQLAlchemyBaseUserTable
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 # target_metadata = None
@@ -34,7 +34,7 @@ def get_url():
     password = os.getenv("POSTGRES_PASSWORD", "qweasd123")
     server = os.getenv("POSTGRES_SERVER", "localhost:5434")
     db = os.getenv("POSTGRES_DB", "yamp_movies_db")
-    return f"postgresql://{user}:{password}@{server}/{db}"
+    return f"postgresql+asyncpg://{user}:{password}@{server}/{db}"
 
 
 def include_object(object, name, type_, reflected, compare_to):

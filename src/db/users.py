@@ -3,7 +3,7 @@ import uuid
 from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type
 
 from .base import BaseUserDatabase
-from ..models import ID, UP
+from models import ID, UP
 from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column

@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey, Integer, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
-from ..models import ID, ARP, UARP
+from models import ID, ARP, UARP
 from db.generics import GUID
 
 UUID_ID = uuid.UUID
