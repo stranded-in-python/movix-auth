@@ -18,7 +18,7 @@ class SQLAlchemyBaseRoleTable(Generic[ID]):
 
     id: ID
     name: Mapped[str] = mapped_column(
-            String(length=100), nullable=False
+            String(length=100), nullable=False, index=True
         )
 
 class SQLAlchemyBaseRoleTableUUID(SQLAlchemyBaseRoleTable[UUID_ID]):
@@ -73,8 +73,8 @@ class SQLAlchemyBaseUserRoleTableUUID:
     __tablename__ = "user_role"
 
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    user_id: mapped_column(Integer, ForeignKey("user.id", ondelete="cascade", onupdate="cascade"), nullable=False)
-    role_id: mapped_column(Integer, ForeignKey("role.id", ondelete="cascade", onupdate="cascade"), nullable=False)
+    user_id: mapped_column(Integer, ForeignKey("user.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
+    role_id: mapped_column(Integer, ForeignKey("role.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
 
 
 class SQLAlchemyUserRoleDatabase:

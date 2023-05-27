@@ -36,7 +36,7 @@ class SQLAlchemyBaseAccessTokenTableUUID(SQLAlchemyBaseAccessTokenTable[uuid.UUI
         @declared_attr
         def user_id(cls) -> Mapped[GUID]:
             return mapped_column(
-                GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False
+                GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False, index=True
             )
 
 

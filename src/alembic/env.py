@@ -28,7 +28,7 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 def get_url():
-    database_adapter = os.getenv("DATABASE_ADAPTER", "yamp_dummy")
+    database_adapter = os.getenv("DATABASE_ADAPTER", "postgresql")
     user = os.getenv("PGUSER", "yamp_dummy")
     password = os.getenv("PGPASSWORD", "qweasd123")
     host = os.getenv("PGHOST", "localhost")

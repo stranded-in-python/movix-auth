@@ -14,11 +14,11 @@ UUID_ID = uuid.UUID
 class SQLAlchemyBaseAccessRightTable(Generic[ID]):
     """Base SQLAlchemy access_right table definition."""
 
-    __tablename__ = "access_rights"
+    __tablename__ = "access_right"
 
     id: ID
     name: Mapped[str] = mapped_column(
-            String(length=100), nullable=False
+            String(length=100), nullable=False, index=True
         )
 
 class SQLAlchemyBaseAccessRightUUID(SQLAlchemyBaseAccessRightTable[UUID_ID]):
@@ -73,8 +73,8 @@ class SQLAlchemyBaseUserAccessRightTableUUID:
     __tablename__ = "user_access_right"
 
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    user_id: mapped_column(Integer, ForeignKey("user.id", ondelete="cascade", onupdate="cascade"), nullable=False)
-    access_right_id: mapped_column(Integer, ForeignKey("access_right.id", ondelete="cascade", onupdate="cascade"), nullable=False)
+    user_id: mapped_column(Integer, ForeignKey("user.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
+    access_right_id: mapped_column(Integer, ForeignKey("access_right.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
 
 
 class SQLAlchemyUserAccessRightDatabase:
