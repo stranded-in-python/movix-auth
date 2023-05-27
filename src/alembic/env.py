@@ -1,11 +1,12 @@
 import os
-
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+from core.config import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -30,11 +31,17 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 def get_url():
-    user = os.getenv("POSTGRES_USER", "yamp_dummy")
-    password = os.getenv("POSTGRES_PASSWORD", "qweasd123")
-    server = os.getenv("POSTGRES_SERVER", "localhost:5434")
-    db = os.getenv("POSTGRES_DB", "yamp_movies_db")
-    return f"postgresql://{user}:{password}@{server}/{db}"
+    database_adapter = os.getenv("DATABASE_ADAPTER", "yamp_dummy")
+    user = os.getenv("PGUSER", "yamp_dummy")
+    password = os.getenv("PGPASSWORD", "qweasd123")
+    host = os.getenv("PGHOST", "localhost")
+    port = os.getenv("PGPORT", "5434")
+    db = os.getenv("PGDATABASE", "yamp_movies_db")
+
+    return f"{database_adapter}:" \
+        f"//{user}:{password}" \
+        f"@{host}:{port}/{db}"
+    # return f"{settings.database_url}"
 
 
 def include_object(object, name, type_, reflected, compare_to):

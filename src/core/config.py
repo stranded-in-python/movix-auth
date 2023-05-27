@@ -1,7 +1,6 @@
 import os
 from logging import config as logging_config
 
-from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseSettings
 
 from core.logger import LOG_LEVEL, get_logging_config
@@ -21,8 +20,20 @@ class Settings(BaseSettings):
     cache_expiration_in_seconds: int = 300
 
     # Настройки PSQL
-    database_url: str = 'postgresql+asyncpg://yamp_dummy:qweasd123@localhost:5434/yamp_movies_db'
-
+    pghost: str = "postgres"
+    pgport: str = "5432"
+    pgdb: str = "yamp_movies_db"
+    pguser: str = "yamp_dummy"
+    pgpassword: str = "qweasd123"
+    database_adapter: str = "postgresql"
+    database_sqlalchemy_adapter: str = "postgresql+asyncpg"
+    database_url: str = f"{database_adapter}:" \
+                          f"//{pguser}:{pgpassword}" \
+                          f"@{pghost}:{pgport}/{pgdb}"
+    database_url_async: str = f"{database_sqlalchemy_adapter}:" \
+                        f"//{pguser}:{pgpassword}" \
+                        f"@{pghost}:{pgport}/{pgdb}"
+    # DATABASE_URL: str = 'postgresql+asyncpg://yamp_dummy:qweasd123@localhost:5434/yamp_movies_db'
     # Параметры аутентификации
     reset_password_token_secret: str = "SECRET"
     verification_token_secret: str = "SECRET"
@@ -31,15 +42,6 @@ class Settings(BaseSettings):
     base_dir = os.path.dirname(os.path.dirname(__file__))
 
     log_level: str = LOG_LEVEL
-
-
-class AuthJWTSettings(BaseSettings):
-    authjwt_secret_key: str = "secret"
-
-
-@AuthJWT.load_config
-def get_config():
-    return AuthJWTSettings()
 
 
 settings = Settings()

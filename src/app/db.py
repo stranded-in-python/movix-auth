@@ -3,26 +3,24 @@ from typing import AsyncGenerator, TYPE_CHECKING
 
 from fastapi import Depends
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
-from sqlalchemy.sql import Select
+from sqlalchemy import ForeignKey, String, MetaData
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 
 from core.config import settings
-from db.access_rights import SQLAlchemyBaseAccessRightTableUUID, SQLAlchemyAccessRightDatabase
-from db.roles import SQLAlchemyBaseRoleTableUUID, SQLAlchemyRoleDatabase
+from db.access_rights import SQLAlchemyAccessRightDatabase
+from db.roles import SQLAlchemyRoleDatabase
 from db.users import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase, SQLAlchemyBaseSignInHistoryTableUUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = settings.database_url
-# TODO Упаковать в env или settings
-
+DATABASE_URL = settings.database_url_async
 UUID = uuid.UUID
+metadata_obj = MetaData(schema="users")
 
 
 class Base(DeclarativeBase):
-    pass
+    metadata = metadata_obj
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
@@ -49,7 +47,6 @@ class SignInHistory(SQLAlchemyBaseSignInHistoryTableUUID, Base):
 
     else:
         user_id: Mapped[UUID] = mapped_column("user", ForeignKey("user.id"))
-
 
 
 class Role:

@@ -31,10 +31,17 @@ sys.exit(0)
 END
 }
 
+migrate_to_head() {
+  alembic upgrade head
+}
+
+
 until postgres_ready; do
   >&2 echo 'Waiting for PostgreSQL to become available...'
   sleep 1
 done
 >&2 echo 'PostgreSQL is available'
+
+migrate_to_head;
 
 exec "$@"

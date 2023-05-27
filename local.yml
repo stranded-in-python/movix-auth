@@ -16,9 +16,14 @@ services:
     ports:
       - "5434:5432"
 
-  redis:
-    image: redis:7.2-rc-bullseye
-    volumes:
-      - redis_data_local:/data
+  auth:
+    build:
+      dockerfile: ./compose/local/auth/Dockerfile
+    env_file:
+      - ./.envs/.local/.postgres
+      - ./.envs/.local/.auth
+    depends_on:
+      - postgres
+    command: "/start"
     ports:
-      - "6379:6379"
+      - "8001:8000"
