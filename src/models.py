@@ -59,14 +59,14 @@ class AccessRightProtocol(Protocol[ID]):
 
 ARP = TypeVar("ARP", bound=AccessRightProtocol)
 
-class UserAccessRightProtocol(Protocol[ID]):
-    """User/Role protocol that ORM model should follow."""
+class RoleAccessRightProtocol(Protocol[ID]):
+    """Role/AccessRight protocol that ORM model should follow."""
 
     id: ID
     user_id: ID
     access_right_id: ID
 
-UARP = TypeVar("UARP", bound=UserAccessRightProtocol)
+RARP = TypeVar("RARP", bound=RoleAccessRightProtocol)
 
 class SignInHistoryEvent(Protocol[ID]):
     id: ID
@@ -77,6 +77,18 @@ class SignInHistoryEvent(Protocol[ID]):
 
 SIHE = TypeVar("SIHE", bound=SignInHistoryEvent)
 
+class AccessTokenProtocol(Protocol[Protocol.ID]):
+    """Access token protocol that ORM model should follow."""
+
+    token: str
+    user_id: ID
+    created_at: datetime
+
+    def __init__(self, *args, **kwargs) -> None:
+        ...  # pragma: no cover
+
+
+AP = TypeVar("AP", bound=AccessTokenProtocol)
 
 class UUIDIDMixin:
     def parse_id(self, value: Any) -> UUID:

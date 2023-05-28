@@ -7,6 +7,7 @@ from sqlalchemy.sql import Select
 
 from models import ID, RP, URP
 from db.generics import GUID
+from db.base import BaseRoleDatabase, BaseUserRoleDatabase
 
 UUID_ID = uuid.UUID
 
@@ -25,7 +26,7 @@ class SQLAlchemyBaseRoleTableUUID(SQLAlchemyBaseRoleTable[UUID_ID]):
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
 
 
-class SQLAlchemyRoleDatabase:
+class SQLAlchemyRoleDatabase(BaseRoleDatabase):
     session: AsyncSession
     user_table: Type[RP]
 
@@ -41,7 +42,7 @@ class SQLAlchemyRoleDatabase:
         statement = select(self.role_table)
         return await list(self._get_role(statement)) # ?
 
-    async def get_by_id(self, role_id: ID) -> Optional[RP]:
+    async def get(self, role_id: ID) -> Optional[RP]:
         statement = select(self.role_table).where(self.role_table.id == role_id)
         return await self._get_role(statement)
 
@@ -77,7 +78,7 @@ class SQLAlchemyBaseUserRoleTableUUID:
     role_id: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("role.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
 
 
-class SQLAlchemyUserRoleDatabase:
+class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase):
     session: AsyncSession
     user_role_table: Type[URP]
 
@@ -90,11 +91,18 @@ class SQLAlchemyUserRoleDatabase:
         self.session = session
         self.user_role_table = user_role_table
 
-    async def get_user_role(self, user_id: ID, role_id: ID) -> Optional[URP]:
+    async def get(self, user_id: ID, role_id: ID) -> Optional[URP]:
         statement = select(self.role_table).where(
                                         (self.user_role_table.user_id == user_id) &
                                         self.user_role_table.role_id == role_id)
         return self._get_user_role(statement)
+    
+    async def create(self, user_role: URP, create_dict: Dict[str, Any]) -> URP:
+        for key, value in create_dict.items():
+            setattr(user_role, key, value)
+        self.session.add(user_role)
+        await self.session.commit()
+        return user_role
     
     async def update(self, user_role: URP, update_dict: Dict[str, Any]) -> URP:
         for key, value in update_dict.items():
@@ -102,7 +110,7 @@ class SQLAlchemyUserRoleDatabase:
         self.session.add(user_role)
         await self.session.commit()
         return user_role
-
+    
     async def delete(self, user_role: URP) -> None:
         await self.session.delete(user_role)
         await self.session.commit()
