@@ -30,5 +30,5 @@ class ErrorCode(str, Enum):
 
     # Roles
     UPDATE_ROLE_NAME_ALREADY_EXISTS = "UPDATE_ROLE_NAME_ALREADY_EXISTS"
-
+    ROLE_IS_NOT_EXISTS = "ROLE_IS_NOT_EXISTS"
     # Access rights

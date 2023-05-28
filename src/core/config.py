@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     cache_expiration_in_seconds: int = 300
 
     # Настройки PSQL
-    pghost: str = "postgres"
-    pgport: str = "5432"
+    pghost: str = "localhost"
+    pgport: str = "5434"
     pgdb: str = "yamp_movies_db"
     pguser: str = "yamp_dummy"
     pgpassword: str = "qweasd123"

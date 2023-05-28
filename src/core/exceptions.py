@@ -43,4 +43,3 @@ class RoleNotExists(AppException):
 
 class RoleAlreadyExists(AppException):
     pass
-

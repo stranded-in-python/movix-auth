@@ -1,15 +1,17 @@
 import uuid
-from typing import Any, Dict, Generic, Optional, Type
+from typing import Any, Dict, Generic, Optional, Type, TypeVar
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey, Integer, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
+from core.pagination import PaginateQueryParams
+from db.base import BaseRoleDatabase
 from models import ID, RP, URP
 from db.generics import GUID
 
 UUID_ID = uuid.UUID
-
+TRow = TypeVar("TRow")
 
 class SQLAlchemyBaseRoleTable(Generic[ID]):
     """Base SQLAlchemy roles table definition."""
@@ -25,7 +27,7 @@ class SQLAlchemyBaseRoleTableUUID(SQLAlchemyBaseRoleTable[UUID_ID]):
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
 
 
-class SQLAlchemyRoleDatabase:
+class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
     session: AsyncSession
     user_table: Type[RP]
 
@@ -37,9 +39,21 @@ class SQLAlchemyRoleDatabase:
         self.session = session
         self.role_table = role_table
 
-    async def get_all_roles(self) -> Optional[list[RP]]:
+    async def search(
+            self,
+            pagination_params: PaginateQueryParams,
+            filter_param: str | None = None,
+    ) -> list[TRow]:
         statement = select(self.role_table)
-        return await list(self._get_role(statement)) # ?
+        if filter_param:
+            statement.where(self.role_table.name == filter_param)
+
+        statement.limit(pagination_params.page_size)
+        statement.offset(pagination_params.page_number * pagination_params.page_size)
+
+        results = await self.session.execute(statement)
+
+        return results.fetchall()
 
     async def get_by_id(self, role_id: ID) -> Optional[RP]:
         statement = select(self.role_table).where(self.role_table.id == role_id)

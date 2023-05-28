@@ -37,6 +37,7 @@ class APIRoles(Generic[models.RP, models.ID]):
         """
         return get_roles_router(
             self.get_user_manager,
+            self.get_role_manager,
             role_schema,
             role_update_schema,
             self.authenticator

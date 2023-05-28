@@ -4,6 +4,7 @@ from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
 from models import ID, UP, RP, ARP, SIHE
 
+TRow = t.TypeVar("TRow")
 
 class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
     """Base adapter for retrieving, creating and updating users from a database."""
@@ -36,13 +37,13 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
         """Record in users sigh-in history"""
         raise NotImplementedError()
 
-    async def get_sign_in_history(self, user_id: ID, pagination_params: PaginateQueryParams):
+    async def get_sign_in_history(self, user_id: ID, pagination_params: PaginateQueryParams) -> list[TRow]:
         """Get recorded events in users sigh-in history"""
         raise NotImplementedError()
 
 
 class BaseRoleDatabase(t.Generic[RP, ID]):
-    async def get(self, role_id: ID) -> t.Optional[RP]:
+    async def get_by_id(self, role_id: ID) -> t.Optional[RP]:
         """Get a role by id."""
         raise NotImplementedError()
 
@@ -57,6 +58,15 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
     async def delete(self, role_id: ID) -> None:
         """Delete a role."""
         raise NotImplementedError()
+
+    async def search(
+            self,
+            pagination_params: PaginateQueryParams,
+            filter_param: str | None = None
+    ) -> list[TRow]:
+        """Delete a role."""
+        raise NotImplementedError()
+
 
 
 class BaseAccessRightDatabase(t.Generic[ARP, ID]):

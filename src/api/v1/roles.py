@@ -32,6 +32,7 @@ def get_roles_router(
     @router.post(
         "/roles",
         response_model=role_schema,
+        status_code=status.HTTP_201_CREATED,
         summary="Create a role",
         description="Create a new item to the role directory",
         response_description="Role entity",
@@ -56,9 +57,34 @@ def get_roles_router(
                 detail=ErrorCode.UPDATE_ROLE_NAME_ALREADY_EXISTS,
             )
 
+    @router.get(
+        "/roles/{role_id}",
+        response_model=role_schema,
+        summary="Get a role",
+        description="Get a item from the role directory",
+        response_description="Role entity",
+        tags=['Roles'],
+    )
+    async def get_role(
+            role_id: UUID,
+            role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+    ) -> role_schema:
+        # TODO Проверить права доступа у пользователя
+        try:
+            role = await role_manager.get(role_id)
+            return role_schema.from_orm(role)
+
+        except exceptions.RoleNotExists:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                detail=ErrorCode.ROLE_IS_NOT_EXISTS,
+            )
+
+
     @router.put(
         "/roles/{role_id}",
         response_model=role_schema,
+        status_code=status.HTTP_201_CREATED,
         summary="Update a role",
         description="Update a role",
         response_description="Update role entity",
@@ -95,6 +121,7 @@ def get_roles_router(
     @router.delete(
         "/roles/{role_id}",
         response_model=role_schema,
+        status_code=status.HTTP_200_OK,
         summary="Delete a role",
         description="Delete a role",
         response_description="Deleted role entity",
@@ -111,14 +138,14 @@ def get_roles_router(
             role = await role_manager.get(role_id)
 
             role = await role_manager.delete(
-                role.id, request=request
+                role, request=request
             )
             return role_schema.from_orm(role)
 
         except exceptions.RoleNotExists:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
-                detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+                detail=ErrorCode.ROLE_IS_NOT_EXISTS,
             )
 
     @router.get(
@@ -129,9 +156,9 @@ def get_roles_router(
         response_description="Role entities",
         tags=['Roles'],
     )
-    async def get_all(
-            filter_param: str | None = None,
+    async def search(
             page_params: PaginateQueryParams = Depends(PaginateQueryParams),
+            filter_param: str | None = None,
             role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
     ) -> list[role_schema]:
 
@@ -139,7 +166,7 @@ def get_roles_router(
 
         return list(
             role_schema.from_orm(role[0])
-            for role in await role_manager.get_roles(filter_param, page_params)
+            for role in await role_manager.search(page_params, filter_param)
         )
 
     @router.get(

@@ -115,7 +115,7 @@ class SQLAlchemyBaseOAuthAccountTableUUID(SQLAlchemyBaseOAuthAccountTable[UUID_I
             )
 
 
-class SQLAlchemyUserDatabase(Generic[UP, ID, SIHE], BaseUserDatabase[UP, ID, SIHE]):
+class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
     """
     Database adapter for SQLAlchemy.
 

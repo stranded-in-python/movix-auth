@@ -6,6 +6,7 @@ import models
 import schemas
 from core import exceptions
 from core.dependency_types import DependencyCallable
+from core.pagination import PaginateQueryParams
 from db.base import BaseRoleDatabase
 
 
@@ -45,7 +46,7 @@ class BaseRoleManager(
         return created_role
 
     async def get(self, role_id: models.ID) -> models.RP:
-        role = await self.role_db.get(role_id)
+        role = await self.role_db.get_by_id(role_id)
 
         if role is None:
             raise exceptions.RoleNotExists()
@@ -69,13 +70,24 @@ class BaseRoleManager(
             self,
             role: models.RP,
             request: Optional[Request] = None,
-    ) -> None:
+    ) -> models.RP:
 
         await self.on_before_delete(role, request)
 
         await self.role_db.delete(role.id)
 
         await self.on_after_delete(role, request)
+
+        return role
+
+    async def search(
+            self,
+            pagination_params: PaginateQueryParams,
+            filter_param: str | None = None,
+    ) -> models.RP:
+        roles = await self.role_db.search(pagination_params, filter_param)
+
+        return roles
 
     async def on_after_create(
             self, user: models.UP, request: Optional[Request] = None
