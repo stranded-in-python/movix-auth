@@ -42,20 +42,20 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
 
 
 class BaseRoleDatabase(t.Generic[RP, ID]):
-    async def get(self, user_id: ID) -> t.Optional[UP]:
-        """Get a single user by id."""
+    async def get(self, role_id: ID) -> t.Optional[RP]:
+        """Get a role by id."""
         raise NotImplementedError()
 
-    async def create(self, create_dict: dict[str, t.Any]) -> UP:
-        """Create a user."""
+    async def create(self, create_dict: dict[str, t.Any]) -> RP:
+        """Create a role."""
         raise NotImplementedError()
 
-    async def update(self, user: UP, update_dict: dict[str, t.Any]) -> UP:
-        """Update a user."""
+    async def update(self, role: RP, update_dict: dict[str, t.Any]) -> RP:
+        """Update a role."""
         raise NotImplementedError()
 
-    async def delete(self, user: UP) -> None:
-        """Delete a user."""
+    async def delete(self, role_id: ID) -> None:
+        """Delete a role."""
         raise NotImplementedError()
 
 

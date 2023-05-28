@@ -1,17 +1,22 @@
 from typing import Type
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 
 import models as models
-import schemas
+import schemas as schemas
 from authentication import Authenticator
+from core import exceptions
 from core.pagination import PaginateQueryParams
+from services.role import RoleManagerDependency, BaseRoleManager
 from services.user import UserManagerDependency
+
+from api.v1.common import ErrorCode, ErrorModel
 
 
 def get_roles_router(
     get_user_manager: UserManagerDependency[models.UP, models.ID],
+    get_role_manager: RoleManagerDependency[models.RP, models.ID],
     role_schema: Type[schemas.R],
     role_update_schema: Type[schemas.RU],
     authenticator: Authenticator
@@ -32,33 +37,60 @@ def get_roles_router(
         response_description="Role entity",
         tags=['Roles'],
     )
-    async def create_role(params: role_update_schema) -> role_schema:
-        ...
+    async def create_role(
+            request: Request,
+            role_create: role_update_schema,
+            role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+    ) -> role_schema:
+        # TODO Проверить права доступа у пользователя
 
+        try:
+            role = await role_manager.create(
+                role_create, request=request
+            )
+            return role_schema.from_orm(role)
 
-    @router.get(
-        "/roles",
-        response_model=list[role_schema],
-        summary="View all roles",
-        description="View all roles",
-        response_description="Role entities",
-        tags=['Roles'],
-    )
-    async def get_all(pag_params: PaginateQueryParams = Depends(PaginateQueryParams)) -> list[role_schema]:
-        ...
-
+        except exceptions.RoleAlreadyExists:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=ErrorCode.UPDATE_ROLE_NAME_ALREADY_EXISTS,
+            )
 
     @router.put(
         "/roles/{role_id}",
         response_model=role_schema,
-        summary="Change a role",
-        description="Change a role",
-        response_description="Changed role entity",
+        summary="Update a role",
+        description="Update a role",
+        response_description="Update role entity",
         tags=['Roles'],
     )
-    async def update_role(role_id: UUID, params: role_update_schema) -> role_schema:
-        ...
+    async def update_role(
+            request: Request,
+            role_id: UUID,
+            role_update: role_update_schema,
+            role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+    ) -> role_schema:
+        try:
+            # TODO Проверить доступ пользователя
 
+            role = await role_manager.get(role_id)
+
+            role = await role_manager.update(
+                role_update, role, request=request
+            )
+            return role_schema.from_orm(role)
+
+        except exceptions.RoleNotExists:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+            )
+
+        except exceptions.RoleAlreadyExists:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=ErrorCode.UPDATE_ROLE_NAME_ALREADY_EXISTS,
+            )
 
     @router.delete(
         "/roles/{role_id}",
@@ -68,9 +100,47 @@ def get_roles_router(
         response_description="Deleted role entity",
         tags=['Roles'],
     )
-    async def delete_role(role_id: models.ID) -> role_schema:
-        ...
+    async def delete_role(
+            request: Request,
+            role_id: UUID,
+            role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+    ) -> role_schema:
+        try:
+            # TODO Проверить доступ пользователя
 
+            role = await role_manager.get(role_id)
+
+            role = await role_manager.delete(
+                role.id, request=request
+            )
+            return role_schema.from_orm(role)
+
+        except exceptions.RoleNotExists:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+            )
+
+    @router.get(
+        "/roles",
+        response_model=list[role_schema],
+        summary="View all roles",
+        description="View all roles",
+        response_description="Role entities",
+        tags=['Roles'],
+    )
+    async def get_all(
+            filter_param: str | None = None,
+            page_params: PaginateQueryParams = Depends(PaginateQueryParams),
+            role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+    ) -> list[role_schema]:
+
+        # TODO Проверить права доступа у пользователя
+
+        return list(
+            role_schema.from_orm(role[0])
+            for role in await role_manager.get_roles(filter_param, page_params)
+        )
 
     @router.get(
         "/users/{user_id}/roles/{role_id}",

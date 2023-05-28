@@ -177,7 +177,9 @@ class BaseUserManager(Generic[models.UP, models.ID]):
             updated_user_data = user_update.create_update_dict()
         else:
             updated_user_data = user_update.create_update_dict_superuser()
+
         updated_user = await self._update(user, updated_user_data)
+
         await self.on_after_update(updated_user, updated_user_data, request)
         return updated_user
 

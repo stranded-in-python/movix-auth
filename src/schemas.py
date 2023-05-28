@@ -15,8 +15,6 @@ class CreateUpdateDictModel(BaseModel):
             exclude_unset=True,
             exclude={
                 "id",
-                "is_superuser",
-                "is_active",
             },
         )
 
@@ -24,7 +22,19 @@ class CreateUpdateDictModel(BaseModel):
         return self.dict(exclude_unset=True, exclude={"id"})
 
 
-class BaseUser(Generic[ID], CreateUpdateDictModel):
+class CreateUpdateUserDictModel(CreateUpdateDictModel):
+    def create_update_dict(self):
+        return self.dict(
+            exclude_unset=True,
+            exclude={
+                "id",
+                "is_superuser",
+                "is_active",
+            },
+        )
+
+
+class BaseUser(Generic[ID], CreateUpdateUserDictModel):
     """Base User model."""
 
     id: ID
@@ -38,7 +48,7 @@ class BaseUser(Generic[ID], CreateUpdateDictModel):
     # TODO is self.from_orm method needed?
 
 
-class BaseUserCreate(CreateUpdateDictModel):
+class BaseUserCreate(CreateUpdateUserDictModel):
     username: str
     password: str
     email: str
@@ -48,7 +58,7 @@ class BaseUserCreate(CreateUpdateDictModel):
     is_superuser: Optional[bool] = False
 
 
-class BaseUserUpdate(CreateUpdateDictModel):
+class BaseUserUpdate(CreateUpdateUserDictModel):
     password: Optional[str]
     email: Optional[EmailStr]
     is_active: Optional[bool]
@@ -60,7 +70,7 @@ UC = TypeVar("UC", bound=BaseUserCreate)
 UU = TypeVar("UU", bound=BaseUserUpdate)
 
 
-class BaseSignInHistoryEvent(BaseModel):
+class BaseSignInHistoryEvent(CreateUpdateDictModel):
     timestamp: datetime.datetime | None
     fingerprint: str | None
 

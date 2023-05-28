@@ -1,38 +1,46 @@
 from typing import Any
 
 
-class FastAPIUsersException(Exception):
+class AppException(Exception):
     pass
 
 
-class InvalidID(FastAPIUsersException):
+class InvalidID(AppException):
     pass
 
 
-class UserAlreadyExists(FastAPIUsersException):
+class UserAlreadyExists(AppException):
     pass
 
 
-class UserNotExists(FastAPIUsersException):
+class UserNotExists(AppException):
     pass
 
 
-class UserInactive(FastAPIUsersException):
+class UserInactive(AppException):
     pass
 
 
-class UserAlreadyVerified(FastAPIUsersException):
+class UserAlreadyVerified(AppException):
     pass
 
 
-class InvalidVerifyToken(FastAPIUsersException):
+class InvalidVerifyToken(AppException):
     pass
 
 
-class InvalidResetPasswordToken(FastAPIUsersException):
+class InvalidResetPasswordToken(AppException):
     pass
 
 
-class InvalidPasswordException(FastAPIUsersException):
+class InvalidPasswordException(AppException):
     def __init__(self, reason: Any) -> None:
         self.reason = reason
+
+
+class RoleNotExists(AppException):
+    pass
+
+class RoleAlreadyExists(AppException):
+    pass
+
