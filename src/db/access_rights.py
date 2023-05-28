@@ -8,6 +8,7 @@ from sqlalchemy.sql import Select
 from models import ID, ARP, RARP
 from db.generics import GUID
 from db.base import BaseAccessRightDatabase, BaseRoleAccessRightDatabase
+from cache.cache import cache_decorator
 
 UUID_ID = uuid.UUID
 
@@ -38,10 +39,12 @@ class SQLAlchemyAccessRightDatabase(BaseAccessRightDatabase):
         self.session = session
         self.access_right_table = access_right_table
 
+    @cache_decorator
     async def get_all_access_rights(self) -> Optional[list[ARP]]:
         statement = select(self.access_right_table)
         return await list(self._get_access_right(statement)) # ?
 
+    @cache_decorator
     async def get(self, access_right_id: ID) -> Optional[ARP]:
         statement = select(self.access_right_table).where(self.access_right_table.id == access_right_id)
         return await self._get_access_right(statement)
@@ -91,6 +94,7 @@ class SQLAlchemyRoleAccessRightDatabase(BaseRoleAccessRightDatabase):
         self.session = session
         self.role_access_right_table = role_access_right_table
 
+    @cache_decorator
     async def get(self, role_id: ID, access_right_id: ID) -> Optional[RARP]:
         statement = select(self.role_access_right_table).where(
                                         (self.role_access_right_table.role_id == role_id) &
@@ -114,6 +118,7 @@ class SQLAlchemyRoleAccessRightDatabase(BaseRoleAccessRightDatabase):
         await self.session.delete(role_access_right)
         await self.session.commit()
 
+    @cache_decorator
     async def get_all_access_rights_of_user(self, role_id: ID) -> Optional[list[RARP]]:
         statement = select(self.role_access_right_table).where(self.role_access_right_table.role_id == role_id)
         return await list(self._get_role_access_right(statement)) # ?    

@@ -8,6 +8,7 @@ from sqlalchemy.sql import Select
 from models import ID, RP, URP
 from db.generics import GUID
 from db.base import BaseRoleDatabase, BaseUserRoleDatabase
+from cache.cache import cache_decorator
 
 UUID_ID = uuid.UUID
 
@@ -38,10 +39,12 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase):
         self.session = session
         self.role_table = role_table
 
+    @cache_decorator
     async def get_all_roles(self) -> Optional[list[RP]]:
         statement = select(self.role_table)
         return await list(self._get_role(statement)) # ?
 
+    @cache_decorator
     async def get(self, role_id: ID) -> Optional[RP]:
         statement = select(self.role_table).where(self.role_table.id == role_id)
         return await self._get_role(statement)
@@ -91,6 +94,7 @@ class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase):
         self.session = session
         self.user_role_table = user_role_table
 
+    @cache_decorator
     async def get(self, user_id: ID, role_id: ID) -> Optional[URP]:
         statement = select(self.role_table).where(
                                         (self.user_role_table.user_id == user_id) &
@@ -115,6 +119,7 @@ class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase):
         await self.session.delete(user_role)
         await self.session.commit()
 
+    @cache_decorator
     async def get_all_roles_of_user(self, user_id: ID) -> Optional[list[URP]]:
         statement = select(self.user_role_table).where(self.user_role_table.user_id == user_id)
         return await list(self._get_role(statement)) # ?    

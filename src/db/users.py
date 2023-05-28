@@ -12,6 +12,7 @@ from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 from sqlalchemy.sql import Select
 
 from db.generics import GUID
+from cache.cache import cache_decorator
 
 __version__ = "5.0.0"
 
@@ -135,16 +136,19 @@ class SQLAlchemyUserDatabase(Generic[UP, ID, SIHE], BaseUserDatabase[UP, ID, SIH
         self.user_table = user_table
         self.history_table = history_table
 
+    @cache_decorator
     async def get(self, user_id: ID) -> Optional[UP]:
         statement = select(self.user_table).where(self.user_table.id == user_id)
         return await self._get_user(statement)
 
+    @cache_decorator
     async def get_by_username(self, username: str) -> Optional[UP]:
         statement = select(self.user_table).where(
             func.lower(self.user_table.username) == func.lower(username)
         ) # TODO Fix type error
         return await self._get_user(statement)
 
+    @cache_decorator
     async def get_by_email(self, email: str) -> Optional[UP]:
         statement = select(self.user_table).where(
             func.lower(self.user_table.email) == func.lower(email)
@@ -177,6 +181,7 @@ class SQLAlchemyUserDatabase(Generic[UP, ID, SIHE], BaseUserDatabase[UP, ID, SIH
         self.session.add(event)
         await self.session.commit()
 
+    @cache_decorator
     async def get_sign_in_history(self, user_id: ID, pagination_params: PaginateQueryParams):
         statement = select(self.history_table).where(self.history_table.user_id == user_id)
         return await self._get_events(statement)
