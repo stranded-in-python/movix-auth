@@ -1,12 +1,12 @@
 import uuid
 from typing import Any, Dict, Generic, Optional, Type, TypeVar
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey, Integer, String, select
+from sqlalchemy import ForeignKey, Integer, String, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
 from core.pagination import PaginateQueryParams
-from db.base import BaseRoleDatabase
+from db.base import BaseRoleDatabase, BaseUserRoleDatabase
 from models import ID, RP, URP
 from db.generics import GUID
 
@@ -59,6 +59,11 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
         statement = select(self.role_table).where(self.role_table.id == role_id)
         return await self._get_role(statement)
 
+    async def get_by_name(self, name: str) -> Optional[RP]:
+        statement = select(self.role_table)\
+            .where(func.lower(self.role_table.name) == func.lower(name))
+        return await self._get_role(statement)
+
     async def create(self, create_dict: Dict[str, Any]) -> RP:
         role = self.role_table(**create_dict)
         self.session.add(role)
@@ -91,7 +96,7 @@ class SQLAlchemyBaseUserRoleTableUUID:
     role_id: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("role.id", ondelete="cascade", onupdate="cascade"), nullable=False, index=True)
 
 
-class SQLAlchemyUserRoleDatabase:
+class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase[URP, ID]):
     session: AsyncSession
     user_role_table: Type[URP]
 
@@ -105,26 +110,33 @@ class SQLAlchemyUserRoleDatabase:
         self.user_role_table = user_role_table
 
     async def get_user_role(self, user_id: ID, role_id: ID) -> Optional[URP]:
-        statement = select(self.role_table).where(
-                                        (self.user_role_table.user_id == user_id) &
-                                        self.user_role_table.role_id == role_id)
-        return self._get_user_role(statement)
-    
-    async def update(self, user_role: URP, update_dict: Dict[str, Any]) -> URP:
-        for key, value in update_dict.items():
-            setattr(user_role, key, value)
-        self.session.add(user_role)
-        await self.session.commit()
-        return user_role
+        statement = select(self.user_role_table)\
+            .where((self.user_role_table.user_id == user_id)
+                    & (self.user_role_table.role_id == role_id))
 
-    async def delete(self, user_role: URP) -> None:
-        await self.session.delete(user_role)
-        await self.session.commit()
-
-    async def get_all_roles_of_user(self, user_id: ID) -> Optional[list[URP]]:
-        statement = select(self.user_role_table).where(self.user_role_table.user_id == user_id)
-        return await list(self._get_role(statement)) # ?    
-
-    async def _get_user_role(self, statement: Select) -> Optional[URP]:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+    
+    async def assign_user_role(self, update_dict: Dict[str, Any]) -> URP:
+        user_role = self.user_role_table(**update_dict)
+
+        self.session.add(user_role)
+        await self.session.commit()
+
+        return user_role
+
+    async def remove_user_role(self, user_role: URP) -> None:
+        instance = await self.get_user_role(
+            user_role.user_id,
+            user_role.role_id
+        )
+
+        await self.session.delete(instance)
+        await self.session.commit()
+
+    async def get_user_roles(self, user_id: ID) -> Optional[list[URP]]:
+        statement = select(self.user_role_table)\
+            .where(self.user_role_table.user_id == user_id)
+        results = await self.session.execute(statement)
+
+        return results.fetchall()

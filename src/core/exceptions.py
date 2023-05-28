@@ -41,5 +41,14 @@ class InvalidPasswordException(AppException):
 class RoleNotExists(AppException):
     pass
 
+
 class RoleAlreadyExists(AppException):
+    pass
+
+
+class UserHaveNotRole(AppException):
+    pass
+
+
+class RoleAlreadyAssign(AppException):
     pass

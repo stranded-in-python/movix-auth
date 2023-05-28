@@ -1,5 +1,7 @@
 import uuid
 
+from pydantic import BaseModel
+
 import schemas as schemas
 
 
@@ -34,3 +36,18 @@ class RoleUpdate(schemas.BaseRoleUpdate):
 
 class RoleCreate(schemas.BaseRoleCreate):
     pass
+
+
+class UserRoleRead(schemas.BaseUserRole):
+    pass
+
+
+class UserRoleUpdate(schemas.UserRoleUpdate):
+    pass
+
+
+class ID(BaseModel):
+    id: uuid.UUID
+
+    class Config:
+        orm_mode = True

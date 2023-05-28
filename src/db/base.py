@@ -2,7 +2,7 @@ import typing as t
 
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from models import ID, UP, RP, ARP, SIHE
+from models import ID, UP, RP, ARP, SIHE, URP
 
 TRow = t.TypeVar("TRow")
 
@@ -47,6 +47,10 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
         """Get a role by id."""
         raise NotImplementedError()
 
+    async def get_by_name(self, name: str) -> t.Optional[RP]:
+        """Get a role by name"""
+        raise NotImplementedError()
+
     async def create(self, create_dict: dict[str, t.Any]) -> RP:
         """Create a role."""
         raise NotImplementedError()
@@ -67,6 +71,20 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
         """Delete a role."""
         raise NotImplementedError()
 
+
+class BaseUserRoleDatabase(t.Generic[URP, ID]):
+
+    async def assign_user_role(self, create_dict: dict[str, t.Any]) -> URP:
+        ...
+
+    async def get_user_role(self, user_id: ID, role_id: ID) -> URP | None:
+        ...
+
+    async def remove_user_role(self, user_role: URP) -> URP:
+        ...
+
+    async def get_user_roles(self, user_id: ID) -> list[URP]:
+        ...
 
 
 class BaseAccessRightDatabase(t.Generic[ARP, ID]):

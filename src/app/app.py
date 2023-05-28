@@ -7,7 +7,7 @@ from core.config import settings
 from app.users import api_users
 from app.roles import api_roles
 from app.access_rights import api_access_rights
-from app.schemas import UserCreate, UserRead, UserUpdate, EventRead, RoleRead, RoleUpdate
+import app.schemas as a_sch
 
 app = FastAPI(
     title=settings.project_name,
@@ -17,7 +17,7 @@ app = FastAPI(
 )
 
 app.include_router(
-    api_users.get_register_router(UserRead, UserCreate),
+    api_users.get_register_router(a_sch.UserRead, a_sch.UserCreate),
     tags=["register"]
 )
 app.include_router(
@@ -25,11 +25,17 @@ app.include_router(
     tags=["auth"]
 )
 app.include_router(
-    api_users.get_users_router(UserRead, UserUpdate, EventRead),
+    api_users.get_users_router(a_sch.UserRead, a_sch.UserUpdate, a_sch.EventRead),
     tags=["users"],
 )
 app.include_router(
-    api_roles.get_roles_router(RoleRead, RoleUpdate),
+    api_roles.get_roles_router(
+        a_sch.RoleRead,
+        a_sch.RoleCreate,
+        a_sch.RoleUpdate,
+        a_sch.UserRoleRead,
+        a_sch.UserRoleUpdate
+    ),
     tags=["roles"]
 )
 # app.include_router(

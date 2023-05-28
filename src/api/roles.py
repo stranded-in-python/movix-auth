@@ -27,18 +27,27 @@ class APIRoles(Generic[models.RP, models.ID]):
     def get_roles_router(
             self,
             role_schema: Type[schemas.R],
-            role_update_schema: Type[schemas.RU]
+            role_create_schema: Type[schemas.RC],
+            role_update_schema: Type[schemas.RU],
+            user_role_schema: Type[schemas.UR],
+            user_role_update_schema: Type[schemas.URU]
     ) -> APIRouter:
         """
         Return a router with routes to manage roles.
 
-        :param user_schema: Pydantic schema of a public user.
-        :param user_update_schema: Pydantic schema for updating a user.
+        :param role_schema: Pydantic schema of a role.
+        :param role_create_schema:
+        :param role_update_schema: Pydantic schema for updating a role.
+        :param user_role_schema: Pydantic schema of a user role entity
+        :param user_role_update_schema:
         """
         return get_roles_router(
             self.get_user_manager,
             self.get_role_manager,
             role_schema,
+            role_create_schema,
             role_update_schema,
+            user_role_schema,
+            user_role_update_schema,
             self.authenticator
         )

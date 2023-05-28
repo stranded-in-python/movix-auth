@@ -6,8 +6,9 @@ from pydantic import BaseModel, EmailStr
 
 import models as m
 
-ID = TypeVar("ID", bound=UUID)
-
+UserID = TypeVar("UserID", bound=UUID)
+RoleID = TypeVar("RoleID", bound=UUID)
+UserRoleID = TypeVar("UserRoleID", bound=UUID)
 
 class CreateUpdateDictModel(BaseModel):
     def create_update_dict(self):
@@ -34,10 +35,10 @@ class CreateUpdateUserDictModel(CreateUpdateDictModel):
         )
 
 
-class BaseUser(Generic[ID], CreateUpdateUserDictModel):
+class BaseUser(Generic[UserID], CreateUpdateUserDictModel):
     """Base User model."""
 
-    id: ID
+    id: UserID
     email: EmailStr
     is_active: bool = True
     is_superuser: bool = False
@@ -78,10 +79,10 @@ class BaseSignInHistoryEvent(CreateUpdateDictModel):
 SIHE = TypeVar("SIHE", bound=BaseSignInHistoryEvent)
 
 
-class BaseRole(Generic[ID], CreateUpdateDictModel):
+class BaseRole(Generic[RoleID], CreateUpdateDictModel):
     """Base Role model."""
 
-    id: m.ID
+    id: RoleID
     name: str
 
     class Config:
@@ -92,11 +93,29 @@ class BaseRoleCreate(CreateUpdateDictModel):
     name: str
 
 
-class BaseRoleUpdate(CreateUpdateDictModel):
-    id: m.ID
+class BaseRoleUpdate(Generic[RoleID], CreateUpdateDictModel):
+    id: RoleID
     name: str
 
 
 R = TypeVar("R", bound=BaseRole)
 RC = TypeVar("RC", bound=BaseRoleCreate)
 RU = TypeVar("RU", bound=BaseRoleUpdate)
+
+
+class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
+    id: UserRoleID
+    user_id: UserID
+    role_id: RoleID
+
+    class Config:
+        orm_mode = True
+
+
+class UserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
+    user_id: UserID
+    role_id: RoleID
+
+
+UR = TypeVar("UR", bound=BaseUserRole)
+URU = TypeVar("URU", bound=UserRoleUpdate)
