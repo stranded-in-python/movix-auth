@@ -178,7 +178,11 @@ class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
         await self.session.commit()
 
     async def get_sign_in_history(self, user_id: ID, pagination_params: PaginateQueryParams):
-        statement = select(self.history_table).where(self.history_table.user_id == user_id)
+        statement: Select = select(self.history_table)\
+            .where(self.history_table.user_id == user_id)\
+            .limit(pagination_params.page_size)\
+            .offset((pagination_params.page_number - 1)  * pagination_params.page_size)
+
         return await self._get_events(statement)
 
     async def _get_events(self, statement: Select):

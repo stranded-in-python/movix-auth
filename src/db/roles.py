@@ -49,7 +49,7 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
             statement.where(self.role_table.name == filter_param)
 
         statement.limit(pagination_params.page_size)
-        statement.offset(pagination_params.page_number * pagination_params.page_size)
+        statement.offset((pagination_params.page_number - 1) * pagination_params.page_size)
 
         results = await self.session.execute(statement)
 
