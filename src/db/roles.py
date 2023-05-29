@@ -9,6 +9,8 @@ from core.pagination import PaginateQueryParams
 from db.base import BaseRoleDatabase, BaseUserRoleDatabase
 from models import ID, RP, URP
 from db.generics import GUID
+from db.base import BaseRoleDatabase, BaseUserRoleDatabase
+from cache.cache import cache_decorator
 
 UUID_ID = uuid.UUID
 TRow = TypeVar("TRow")
@@ -39,6 +41,7 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
         self.session = session
         self.role_table = role_table
 
+    @cache_decorator
     async def search(
             self,
             pagination_params: PaginateQueryParams,
@@ -55,7 +58,8 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
 
         return results.fetchall()
 
-    async def get_by_id(self, role_id: ID) -> Optional[RP]:
+    @cache_decorator
+    async def get(self, role_id: ID) -> Optional[RP]:
         statement = select(self.role_table).where(self.role_table.id == role_id)
         return await self._get_role(statement)
 
@@ -137,6 +141,12 @@ class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase[URP, ID]):
     async def get_user_roles(self, user_id: ID) -> Optional[list[URP]]:
         statement = select(self.user_role_table)\
             .where(self.user_role_table.user_id == user_id)
+    @cache_decorator
+    async def get_all_roles_of_user(self, user_id: ID) -> Optional[list[URP]]:
+        statement = select(self.user_role_table).where(self.user_role_table.user_id == user_id)
+        return await list(self._get_role(statement)) # ?    
+
+    async def _get_user_role(self, statement: Select) -> Optional[URP]:
         results = await self.session.execute(statement)
 
         return results.fetchall()

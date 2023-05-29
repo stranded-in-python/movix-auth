@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
 from db.generics import GUID, TIMESTAMPAware, now_utc
+from cache.cache import cache_decorator
 
 UUID_ID = uuid.UUID
 
@@ -59,6 +60,7 @@ class SQLAlchemyAccessTokenDatabase(Generic[AP], AccessTokenDatabase[AP]):
         self.session = session
         self.access_token_table = access_token_table
 
+    @cache_decorator
     async def get_by_token(
         self, token: str, max_age: Optional[datetime] = None
     ) -> Optional[AP]:
