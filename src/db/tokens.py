@@ -6,8 +6,8 @@ from sqlalchemy import ForeignKey, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
-# from ..authentication.strategy.db.adapter import AP, AccessTokenDatabase
 from authentication.strategy.db.adapter import AP, AccessTokenDatabase
+from cache.cache import cache_decorator
 from db.generics import GUID, TIMESTAMPAware, now_utc
 from db.models import ID
 
@@ -41,7 +41,9 @@ class SQLAlchemyBaseAccessTokenTableUUID(SQLAlchemyBaseAccessTokenTable[uuid.UUI
         @declared_attr
         def user_id(cls) -> Mapped[GUID]:
             return mapped_column(
-                GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False
+                GUID,
+                ForeignKey("user.id", ondelete="cascade"),
+                nullable=False,
             )
 
 
@@ -53,10 +55,15 @@ class SQLAlchemyAccessTokenDatabase(Generic[AP], AccessTokenDatabase[AP]):
     :param access_token_table: SQLAlchemy access token model.
     """
 
-    def __init__(self, session: AsyncSession, access_token_table: Type[AP]):
+    def __init__(
+        self,
+        session: AsyncSession,
+        access_token_table: Type[AP],
+    ):
         self.session = session
         self.access_token_table = access_token_table
 
+    @cache_decorator
     async def get_by_token(
         self, token: str, max_age: Optional[datetime] = None
     ) -> Optional[AP]:

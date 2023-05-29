@@ -1,9 +1,9 @@
 import typing as t
 
-from db.models import ARP, ID, RP, SIHE, UP, URP
 
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
+from db.models import ARP, ID, RP, SIHE, UP, URP, RARP
 
 TRow = t.TypeVar("TRow")
 
@@ -68,7 +68,9 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
         raise NotImplementedError()
 
     async def search(
-        self, pagination_params: PaginateQueryParams, filter_param: str | None = None
+            self,
+            pagination_params: PaginateQueryParams,
+            filter_param: str | None = None
     ) -> list[TRow]:
         """Delete a role."""
         raise NotImplementedError()
@@ -89,20 +91,56 @@ class BaseUserRoleDatabase(t.Generic[URP, ID]):
 
 
 class BaseAccessRightDatabase(t.Generic[ARP, ID]):
-    async def get(self, user_id: ID) -> t.Optional[UP]:
+    async def get(self, access_right_id: ID) -> t.Optional[ARP]:
         """Get a single access right by id."""
         raise NotImplementedError()
 
-    async def create(self, create_dict: dict[str, t.Any]) -> UP:
+    async def create(self, create_dict: dict[str, t.Any]) -> ARP:
         """Create an access right."""
         raise NotImplementedError()
 
-    async def update(self, user: UP, update_dict: dict[str, t.Any]) -> UP:
+    async def update(self, access_right: ARP, update_dict: dict[str, t.Any]) -> ARP:
         """Update an access right."""
         raise NotImplementedError()
 
-    async def delete(self, user: UP) -> None:
-        """Delete an access right."""
+    async def delete(self, access_right_id: ID) -> None:
+        """Delete an access right by its id."""
+        raise NotImplementedError()
+
+
+class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
+    async def get(self, role_id: ID, access_right_id: ID) -> t.Optional[RARP]:
+        """Get a single access right by id."""
+        raise NotImplementedError()
+
+    async def create(self, create_dict: dict[str, t.Any]) -> RARP:
+        """Create an access right."""
+        raise NotImplementedError()
+
+    async def update(self, role_access_right: RARP, update_dict: dict[str, t.Any]) -> RARP:
+        """Update an access right."""
+        raise NotImplementedError()
+
+    async def delete(self, role_access_right: RARP) -> None:
+        """Delete an access right by its id."""
+        raise NotImplementedError()
+
+
+class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
+    async def get(self, role_id: ID, access_right_id: ID) -> t.Optional[RARP]:
+        """Get a single access right by id."""
+        raise NotImplementedError()
+
+    async def create(self, create_dict: dict[str, t.Any]) -> RARP:
+        """Create an access right."""
+        raise NotImplementedError()
+
+    async def update(self, role_access_right: RARP, update_dict: dict[str, t.Any]) -> RARP:
+        """Update an access right."""
+        raise NotImplementedError()
+
+    async def delete(self, role_access_right: RARP) -> None:
+        """Delete an access right by its id."""
         raise NotImplementedError()
 
 
@@ -110,4 +148,6 @@ RETURN_TYPE = t.TypeVar("RETURN_TYPE")
 
 UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID, SIHE]]
 BaseRoleDatabaseDependency = DependencyCallable[BaseRoleDatabase[RP, ID]]
+BaseUserRoleRoleDatabaseDependency = DependencyCallable[BaseUserRoleDatabase[URP, ID]]
 BaseAccessRightDatabaseDependency = DependencyCallable[BaseAccessRightDatabase[ARP, ID]]
+BaseRoleAccessRightDatabaseDependency = DependencyCallable[BaseRoleAccessRightDatabase[RARP, ID]]
