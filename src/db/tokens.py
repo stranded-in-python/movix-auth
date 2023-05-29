@@ -2,16 +2,17 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type
 
-# from ..authentication.strategy.db.adapter import AP, AccessTokenDatabase
-from authentication.strategy.db.adapter import AP, AccessTokenDatabase
-from models import ID
 from sqlalchemy import ForeignKey, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
+# from ..authentication.strategy.db.adapter import AP, AccessTokenDatabase
+from authentication.strategy.db.adapter import AP, AccessTokenDatabase
 from db.generics import GUID, TIMESTAMPAware, now_utc
+from db.models import ID
 
 UUID_ID = uuid.UUID
+
 
 class SQLAlchemyBaseAccessTokenTable(Generic[ID]):
     """Base SQLAlchemy access token table definition."""
@@ -36,10 +37,11 @@ class SQLAlchemyBaseAccessTokenTableUUID(SQLAlchemyBaseAccessTokenTable[uuid.UUI
         user_id: uuid.UUID
     else:
         id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+
         @declared_attr
         def user_id(cls) -> Mapped[GUID]:
             return mapped_column(
-                GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False,
+                GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False
             )
 
 
@@ -51,11 +53,7 @@ class SQLAlchemyAccessTokenDatabase(Generic[AP], AccessTokenDatabase[AP]):
     :param access_token_table: SQLAlchemy access token model.
     """
 
-    def __init__(
-        self,
-        session: AsyncSession,
-        access_token_table: Type[AP],
-    ):
+    def __init__(self, session: AsyncSession, access_token_table: Type[AP]):
         self.session = session
         self.access_token_table = access_token_table
 

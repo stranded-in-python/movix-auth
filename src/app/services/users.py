@@ -4,43 +4,37 @@ from uuid import UUID
 
 from fastapi import Depends, Request, Response
 
-import models
-from core.config import settings
-from app.auth import auth_backend
-from core.pagination import PaginateQueryParams
-from models import UUIDIDMixin
 from api.auth_users import APIUsers
-from schemas import SIHE, BaseSignInHistoryEvent
-from services.user import BaseUserManager
-
-from db.users import SQLAlchemyUserDatabase
-
+from api.schemas import BaseSignInHistoryEvent
 from app.db import User, get_user_db
+from app.services.auth import auth_backend
+from core.config import settings
+from core.pagination import PaginateQueryParams
+from db import models
+from db.users import SQLAlchemyUserDatabase
+from managers.user import BaseUserManager
 
 
-class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
+class UserManager(models.UUIDIDMixin, BaseUserManager[User, UUID]):
     reset_password_token_secret = settings.reset_password_token_secret
     verification_token_secret = settings.verification_token_secret
 
     async def get_sign_in_history(
-            self,
-            user: User,
-            pagination_params: PaginateQueryParams
+        self, user: User, pagination_params: PaginateQueryParams
     ) -> list[models.SignInHistoryEvent]:
         return await self.user_db.get_sign_in_history(user.id, pagination_params)
 
     async def _record_in_sighin_history(self, user: User, request: Request):
         event = BaseSignInHistoryEvent(
-            timestamp=datetime.now(),
-            fingerprint=request.client.host
+            timestamp=datetime.now(), fingerprint=request.client.host
         )
         await self.user_db.record_in_sighin_history(user_id=user.id, event=event)
 
     async def on_after_login(
-            self,
-            user: User,
-            request: Optional[Request] = None,
-            response: Optional[Response] = None,
+        self,
+        user: User,
+        request: Optional[Request] = None,
+        response: Optional[Response] = None,
     ) -> None:
         await self._record_in_sighin_history(user, request)
 

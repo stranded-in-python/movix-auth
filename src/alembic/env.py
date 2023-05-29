@@ -1,8 +1,7 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -19,9 +18,11 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 from app.db import Base
+
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 # target_metadata = None
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -35,9 +36,7 @@ def get_url():
     port = os.getenv("PGPORT", "5434")
     db = os.getenv("PGDATABASE", "yamp_movies_db")
 
-    return f"{database_adapter}:" \
-        f"//{user}:{password}" \
-        f"@{host}:{port}/{db}"
+    return f"{database_adapter}:" f"//{user}:{password}" f"@{host}:{port}/{db}"
     # return f"{settings.database_url}"
 
 
@@ -62,8 +61,11 @@ def run_migrations_offline() -> None:
     """
     url = get_url()
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True, compare_type=True,
-        include_object=include_object
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        compare_type=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -80,11 +82,13 @@ def run_migrations_online() -> None:
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
-        configuration, prefix="sqlalchemy.", poolclass=pool.NullPool,
+        configuration, prefix="sqlalchemy.", poolclass=pool.NullPool
     )
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata, include_object=include_object
+            connection=connection,
+            target_metadata=target_metadata,
+            include_object=include_object,
         )
 
         with context.begin_transaction():

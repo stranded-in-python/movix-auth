@@ -1,7 +1,4 @@
-from authentication.strategy.base import (
-    Strategy,
-    StrategyDestroyNotSupportedError,
-)
+from authentication.strategy.base import Strategy, StrategyDestroyNotSupportedError
 from authentication.strategy.db import (
     AP,
     AccessTokenDatabase,

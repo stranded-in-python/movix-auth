@@ -2,12 +2,13 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Generic, Optional
 
+from db import models
+
 import core.exceptions as exceptions
-import models as models
 from authentication.strategy.base import Strategy
 from authentication.strategy.db.adapter import AccessTokenDatabase
 from authentication.strategy.db.models import AP
-from services.user import BaseUserManager
+from managers.user import BaseUserManager
 
 
 class DatabaseStrategy(

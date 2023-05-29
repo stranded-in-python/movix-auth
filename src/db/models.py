@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Protocol, TypeVar, Any
+from typing import Any, Protocol, TypeVar
 from uuid import UUID
 
 import core.exceptions as ex
@@ -38,6 +38,7 @@ class RoleProtocol(Protocol[ID]):
 
 RP = TypeVar("RP", bound=RoleProtocol)
 
+
 class UserRoleProtocol(Protocol[ID]):
     """User/Role protocol that ORM model should follow."""
 
@@ -45,7 +46,9 @@ class UserRoleProtocol(Protocol[ID]):
     user_id: ID
     role_id: ID
 
+
 URP = TypeVar("URP", bound=UserRoleProtocol)
+
 
 class AccessRightProtocol(Protocol[ID]):
     """Access right protocol that ORM model should follow."""
@@ -59,6 +62,7 @@ class AccessRightProtocol(Protocol[ID]):
 
 ARP = TypeVar("ARP", bound=AccessRightProtocol)
 
+
 class UserAccessRightProtocol(Protocol[ID]):
     """User/Role protocol that ORM model should follow."""
 
@@ -66,7 +70,9 @@ class UserAccessRightProtocol(Protocol[ID]):
     user_id: ID
     access_right_id: ID
 
+
 UARP = TypeVar("UARP", bound=UserAccessRightProtocol)
+
 
 class SignInHistoryEvent(Protocol[ID]):
     id: ID

@@ -1,23 +1,17 @@
 import datetime
-from typing import List, Optional, TypeVar, Generic
+from typing import Generic, Optional, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
-
-import models as m
 
 UserID = TypeVar("UserID", bound=UUID)
 RoleID = TypeVar("RoleID", bound=UUID)
 UserRoleID = TypeVar("UserRoleID", bound=UUID)
 
+
 class CreateUpdateDictModel(BaseModel):
     def create_update_dict(self):
-        return self.dict(
-            exclude_unset=True,
-            exclude={
-                "id",
-            },
-        )
+        return self.dict(exclude_unset=True, exclude={"id"})
 
     def create_update_dict_superuser(self):
         return self.dict(exclude_unset=True, exclude={"id"})
@@ -26,12 +20,7 @@ class CreateUpdateDictModel(BaseModel):
 class CreateUpdateUserDictModel(CreateUpdateDictModel):
     def create_update_dict(self):
         return self.dict(
-            exclude_unset=True,
-            exclude={
-                "id",
-                "is_superuser",
-                "is_active",
-            },
+            exclude_unset=True, exclude={"id", "is_superuser", "is_active"}
         )
 
 

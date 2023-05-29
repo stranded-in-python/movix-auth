@@ -2,16 +2,10 @@ from typing import Generic
 
 from fastapi import Response, status
 
-import models as models
-from authentication.strategy import (
-    Strategy,
-    StrategyDestroyNotSupportedError,
-)
-from authentication.transport import (
-    Transport,
-    TransportLogoutNotSupportedError,
-)
+from authentication.strategy import Strategy, StrategyDestroyNotSupportedError
+from authentication.transport import Transport, TransportLogoutNotSupportedError
 from core.dependency_types import DependencyCallable
+from db import models
 
 
 class AuthenticationBackend(Generic[models.UP, models.ID]):

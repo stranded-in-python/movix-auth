@@ -3,13 +3,10 @@ from typing import Generic, List, Optional
 import jwt
 
 import core.exceptions as exceptions
-import models
-from authentication.strategy.base import (
-    Strategy,
-    StrategyDestroyNotSupportedError,
-)
+from authentication.strategy.base import Strategy, StrategyDestroyNotSupportedError
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt
-from services.user import BaseUserManager
+from db import models
+from managers.user import BaseUserManager
 
 
 class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID]):

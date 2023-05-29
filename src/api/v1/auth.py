@@ -3,11 +3,11 @@ from typing import Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-import models
-from authentication import AuthenticationBackend, Authenticator, Strategy
-from services.user import BaseUserManager, UserManagerDependency
-from openapi import OpenAPIResponseType
 from api.v1.common import ErrorCode, ErrorModel
+from authentication import AuthenticationBackend, Authenticator, Strategy
+from db import models
+from managers.user import BaseUserManager, UserManagerDependency
+from openapi import OpenAPIResponseType
 
 
 def get_auth_router(
@@ -45,11 +45,7 @@ def get_auth_router(
         **backend.transport.get_openapi_login_responses_success(),
     }
 
-    @router.post(
-        "/login",
-        name=f"auth:{backend.name}.login",
-        responses=login_responses,
-    )
+    @router.post("/login", name=f"auth:{backend.name}.login", responses=login_responses)
     async def login(
         request: Request,
         credentials: OAuth2PasswordRequestForm = Depends(),

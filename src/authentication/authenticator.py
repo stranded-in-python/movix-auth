@@ -5,12 +5,11 @@ from typing import Callable, List, Optional, Sequence, Tuple, cast
 from fastapi import Depends, HTTPException, status
 from makefun import with_signature
 
-import models
 from authentication.backend import AuthenticationBackend
 from authentication.strategy import Strategy
 from core.dependency_types import DependencyCallable
-from services.user import BaseUserManager, UserManagerDependency
-
+from db import models
+from managers.user import BaseUserManager, UserManagerDependency
 
 INVALID_CHARS_PATTERN = re.compile(r"[^0-9a-zA-Z_]")
 INVALID_LEADING_CHARS_PATTERN = re.compile(r"^[^a-zA-Z_]+")
@@ -83,15 +82,21 @@ class Authenticator:
         Useful if you want to dynamically enable some authentication backends
         based on external logic, like a configuration in database.
         By default, all specified authentication backends are enabled.
-        Please not however that every backends will appear in the OpenAPI documentation,
+        Please not however that every backend will appear in the OpenAPI documentation,
         as FastAPI resolves it statically.
         """
         signature = self._get_dependency_signature(get_enabled_backends)
 
         @with_signature(signature)
         async def current_user_token_dependency(*args, **kwargs):
-            return await self._authenticate(*args, optional=optional, active=active, verified=verified,
-                                            superuser=superuser, **kwargs)
+            return await self._authenticate(
+                *args,
+                optional=optional,
+                active=active,
+                verified=verified,
+                superuser=superuser,
+                **kwargs,
+            )
 
         return current_user_token_dependency
 
@@ -120,15 +125,16 @@ class Authenticator:
         Useful if you want to dynamically enable some authentication backends
         based on external logic, like a configuration in database.
         By default, all specified authentication backends are enabled.
-        Please not however that every backends will appear in the OpenAPI documentation,
+        Please not however that every backend will appear in the OpenAPI documentation,
         as FastAPI resolves it statically.
         """
         signature = self._get_dependency_signature(get_enabled_backends)
 
         @with_signature(signature)
         async def current_user_dependency(*args, **kwargs):
-            user, _ = await self._authenticate(*args, optional=optional, active=active,
-                                               superuser=superuser, **kwargs)
+            user, _ = await self._authenticate(
+                *args, optional=optional, active=active, superuser=superuser, **kwargs
+            )
             return user
 
         return current_user_dependency

@@ -173,9 +173,6 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
-# End of https://www.toptal.com/developers/gitignore/api/python
-.pytest_cache/
-
 # All productions except local
 .envs/*
 !.envs/.local

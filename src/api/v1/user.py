@@ -1,15 +1,14 @@
 from typing import Type
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from managers.user import BaseUserManager, UserManagerDependency
 
-import models as models
-import schemas as schemas
 import core.exceptions as exceptions
-
+from api import schemas
 from api.v1.common import ErrorCode, ErrorModel
-from core.pagination import PaginateQueryParams
-from services.user import UserManagerDependency, BaseUserManager
 from authentication import Authenticator
+from core.pagination import PaginateQueryParams
+from db import models
 
 
 def get_users_router(
@@ -17,15 +16,12 @@ def get_users_router(
     user_schema: Type[schemas.U],
     user_update_schema: Type[schemas.UU],
     event_schema: Type[schemas.SIHE],
-    authenticator: Authenticator
+    authenticator: Authenticator,
 ) -> APIRouter:
-
     router = APIRouter()
     router.prefix = "/api/v1"
 
-    get_current_active_user = authenticator.current_user(
-        active=True
-    )
+    get_current_active_user = authenticator.current_user(active=True)
 
     @router.get(
         "/users/me",
@@ -37,15 +33,14 @@ def get_users_router(
         response_description="sensitive data",
         tags=['User'],
         responses={
-                status.HTTP_401_UNAUTHORIZED: {
-                    "description": "Missing token or inactive user.",
-                },
-            },
+            status.HTTP_401_UNAUTHORIZED: {
+                "description": "Missing token or inactive user."
+            }
+        },
     )
     async def get_current_user(
         user: models.UP = Depends(get_current_active_user),
     ) -> user_schema:
-
         return user_schema.from_orm(user)
 
     @router.put(
@@ -58,7 +53,7 @@ def get_users_router(
         response_description="sensitive data",
         responses={
             status.HTTP_401_UNAUTHORIZED: {
-                "description": "Missing token or inactive user.",
+                "description": "Missing token or inactive user."
             },
             status.HTTP_400_BAD_REQUEST: {
                 "model": ErrorModel,
@@ -77,7 +72,7 @@ def get_users_router(
                                     "detail": {
                                         "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
                                         "reason": "Password should be"
-                                                  "at least 3 characters",
+                                        "at least 3 characters",
                                     }
                                 },
                             },
@@ -89,12 +84,11 @@ def get_users_router(
         tags=['User'],
     )
     async def update_current_user(
-            request: Request,
-            user_update: user_update_schema,
-            user: models.UP = Depends(get_current_active_user),
-            user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        request: Request,
+        user_update: user_update_schema,
+        user: models.UP = Depends(get_current_active_user),
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
     ) -> user_schema:
-
         try:
             user = await user_manager.update(
                 user_update, user, safe=True, request=request
@@ -127,9 +121,8 @@ def get_users_router(
     async def sign_in_history(
         user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
         user: models.UP = Depends(get_current_active_user),
-        paginate_params: PaginateQueryParams = Depends(PaginateQueryParams)
+        paginate_params: PaginateQueryParams = Depends(PaginateQueryParams),
     ) -> list[schemas.BaseSignInHistoryEvent]:
-
         return list(
             event_schema.from_orm(event[0])
             for event in await user_manager.get_sign_in_history(user, paginate_params)

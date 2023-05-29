@@ -27,12 +27,14 @@ class Settings(BaseSettings):
     pgpassword: str = "qweasd123"
     database_adapter: str = "postgresql"
     database_sqlalchemy_adapter: str = "postgresql+asyncpg"
-    database_url: str = f"{database_adapter}:" \
-                          f"//{pguser}:{pgpassword}" \
-                          f"@{pghost}:{pgport}/{pgdb}"
-    database_url_async: str = f"{database_sqlalchemy_adapter}:" \
-                        f"//{pguser}:{pgpassword}" \
-                        f"@{pghost}:{pgport}/{pgdb}"
+    database_url: str = (
+        f"{database_adapter}:" f"//{pguser}:{pgpassword}" f"@{pghost}:{pgport}/{pgdb}"
+    )
+    database_url_async: str = (
+        f"{database_sqlalchemy_adapter}:"
+        f"//{pguser}:{pgpassword}"
+        f"@{pghost}:{pgport}/{pgdb}"
+    )
     # DATABASE_URL: str = 'postgresql+asyncpg://yamp_dummy:qweasd123@localhost:5434/yamp_movies_db'
     # Параметры аутентификации
     reset_password_token_secret: str = "SECRET"

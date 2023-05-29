@@ -2,10 +2,10 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import EmailStr
 
 import core.exceptions as exceptions
-import models
-from services.user import BaseUserManager, UserManagerDependency
-from openapi import OpenAPIResponseType
 from api.v1.common import ErrorCode, ErrorModel
+from db import models
+from managers.user import BaseUserManager, UserManagerDependency
+from openapi import OpenAPIResponseType
 
 RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
@@ -29,12 +29,12 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
                 }
             }
         },
-    },
+    }
 }
 
 
 def get_reset_password_router(
-    get_user_manager: UserManagerDependency[models.UP, models.ID],
+    get_user_manager: UserManagerDependency[models.UP, models.ID]
 ) -> APIRouter:
     """Generate a router with the reset pw routes."""
     router = APIRouter()

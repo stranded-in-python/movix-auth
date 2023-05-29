@@ -6,8 +6,8 @@ if sys.version_info < (3, 8):
 else:
     from typing import Protocol  # pragma: no cover
 
-import models
-from services.user import BaseUserManager
+from db import models
+from managers.user import BaseUserManager
 
 
 class StrategyDestroyNotSupportedError(Exception):

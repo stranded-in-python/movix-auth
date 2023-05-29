@@ -2,14 +2,13 @@ from typing import Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-import models
-import models as m
-import schemas as schemas
 import core.exceptions as ex
-# from services.abc import BaseUserService
-# from services.user import get_user_service
+from api import schemas
+# from managers.abc import BaseUserService
+# from managers.user import get_user_service
 from api.v1.common import ErrorCode, ErrorModel
-from services.user import UserManagerDependency, BaseUserManager
+from db import models
+from managers.user import BaseUserManager, UserManagerDependency
 
 
 def get_register_router(
@@ -47,20 +46,20 @@ def get_register_router(
                                     "detail": {
                                         "code": ErrorCode.REGISTER_INVALID_PASSWORD,
                                         "reason": "Password should be"
-                                                  "at least 8 characters",
+                                        "at least 8 characters",
                                     }
                                 },
                             },
                         }
                     }
                 },
-            },
-        }
+            }
+        },
     )
     async def register(
-            request: Request,
-            user_create: user_create_schema,
-            user_service: BaseUserManager = Depends(get_user_manager)
+        request: Request,
+        user_create: user_create_schema,
+        user_service: BaseUserManager = Depends(get_user_manager),
     ) -> user_schema:
         try:
             created_user = await user_service.create(

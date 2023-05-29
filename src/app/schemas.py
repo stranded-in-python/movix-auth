@@ -2,7 +2,7 @@ import uuid
 
 from pydantic import BaseModel
 
-import schemas as schemas
+from api import schemas
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):

@@ -1,16 +1,16 @@
-from typing import Generic, Optional, Sequence, Type
+from typing import Generic, Sequence, Type
 
 from fastapi import APIRouter
 
-import models as models
-import schemas as schemas
-from authentication import AuthenticationBackend, Authenticator
-from core.jwt_utils import SecretType
-from services.user import UserManagerDependency
+from api import schemas
 from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
 from api.v1.user import get_users_router
+from authentication import AuthenticationBackend, Authenticator
+from core.jwt_utils import SecretType
+from db import models
+from managers.user import UserManagerDependency
 
 
 class APIUsers(Generic[models.UP, models.ID]):
@@ -64,17 +64,14 @@ class APIUsers(Generic[models.UP, models.ID]):
         require the user to be verified or not. Defaults to False.
         """
         return get_auth_router(
-            backend,
-            self.get_user_manager,
-            self.authenticator,
-            requires_verification,
+            backend, self.get_user_manager, self.authenticator, requires_verification
         )
 
     def get_users_router(
         self,
         user_schema: Type[schemas.U],
         user_update_schema: Type[schemas.UU],
-        event_schema: Type[schemas.SIHE]
+        event_schema: Type[schemas.SIHE],
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
@@ -88,5 +85,5 @@ class APIUsers(Generic[models.UP, models.ID]):
             user_schema,
             user_update_schema,
             event_schema,
-            self.authenticator
+            self.authenticator,
         )

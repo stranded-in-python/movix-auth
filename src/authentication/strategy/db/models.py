@@ -7,7 +7,7 @@ if sys.version_info < (3, 8):
 else:
     from typing import Protocol  # pragma: no cover
 
-import models
+from db import models
 
 
 class AccessTokenProtocol(Protocol[models.ID]):

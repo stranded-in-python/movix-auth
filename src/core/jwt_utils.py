@@ -34,8 +34,5 @@ def decode_jwt(
     algorithms: List[str] = [JWT_ALGORITHM],
 ) -> Dict[str, Any]:
     return jwt.decode(
-        encoded_jwt,
-        _get_secret_value(secret),
-        audience=audience,
-        algorithms=algorithms,
+        encoded_jwt, _get_secret_value(secret), audience=audience, algorithms=algorithms
     )

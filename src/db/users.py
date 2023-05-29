@@ -1,17 +1,17 @@
 """FastAPI Users database adapter for SQLAlchemy."""
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type, Text
+from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type
 
-from core.pagination import PaginateQueryParams
-from db.base import BaseUserDatabase
-from models import ID, UP, SIHE
-from sqlalchemy import Boolean, ForeignKey, Integer, String, func, select, DateTime
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 from sqlalchemy.sql import Select
 
+from core.pagination import PaginateQueryParams
+from db.base import BaseUserDatabase
 from db.generics import GUID
+from db.models import ID, SIHE, UP
 
 __version__ = "5.0.0"
 
@@ -60,9 +60,7 @@ class SQLAlchemyBaseSignInHistoryTable(Generic[ID]):
 
     else:
         timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-        fingerprint: Mapped[str] = mapped_column(
-            String(length=1024), nullable=False
-        )
+        fingerprint: Mapped[str] = mapped_column(String(length=1024), nullable=False)
 
 
 class SQLAlchemyBaseSignInHistoryTableUUID(SQLAlchemyBaseSignInHistoryTable[UUID_ID]):
@@ -126,10 +124,7 @@ class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
     session: AsyncSession
 
     def __init__(
-        self,
-        session: AsyncSession,
-        user_table: Type[UP],
-        history_table: Type[SIHE]
+        self, session: AsyncSession, user_table: Type[UP], history_table: Type[SIHE]
     ):
         self.session = session
         self.user_table = user_table
@@ -142,7 +137,7 @@ class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
     async def get_by_username(self, username: str) -> Optional[UP]:
         statement = select(self.user_table).where(
             func.lower(self.user_table.username) == func.lower(username)
-        ) # TODO Fix type error
+        )  # TODO Fix type error
         return await self._get_user(statement)
 
     async def get_by_email(self, email: str) -> Optional[UP]:
@@ -177,11 +172,15 @@ class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
         self.session.add(event)
         await self.session.commit()
 
-    async def get_sign_in_history(self, user_id: ID, pagination_params: PaginateQueryParams):
-        statement: Select = select(self.history_table)\
-            .where(self.history_table.user_id == user_id)\
-            .limit(pagination_params.page_size)\
-            .offset((pagination_params.page_number - 1)  * pagination_params.page_size)
+    async def get_sign_in_history(
+        self, user_id: ID, pagination_params: PaginateQueryParams
+    ):
+        statement: Select = (
+            select(self.history_table)
+            .where(self.history_table.user_id == user_id)
+            .limit(pagination_params.page_size)
+            .offset((pagination_params.page_number - 1) * pagination_params.page_size)
+        )
 
         return await self._get_events(statement)
 

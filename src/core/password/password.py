@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 from passlib import pwd
 from passlib.context import CryptContext
 
-from password.base import PasswordHelperProtocol
+from core.password.base import PasswordHelperProtocol
 
 
 class PasswordHelper(PasswordHelperProtocol):

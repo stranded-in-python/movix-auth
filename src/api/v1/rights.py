@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 
-import models as models
 from core.pagination import PaginateQueryParams
+from db import models
 
 router = APIRouter()
 
@@ -57,12 +57,8 @@ async def delete_role(access_right_id: models.ID) -> models.ARP:
 @router.get(
     "/roles/{roles_id}/rights/{access_right_id}",
     responses={
-        status.HTTP_204_NO_CONTENT: {
-            "description": "Role have not access right.",
-        },
-        status.HTTP_404_NOT_FOUND: {
-            "description": "Role or access right not found.",
-        },
+        status.HTTP_204_NO_CONTENT: {"description": "Role have not access right."},
+        status.HTTP_404_NOT_FOUND: {"description": "Role or access right not found."},
     },
     summary="Check roles access right",
     description="Check if role is assigned to the access right",
@@ -89,16 +85,16 @@ async def assign_access_right(roles_id: models.ID, access_right_id: models.ID) -
     "/roles/{roles_id}/rights/{access_right_id}",
     status_code=status.HTTP_200_OK,
     responses={
-        status.HTTP_204_NO_CONTENT: {
-            "description": "Role or access right not found.",
-        },
+        status.HTTP_204_NO_CONTENT: {"description": "Role or access right not found."}
     },
     summary="Unassign a access right",
     description="Unassign role's access right",
     response_description="Message entity",
     tags=['Access right'],
 )
-async def unassign_access_right(roles_id: models.ID, access_right_id: models.ID) -> None:
+async def unassign_access_right(
+    roles_id: models.ID, access_right_id: models.ID
+) -> None:
     ...
 
 

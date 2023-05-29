@@ -7,11 +7,7 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-from authentication.transport import (
-    BearerTransport,
-    CookieTransport,
-    Transport,
-)
+from authentication.transport import BearerTransport, CookieTransport, Transport
 
 __all__ = [
     "Authenticator",

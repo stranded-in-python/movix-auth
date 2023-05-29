@@ -1,4 +1,4 @@
-from typing import Tuple, Protocol
+from typing import Protocol, Tuple
 
 
 class PasswordHelperProtocol(Protocol):
