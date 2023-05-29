@@ -84,7 +84,7 @@ class SignInHistoryEvent(Protocol[ID]):
 SIHE = TypeVar("SIHE", bound=SignInHistoryEvent)
 
 
-class AccessTokenProtocol(Protocol[Protocol.ID]):
+class AccessTokenProtocol(Protocol[ID]):
     """Access token protocol that ORM model should follow."""
 
     token: str

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
 
+from cache.cache import cache_decorator
 from core.pagination import PaginateQueryParams
 from db.base import BaseRoleDatabase, BaseUserRoleDatabase
 from db.generics import GUID
@@ -36,15 +37,13 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
         self.session = session
         self.role_table = role_table
 
-    @cache_decorator
+    @cache_decorator()
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
     ) -> list[TRow]:
         statement = select(self.role_table)
         if filter_param:
-            statement.where(
-                self.role_table.name == filter_param
-            )
+            statement.where(self.role_table.name == filter_param)
 
         statement.limit(pagination_params.page_size)
         statement.offset(
@@ -55,20 +54,14 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
 
         return results.fetchall()
 
-    @cache_decorator
+    @cache_decorator()
     async def get_by_id(self, role_id: ID) -> Optional[RP]:
-        statement = select(
-            self.role_table
-        ).where(
-            self.role_table.id == role_id
-        )
+        statement = select(self.role_table).where(self.role_table.id == role_id)
         return await self._get_role(statement)
 
-    @cache_decorator
+    @cache_decorator()
     async def get_by_name(self, name: str) -> Optional[RP]:
-        statement = select(
-            self.role_table
-        ).where(
+        statement = select(self.role_table).where(
             func.lower(self.role_table.name) == func.lower(name)
         )
         return await self._get_role(statement)
@@ -87,11 +80,7 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
         return role
 
     async def delete(self, role_id: ID) -> None:
-        statement = select(
-            self.role_table
-        ).where(
-            self.role_table.id == role_id
-        )
+        statement = select(self.role_table).where(self.role_table.id == role_id)
         role_to_delete = await self._get_role(statement)
         await self.session.delete(role_to_delete)
         await self.session.commit()
@@ -99,6 +88,13 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
     async def _get_role(self, statement: Select) -> Optional[RP]:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+
+    def __getstate__(self):
+        """pickle.dumps()"""
+        # Определяем, какие атрибуты должны быть сериализованы
+        state = self.__class__.__name__
+
+        return state
 
 
 class SQLAlchemyBaseUserRoleTableUUID:
@@ -123,20 +119,13 @@ class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase[URP, ID]):
     session: AsyncSession
     user_role_table: Type[URP]
 
-    def __init__(
-        self,
-        session: AsyncSession,
-        user_role_table: Type[URP]
-        
-    ):
+    def __init__(self, session: AsyncSession, user_role_table: Type[URP]):
         self.session = session
         self.user_role_table = user_role_table
 
-    @cache_decorator
+    @cache_decorator()
     async def get_user_role(self, user_id: ID, role_id: ID) -> Optional[URP]:
-        statement = select(
-            self.user_role_table
-        ).where(
+        statement = select(self.user_role_table).where(
             (self.user_role_table.user_id == user_id)
             & (self.user_role_table.role_id == role_id)
         )
@@ -153,21 +142,23 @@ class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase[URP, ID]):
         return user_role
 
     async def remove_user_role(self, user_role: URP) -> None:
-        instance = await self.get_user_role(
-            user_role.user_id,
-            user_role.role_id
-        )
+        instance = await self.get_user_role(user_role.user_id, user_role.role_id)
 
         await self.session.delete(instance)
         await self.session.commit()
 
-    @cache_decorator
+    @cache_decorator()
     async def get_user_roles(self, user_id: ID) -> Optional[list[URP]]:
-        statement = select(
-            self.user_role_table
-        ).where(
+        statement = select(self.user_role_table).where(
             self.user_role_table.user_id == user_id
         )
         results = await self.session.execute(statement)
 
         return results.fetchall()
+
+    def __getstate__(self):
+        """pickle.dumps()"""
+        # Определяем, какие атрибуты должны быть сериализованы
+        state = self.__class__.__name__
+
+        return state

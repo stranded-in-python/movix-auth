@@ -8,11 +8,11 @@ from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Callable, cast
 
-import utils
+import cache.utils as utils
 from core.config import settings
-from .redis import RedisClient, get_manager
 
 from .abc_cache import CacheStorageABC
+from .redis import RedisClient, get_manager
 
 
 class CacheError(Exception):

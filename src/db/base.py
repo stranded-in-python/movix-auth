@@ -1,9 +1,8 @@
 import typing as t
 
-
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db.models import ARP, ID, RP, SIHE, UP, URP, RARP
+from db.models import ARP, ID, RARP, RP, SIHE, UP, URP
 
 TRow = t.TypeVar("TRow")
 
@@ -15,7 +14,7 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
         """Get a single user by id."""
         raise NotImplementedError()
 
-    async def get_by_username(self, email: str) -> t.Optional[UP]:
+    async def get_by_username(self, username: str) -> t.Optional[UP]:
         """Get a single user by username."""
         raise NotImplementedError()
 
@@ -68,9 +67,7 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
         raise NotImplementedError()
 
     async def search(
-            self,
-            pagination_params: PaginateQueryParams,
-            filter_param: str | None = None
+        self, pagination_params: PaginateQueryParams, filter_param: str | None = None
     ) -> list[TRow]:
         """Delete a role."""
         raise NotImplementedError()
@@ -117,7 +114,9 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
         """Create an access right."""
         raise NotImplementedError()
 
-    async def update(self, role_access_right: RARP, update_dict: dict[str, t.Any]) -> RARP:
+    async def update(
+        self, role_access_right: RARP, update_dict: dict[str, t.Any]
+    ) -> RARP:
         """Update an access right."""
         raise NotImplementedError()
 
@@ -135,7 +134,9 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
         """Create an access right."""
         raise NotImplementedError()
 
-    async def update(self, role_access_right: RARP, update_dict: dict[str, t.Any]) -> RARP:
+    async def update(
+        self, role_access_right: RARP, update_dict: dict[str, t.Any]
+    ) -> RARP:
         """Update an access right."""
         raise NotImplementedError()
 
@@ -150,4 +151,6 @@ UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID, SIHE]]
 BaseRoleDatabaseDependency = DependencyCallable[BaseRoleDatabase[RP, ID]]
 BaseUserRoleRoleDatabaseDependency = DependencyCallable[BaseUserRoleDatabase[URP, ID]]
 BaseAccessRightDatabaseDependency = DependencyCallable[BaseAccessRightDatabase[ARP, ID]]
-BaseRoleAccessRightDatabaseDependency = DependencyCallable[BaseRoleAccessRightDatabase[RARP, ID]]
+BaseRoleAccessRightDatabaseDependency = DependencyCallable[
+    BaseRoleAccessRightDatabase[RARP, ID]
+]

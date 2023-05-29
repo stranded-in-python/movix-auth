@@ -1,8 +1,8 @@
 from typing import Generic, Sequence, Type
 
-from api import schemas
 from fastapi import APIRouter
 
+from api import schemas
 from api.v1.roles import get_roles_router
 from authentication import AuthenticationBackend, Authenticator
 from db import models

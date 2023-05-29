@@ -1,7 +1,6 @@
 from typing import Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from managers.user import BaseUserManager, UserManagerDependency
 
 import core.exceptions as exceptions
 from api import schemas
@@ -9,6 +8,7 @@ from api.v1.common import ErrorCode, ErrorModel
 from authentication import Authenticator
 from core.pagination import PaginateQueryParams
 from db import models
+from managers.user import BaseUserManager, UserManagerDependency
 
 
 def get_users_router(

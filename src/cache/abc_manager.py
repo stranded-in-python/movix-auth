@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from utils import Singleton
+from cache.utils import Singleton
 
 
 class DBClient(ABC):
