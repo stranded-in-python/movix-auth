@@ -63,6 +63,7 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
         statement = select(self.role_table).where(self.role_table.id == role_id)
         return await self._get_role(statement)
 
+    @cache_decorator
     async def get_by_name(self, name: str) -> Optional[RP]:
         statement = select(self.role_table)\
             .where(func.lower(self.role_table.name) == func.lower(name))
@@ -113,6 +114,7 @@ class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase[URP, ID]):
         self.session = session
         self.user_role_table = user_role_table
 
+    @cache_decorator
     async def get_user_role(self, user_id: ID, role_id: ID) -> Optional[URP]:
         statement = select(self.user_role_table)\
             .where((self.user_role_table.user_id == user_id)
@@ -138,9 +140,6 @@ class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase[URP, ID]):
         await self.session.delete(instance)
         await self.session.commit()
 
-    async def get_user_roles(self, user_id: ID) -> Optional[list[URP]]:
-        statement = select(self.user_role_table)\
-            .where(self.user_role_table.user_id == user_id)
     @cache_decorator
     async def get_all_roles_of_user(self, user_id: ID) -> Optional[list[URP]]:
         statement = select(self.user_role_table).where(self.user_role_table.user_id == user_id)
