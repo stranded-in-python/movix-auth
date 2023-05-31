@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Dict, Generic, Optional, Type, TypeVar
+from typing import Any, Dict, Optional, TypeVar, cast
 
 from sqlalchemy import ForeignKey, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,39 +8,36 @@ from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
 from core.pagination import PaginateQueryParams
-from db.base import BaseRoleDatabase, BaseUserRoleDatabase
-from db.generics import GUID
-from db.models import ID, RP, URP
+
+from .base import BaseRoleDatabase, BaseUserRoleDatabase, SQLAlchemyBase
+from .generics import GUID
+from .models import RP, URP, URUP
 
 UUID_ID = uuid.UUID
 TRow = TypeVar("TRow")
 
 
-class SQLAlchemyBaseRoleTable(Generic[ID]):
-    """Base SQLAlchemy roles table definition."""
+class SARole(SQLAlchemyBase):
+    """Role table definition."""
 
     __tablename__ = "role"
 
-    id: ID
+    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(length=100), nullable=False, index=True)
 
 
-class SQLAlchemyBaseRoleTableUUID(SQLAlchemyBaseRoleTable[UUID_ID]):
-    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-
-
-class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
+class SARoleDB(BaseRoleDatabase[RP, UUID_ID]):
     session: AsyncSession
-    user_table: Type[RP]
+    user_table: type[SARole]
 
-    def __init__(self, session: AsyncSession, role_table: Type[RP]):
+    def __init__(self, session: AsyncSession, role_table: type[SARole]):
         self.session = session
         self.role_table = role_table
 
     @cache_decorator()
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> list[TRow]:
+    ) -> list[RP]:
         statement = select(self.role_table)
         if filter_param:
             statement.where(self.role_table.name == filter_param)
@@ -52,15 +49,15 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
 
         results = await self.session.execute(statement)
 
-        return results.fetchall()
+        return cast(list[RP], list(results.fetchall()))
 
     @cache_decorator()
-    async def get_by_id(self, role_id: ID) -> Optional[RP]:
+    async def get_by_id(self, role_id: UUID_ID) -> RP | None:
         statement = select(self.role_table).where(self.role_table.id == role_id)
         return await self._get_role(statement)
 
     @cache_decorator()
-    async def get_by_name(self, name: str) -> Optional[RP]:
+    async def get_by_name(self, name: str) -> RP | None:
         statement = select(self.role_table).where(
             func.lower(self.role_table.name) == func.lower(name)
         )
@@ -70,7 +67,7 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
         role = self.role_table(**create_dict)
         self.session.add(role)
         await self.session.commit()
-        return role
+        return cast(RP, role)
 
     async def update(self, role: RP, update_dict: Dict[str, Any]) -> RP:
         for key, value in update_dict.items():
@@ -79,13 +76,13 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
         await self.session.commit()
         return role
 
-    async def delete(self, role_id: ID) -> None:
+    async def delete(self, role_id: UUID_ID) -> None:
         statement = select(self.role_table).where(self.role_table.id == role_id)
         role_to_delete = await self._get_role(statement)
         await self.session.delete(role_to_delete)
         await self.session.commit()
 
-    async def _get_role(self, statement: Select) -> Optional[RP]:
+    async def _get_role(self, statement: Select) -> RP | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
@@ -97,11 +94,11 @@ class SQLAlchemyRoleDatabase(BaseRoleDatabase[RP, ID]):
         return state
 
 
-class SQLAlchemyBaseUserRoleTableUUID:
+class SAUserRole(SQLAlchemyBase):
     __tablename__ = "user_role"
 
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[UUID_ID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         GUID,
         ForeignKey("user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
@@ -115,31 +112,31 @@ class SQLAlchemyBaseUserRoleTableUUID:
     )
 
 
-class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase[URP, ID]):
+class SAUserRoleDB(BaseUserRoleDatabase[URP, URUP, UUID_ID]):
     session: AsyncSession
-    user_role_table: Type[URP]
+    user_role_table: type[SAUserRole]
 
-    def __init__(self, session: AsyncSession, user_role_table: Type[URP]):
+    def __init__(self, session: AsyncSession, user_role_table: type[SAUserRole]):
         self.session = session
         self.user_role_table = user_role_table
 
     @cache_decorator()
-    async def get_user_role(self, user_id: ID, role_id: ID) -> Optional[URP]:
+    async def get_user_role(self, user_id: UUID_ID, role_id: UUID_ID) -> URP | None:
         statement = select(self.user_role_table).where(
             (self.user_role_table.user_id == user_id)
             & (self.user_role_table.role_id == role_id)
         )
 
         results = await self.session.execute(statement)
-        return results.unique().scalar_one_or_none()
+        return cast(URP | None, results.unique().scalar_one_or_none())
 
-    async def assign_user_role(self, update_dict: Dict[str, Any]) -> URP:
-        user_role = self.user_role_table(**update_dict)
+    async def assign_user_role(self, user_id: UUID_ID, role_id: UUID_ID) -> URP:
+        user_role = self.user_role_table(user_id=user_id, role_id=role_id)
 
         self.session.add(user_role)
         await self.session.commit()
 
-        return user_role
+        return cast(URP, user_role)
 
     async def remove_user_role(self, user_role: URP) -> None:
         instance = await self.get_user_role(user_role.user_id, user_role.role_id)
@@ -148,13 +145,16 @@ class SQLAlchemyUserRoleDatabase(BaseUserRoleDatabase[URP, ID]):
         await self.session.commit()
 
     @cache_decorator()
-    async def get_user_roles(self, user_id: ID) -> Optional[list[URP]]:
+    async def get_user_roles(self, user_id: UUID_ID) -> list[URP] | None:
         statement = select(self.user_role_table).where(
             self.user_role_table.user_id == user_id
         )
         results = await self.session.execute(statement)
 
-        return results.fetchall()
+        if not results:
+            return
+
+        return cast(list[URP], list(results.fetchall()))
 
     def __getstate__(self):
         """pickle.dumps()"""

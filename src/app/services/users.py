@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from fastapi import Depends, Request, Response
@@ -11,7 +10,7 @@ from app.services.auth import auth_backend
 from core.config import settings
 from core.pagination import PaginateQueryParams
 from db import models
-from db.users import SQLAlchemyUserDatabase
+from db.users import SAUserDB
 from managers.user import BaseUserManager
 
 
@@ -25,6 +24,8 @@ class UserManager(models.UUIDIDMixin, BaseUserManager[User, UUID]):
         return await self.user_db.get_sign_in_history(user.id, pagination_params)
 
     async def _record_in_sighin_history(self, user: User, request: Request):
+        if request.client is None:
+            return
         event = BaseSignInHistoryEvent(
             timestamp=datetime.now(), fingerprint=request.client.host
         )
@@ -33,26 +34,28 @@ class UserManager(models.UUIDIDMixin, BaseUserManager[User, UUID]):
     async def on_after_login(
         self,
         user: User,
-        request: Optional[Request] = None,
-        response: Optional[Response] = None,
+        request: Request | None = None,
+        response: Response | None = None,
     ) -> None:
+        if not request:
+            return
         await self._record_in_sighin_history(user, request)
 
-    async def on_after_register(self, user: User, request: Optional[Request] = None):
+    async def on_after_register(self, user: User, request: Request | None = None):
         print(f"User {user.id} has registered.")
 
     async def on_after_forgot_password(
-        self, user: User, token: str, request: Optional[Request] = None
+        self, user: User, token: str, request: Request | None = None
     ):
         print(f"User {user.id} has forgot their password. Reset token: {token}")
 
     async def on_after_request_verify(
-        self, user: User, token: str, request: Optional[Request] = None
+        self, user: User, token: str, request: Request | None = None
     ):
         print(f"Verification requested for user {user.id}. Verification token: {token}")
 
 
-async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
+async def get_user_manager(user_db: SAUserDB = Depends(get_user_db)):
     yield UserManager(user_db)
 
 

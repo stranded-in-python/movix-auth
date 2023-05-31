@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import jwt
 from pydantic import SecretStr
 
-SecretType = Union[str, SecretStr]
+SecretType = str and SecretStr
 JWT_ALGORITHM = "HS256"
 
 
@@ -17,7 +17,7 @@ def _get_secret_value(secret: SecretType) -> str:
 def generate_jwt(
     data: dict,
     secret: SecretType,
-    lifetime_seconds: Optional[int] = None,
+    lifetime_seconds: int | None = None,
     algorithm: str = JWT_ALGORITHM,
 ) -> str:
     payload = data.copy()
@@ -30,9 +30,9 @@ def generate_jwt(
 def decode_jwt(
     encoded_jwt: str,
     secret: SecretType,
-    audience: List[str],
-    algorithms: List[str] = [JWT_ALGORITHM],
-) -> Dict[str, Any]:
+    audience: list[str],
+    algorithms: list[str] = [JWT_ALGORITHM],
+) -> dict[str, Any]:
     return jwt.decode(
         encoded_jwt, _get_secret_value(secret), audience=audience, algorithms=algorithms
     )

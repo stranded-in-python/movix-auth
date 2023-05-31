@@ -4,7 +4,7 @@ from core.config import settings
 bearer_transport = BearerTransport(token_url="auth/jwt/login")
 
 
-def get_jwt_strategy() -> JWTStrategy:
+def get_jwt_strategy() -> JWTStrategy[]:
     return JWTStrategy(secret=settings.verification_token_secret, lifetime_seconds=3600)
 
 

@@ -1,11 +1,6 @@
-import sys
 from datetime import datetime
+from typing import Protocol  # pragma: no cover
 from typing import Any, Dict, Generic, Optional
-
-if sys.version_info < (3, 8):
-    from typing_extensions import Protocol  # pragma: no cover
-else:
-    from typing import Protocol  # pragma: no cover
 
 from authentication.strategy.db.models import AP
 

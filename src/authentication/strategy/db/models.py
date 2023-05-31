@@ -1,21 +1,14 @@
-import sys
 from datetime import datetime
-from typing import TypeVar
-
-if sys.version_info < (3, 8):
-    from typing_extensions import Protocol  # pragma: no cover
-else:
-    from typing import Protocol  # pragma: no cover
-
-from db import models
+from typing import ClassVar, Protocol, TypeVar
+from uuid import UUID
 
 
-class AccessTokenProtocol(Protocol[models.ID]):
+class AccessTokenProtocol(Protocol):
     """Access token protocol that ORM model should follow."""
 
-    token: str
-    user_id: models.ID
-    created_at: datetime
+    token: ClassVar[str]
+    user_id: ClassVar[UUID]
+    created_at: ClassVar[datetime]
 
     def __init__(self, *args, **kwargs) -> None:
         ...  # pragma: no cover

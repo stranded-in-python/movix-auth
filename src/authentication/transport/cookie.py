@@ -1,10 +1,5 @@
-import sys
+from typing import Literal  # pragma: no cover
 from typing import Optional
-
-if sys.version_info < (3, 8):
-    from typing_extensions import Literal  # pragma: no cover
-else:
-    from typing import Literal  # pragma: no cover
 
 from fastapi import Response, status
 from fastapi.security import APIKeyCookie
@@ -32,7 +27,7 @@ class CookieTransport(Transport):
         self.cookie_domain = cookie_domain
         self.cookie_secure = cookie_secure
         self.cookie_httponly = cookie_httponly
-        self.cookie_samesite = cookie_samesite
+        self.cookie_samesite: Literal["lax", "strict", "none"] = cookie_samesite
         self.scheme = APIKeyCookie(name=self.cookie_name, auto_error=False)
 
     async def get_login_response(self, token: str) -> Response:

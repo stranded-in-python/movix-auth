@@ -1,7 +1,7 @@
 """FastAPI Users database adapter for SQLAlchemy."""
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type
+from typing import Any, Dict, Type, cast
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,111 +10,63 @@ from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
 from core.pagination import PaginateQueryParams
-from db.base import BaseUserDatabase
-from db.generics import GUID
-from db.models import ID, SIHE, UP
+
+from .base import BaseUserDatabase, SQLAlchemyBase
+from .generics import GUID
+from .models import ID, SIHE, UP
 
 __version__ = "5.0.0"
 
 UUID_ID = uuid.UUID
 
 
-class SQLAlchemyBaseUserTable(Generic[ID]):
+class SAUser(SQLAlchemyBase):
     """Base SQLAlchemy users table definition."""
 
     __tablename__ = "user"
-
-    if TYPE_CHECKING:
-        id: ID
-        email: str
-        hashed_password: str
-        is_active: bool
-        is_superuser: bool
-    else:
-        email: Mapped[str] = mapped_column(
-            String(length=320), unique=True, index=True, nullable=False
-        )
-        hashed_password: Mapped[str] = mapped_column(
-            String(length=1024), nullable=False
-        )
-        is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-        is_superuser: Mapped[bool] = mapped_column(
-            Boolean, default=False, nullable=False
-        )
+    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    username: Mapped[str] = mapped_column(
+        String(length=20), unique=True, index=True, nullable=False
+    )
+    email: Mapped[str] = mapped_column(
+        String(length=320), unique=True, index=True, nullable=False
+    )
+    hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    signin = relationship("SQLAlchemySignInHistoryTable")
 
 
-class SQLAlchemyBaseUserTableUUID(SQLAlchemyBaseUserTable[UUID_ID]):
-    if TYPE_CHECKING:
-        id: UUID_ID
-
-    else:
-        id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-
-
-class SQLAlchemyBaseSignInHistoryTable(Generic[ID]):
+class SASignInHistory(SQLAlchemyBase):
     __tablename__ = 'signins_history'
 
-    if TYPE_CHECKING:
-        id: ID
-        timestamp: datetime
-        fingerprint: str
-
-    else:
-        timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-        fingerprint: Mapped[str] = mapped_column(String(length=1024), nullable=False)
+    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String(length=1024), nullable=False)
+    user_id: Mapped[UUID_ID] = mapped_column("user", ForeignKey("user.id"))
 
 
-class SQLAlchemyBaseSignInHistoryTableUUID(SQLAlchemyBaseSignInHistoryTable[UUID_ID]):
-    if TYPE_CHECKING:
-        id: UUID_ID
-
-    else:
-        id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-
-
-class SQLAlchemyBaseOAuthAccountTable(Generic[ID]):
+class SQLAlchemyOAuthAccountTable(SQLAlchemyBase):
     """Base SQLAlchemy OAuth account table definition."""
 
     __tablename__ = "oauth_account"
 
-    if TYPE_CHECKING:  # pragma: no cover
-        id: ID
-        oauth_name: str
-        access_token: str
-        expires_at: Optional[int]
-        refresh_token: Optional[str]
-        account_id: str
-        account_email: str
-    else:
-        oauth_name: Mapped[str] = mapped_column(
-            String(length=100), index=True, nullable=False
-        )
-        access_token: Mapped[str] = mapped_column(String(length=1024), nullable=False)
-        expires_at: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-        refresh_token: Mapped[Optional[str]] = mapped_column(
-            String(length=1024), nullable=True
-        )
-        account_id: Mapped[str] = mapped_column(
-            String(length=320), index=True, nullable=False
-        )
-        account_email: Mapped[str] = mapped_column(String(length=320), nullable=False)
+    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    oauth_name: Mapped[str] = mapped_column(
+        String(length=100), index=True, nullable=False
+    )
+    access_token: Mapped[str] = mapped_column(String(length=1024), nullable=False)
+    expires_at: Mapped[None | int] = mapped_column(Integer, nullable=True)
+    refresh_token: Mapped[str | None] = mapped_column(
+        String(length=1024), nullable=True
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(length=320), index=True, nullable=False
+    )
+    account_email: Mapped[str] = mapped_column(String(length=320), nullable=False)
 
 
-class SQLAlchemyBaseOAuthAccountTableUUID(SQLAlchemyBaseOAuthAccountTable[UUID_ID]):
-    if TYPE_CHECKING:  # pragma: no cover
-        id: UUID_ID
-        user_id: UUID_ID
-    else:
-        id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-
-        @declared_attr
-        def user_id(cls) -> Mapped[GUID]:
-            return mapped_column(
-                GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False
-            )
-
-
-class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
+class SAUserDB(BaseUserDatabase[UP, ID, SIHE]):
     """
     Database adapter for SQLAlchemy.
 
@@ -125,26 +77,29 @@ class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
     session: AsyncSession
 
     def __init__(
-        self, session: AsyncSession, user_table: Type[UP], history_table: Type[SIHE]
+        self,
+        session: AsyncSession,
+        user_table: Type[SAUser],
+        history_table: Type[SASignInHistory],
     ):
         self.session = session
         self.user_table = user_table
         self.history_table = history_table
 
     @cache_decorator()
-    async def get(self, user_id: ID) -> Optional[UP]:
+    async def get(self, user_id: ID) -> UP | None:
         statement = select(self.user_table).where(self.user_table.id == user_id)
         return await self._get_user(statement)
 
     @cache_decorator()
-    async def get_by_username(self, username: str) -> Optional[UP]:
+    async def get_by_username(self, username: str) -> UP | None:
         statement = select(self.user_table).where(
             func.lower(self.user_table.username) == func.lower(username)
-        )  # TODO Fix type error
+        )
         return await self._get_user(statement)
 
     @cache_decorator()
-    async def get_by_email(self, email: str) -> Optional[UP]:
+    async def get_by_email(self, email: str) -> UP | None:
         statement = select(self.user_table).where(
             func.lower(self.user_table.email) == func.lower(email)
         )
@@ -154,7 +109,7 @@ class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
         user = self.user_table(**create_dict)
         self.session.add(user)
         await self.session.commit()
-        return user
+        return cast(UP, user)
 
     async def update(self, user: UP, update_dict: Dict[str, Any]) -> UP:
         for key, value in update_dict.items():
@@ -167,13 +122,13 @@ class SQLAlchemyUserDatabase(BaseUserDatabase[UP, ID, SIHE]):
         await self.session.delete(user)
         await self.session.commit()
 
-    async def _get_user(self, statement: Select) -> Optional[UP]:
+    async def _get_user(self, statement: Select) -> UP | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
     async def record_in_sighin_history(self, user_id: ID, event: SIHE):
-        event = self.history_table(user_id=user_id, **dict(event))
-        self.session.add(event)
+        e = self.history_table(user_id=user_id, **event.__dict__)
+        self.session.add(e)
         await self.session.commit()
 
     @cache_decorator()

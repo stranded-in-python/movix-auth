@@ -8,22 +8,23 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from core.config import settings
 from db.access_rights import (
-    SQLAlchemyAccessRightDatabase,
+    SAAccessRightDB,
     SQLAlchemyBaseAccessRightUUID,
-    SQLAlchemyBaseRoleAccessRightTableUUID,
-    SQLAlchemyRoleAccessRightDatabase,
+    SARoleAccessRightDB,
+    SARoleAccessRight,
+    :,
 )
 from db.roles import (
     SQLAlchemyBaseRoleTableUUID,
     SQLAlchemyBaseUserRoleTableUUID,
-    SQLAlchemyRoleDatabase,
-    SQLAlchemyUserRoleDatabase,
+    SARoleDB,
+    SAUserRoleDB,
 )
-from db.tokens import SQLAlchemyAccessTokenDatabase, SQLAlchemyBaseAccessTokenTableUUID
+from db.tokens import SAAccessTokenDB, SQLAlchemyBaseAccessTokenTableUUID
 from db.users import (
     SQLAlchemyBaseSignInHistoryTableUUID,
     SQLAlchemyBaseUserTableUUID,
-    SQLAlchemyUserDatabase,
+    SAUserDB,
 )
 
 DATABASE_URL = settings.database_url_async
@@ -77,7 +78,7 @@ class AccessRight(SQLAlchemyBaseAccessRightUUID, Base):
     pass
 
 
-class RoleAccessRight(SQLAlchemyBaseRoleAccessRightTableUUID, Base):
+class RoleAccessRight(SARoleAccessRight, Base):
     pass
 
 
@@ -97,28 +98,28 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyUserDatabase(session, User, SignInHistory)
+    yield SAUserDB(session, User, SignInHistory)
 
 
 async def get_role_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyRoleDatabase(session, Role)
+    yield SARoleDB(session, Role)
 
 
 async def get_user_role_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyUserRoleDatabase(session, UserRole)
+    yield SAUserRoleDB(session, UserRole)
 
 
 async def get_access_right_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyAccessRightDatabase(session, AccessRight)
+    yield SAAccessRightDB(session, AccessRight)
 
 
 async def get_access_token_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
+    yield SAAccessTokenDB(session, AccessToken)
 
 
 async def get_access_rights_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyAccessRightDatabase(session, AccessRight)
+    yield SAAccessRightDB(session, AccessRight)
 
 
 async def get_role_access_right_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyRoleAccessRightDatabase(session, RoleAccessRight)
+    yield SARoleAccessRightDB(session, RoleAccessRight)

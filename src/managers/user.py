@@ -1,4 +1,5 @@
 from typing import Any, Generic, Optional, Union
+from uuid import UUID
 
 import jwt
 from fastapi import Request, Response
@@ -17,7 +18,7 @@ RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
 
-class BaseUserManager(Generic[models.UP, models.ID]):
+class BaseUserManager(Generic[models.UP, models.SIHE]):
     reset_password_token_secret: SecretType
     reset_password_token_lifetime_seconds: int = 3600
     reset_password_token_audience: str = RESET_PASSWORD_TOKEN_AUDIENCE
@@ -26,12 +27,12 @@ class BaseUserManager(Generic[models.UP, models.ID]):
     verification_token_lifetime_seconds: int = 3600
     verification_token_audience: str = VERIFY_USER_TOKEN_AUDIENCE
 
-    user_db: BaseUserDatabase[models.UP, models.ID, models.SIHE]
+    user_db: BaseUserDatabase[models.UP, UUID, models.SIHE]
     password_helper: pw.PasswordHelperProtocol
 
     def __init__(
         self,
-        user_db: BaseUserDatabase[models.UP, models.ID, models.SIHE],
+        user_db: BaseUserDatabase[models.UP, UUID, models.SIHE],
         password_helper: Optional[pw.PasswordHelperProtocol] = None,
     ):
         self.user_db = user_db
@@ -40,14 +41,13 @@ class BaseUserManager(Generic[models.UP, models.ID]):
         else:
             self.password_helper = password_helper
 
-    def parse_id(self, value: Any) -> models.ID:
+    def parse_id(self, value: Any) -> UUID:
         """
-        Parse a value into a correct models.ID instance.
-        Must implement in Generic[models.ID]
+        Parse a value into a correct UUID instance.
 
         :param value: The value to parse.
-        :raises InvalidID: The models.ID value is invalid.
-        :return: An models.ID object.
+        :raises InvalidID: The UUID value is invalid.
+        :return: An UUID object.
         """
         raise NotImplementedError()
 
@@ -77,7 +77,7 @@ class BaseUserManager(Generic[models.UP, models.ID]):
 
         return created_user
 
-    async def get(self, user_id: models.ID) -> models.UP:
+    async def get(self, user_id: UUID) -> models.UP:
         user = await self.user_db.get(user_id)
 
         if user is None:
@@ -294,4 +294,4 @@ class BaseUserManager(Generic[models.UP, models.ID]):
         return await self.user_db.update(user, validated_update_dict)
 
 
-UserManagerDependency = DependencyCallable[BaseUserManager[models.UP, models.ID]]
+UserManagerDependency = DependencyCallable[BaseUserManager[models.UP, models.SIHE]]

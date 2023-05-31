@@ -1,12 +1,10 @@
-from typing import Optional
-
 from redis.asyncio import Redis
 
 from core.config import settings
 
 from .abc_manager import DBClient, DBManager
 
-redis: Optional[Redis] = None
+redis: Redis | None = None
 
 
 class RedisClient(Redis, DBClient):

@@ -1,5 +1,5 @@
 import datetime
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -44,15 +44,15 @@ class BaseUserCreate(CreateUpdateUserDictModel):
     email: str
     first_name: str
     last_name: str
-    is_active: Optional[bool] = True
-    is_superuser: Optional[bool] = False
+    is_active: bool | None = True
+    is_superuser: bool | None = False
 
 
 class BaseUserUpdate(CreateUpdateUserDictModel):
-    password: Optional[str]
-    email: Optional[EmailStr]
-    is_active: Optional[bool]
-    is_superuser: Optional[bool]
+    password: str | None
+    email: EmailStr | None
+    is_active: bool | None
+    is_superuser: bool | None
 
 
 U = TypeVar("U", bound=BaseUser)

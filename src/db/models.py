@@ -1,23 +1,23 @@
 from datetime import datetime
-from typing import Any, Protocol, TypeVar
+from typing import Any, ClassVar, Protocol, TypeVar
 from uuid import UUID
 
 import core.exceptions as ex
 
-ID = TypeVar("ID")
+ID = TypeVar("ID", bound=UUID)
 
 
-class UserProtocol(Protocol[ID]):
+class UserProtocol(Protocol):
     """User protocol that ORM model should follow."""
 
-    id: ID
-    username: str
-    email: str
-    first_name: str
-    last_name: str
-    hashed_password: str
-    is_active: bool
-    is_superuser: bool
+    id: ClassVar[UUID]
+    username: ClassVar[str]
+    email: ClassVar[str]
+    first_name: ClassVar[str]
+    last_name: ClassVar[str]
+    hashed_password: ClassVar[str]
+    is_active: ClassVar[bool]
+    is_superuser: ClassVar[bool]
 
     def __init__(self, *args, **kwargs) -> None:
         ...
@@ -26,11 +26,11 @@ class UserProtocol(Protocol[ID]):
 UP = TypeVar("UP", bound=UserProtocol)
 
 
-class RoleProtocol(Protocol[ID]):
+class RoleProtocol(Protocol):
     """Role protocol that ORM model should follow."""
 
-    id: ID
-    name: str
+    id: ClassVar[UUID]
+    name: ClassVar[str]
 
     def __init__(self, *args, **kwargs) -> None:
         ...
@@ -39,22 +39,30 @@ class RoleProtocol(Protocol[ID]):
 RP = TypeVar("RP", bound=RoleProtocol)
 
 
-class UserRoleProtocol(Protocol[ID]):
+class UserRoleProtocol(Protocol):
     """User/Role protocol that ORM model should follow."""
 
-    id: ID
-    user_id: ID
-    role_id: ID
+    id: ClassVar[UUID]
+    user_id: ClassVar[UUID]
+    role_id: ClassVar[UUID]
 
 
 URP = TypeVar("URP", bound=UserRoleProtocol)
 
 
-class AccessRightProtocol(Protocol[ID]):
+class UserRoleUpdateProtocol(Protocol):
+    user_id: ClassVar[UUID]
+    role_id: ClassVar[UUID]
+
+
+URUP = TypeVar("URUP", bound=UserRoleUpdateProtocol)
+
+
+class AccessRightProtocol(Protocol):
     """Access right protocol that ORM model should follow."""
 
-    id: ID
-    name: str
+    id: ClassVar[UUID]
+    name: ClassVar[str]
 
     def __init__(self, *args, **kwargs) -> None:
         ...
@@ -63,33 +71,33 @@ class AccessRightProtocol(Protocol[ID]):
 ARP = TypeVar("ARP", bound=AccessRightProtocol)
 
 
-class RoleAccessRightProtocol(Protocol[ID]):
+class RoleAccessRightProtocol(Protocol):
     """Role/AccessRight protocol that ORM model should follow."""
 
-    id: ID
-    user_id: ID
-    access_right_id: ID
+    id: ClassVar[UUID]
+    user_id: ClassVar[UUID]
+    access_right_id: ClassVar[UUID]
 
 
 RARP = TypeVar("RARP", bound=RoleAccessRightProtocol)
 
 
-class SignInHistoryEvent(Protocol[ID]):
-    id: ID
-    user_id: ID
-    timestamp: datetime
-    fingerprint: str
+class SignInHistoryEvent(Protocol):
+    id: ClassVar[UUID]
+    user_id: ClassVar[UUID]
+    timestamp: ClassVar[datetime]
+    fingerprint: ClassVar[str]
 
 
 SIHE = TypeVar("SIHE", bound=SignInHistoryEvent)
 
 
-class AccessTokenProtocol(Protocol[ID]):
+class AccessTokenProtocol(Protocol):
     """Access token protocol that ORM model should follow."""
 
-    token: str
-    user_id: ID
-    created_at: datetime
+    token: ClassVar[str]
+    user_id: ClassVar[UUID]
+    created_at: ClassVar[datetime]
 
     def __init__(self, *args, **kwargs) -> None:
         ...  # pragma: no cover
