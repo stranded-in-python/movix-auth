@@ -75,7 +75,7 @@ class RoleAccessRightProtocol(Protocol):
     """Role/AccessRight protocol that ORM model should follow."""
 
     id: ClassVar[UUID]
-    user_id: ClassVar[UUID]
+    role_id: ClassVar[UUID]
     access_right_id: ClassVar[UUID]
 
 
