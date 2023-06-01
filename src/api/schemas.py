@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
 
+AccessRightID = TypeVar('AccessRightID', bound=UUID)
 UserID = TypeVar("UserID", bound=UUID)
 RoleID = TypeVar("RoleID", bound=UUID)
 UserRoleID = TypeVar("UserRoleID", bound=UUID)
@@ -29,13 +30,10 @@ class BaseUser(Generic[UserID], CreateUpdateUserDictModel):
 
     id: UserID
     email: EmailStr
+    first_name: str
+    last_name: str
     is_active: bool = True
     is_superuser: bool = False
-
-    class Config:
-        orm_mode = True
-
-    # TODO is self.from_orm method needed?
 
 
 class BaseUserCreate(CreateUpdateUserDictModel):
@@ -51,6 +49,8 @@ class BaseUserCreate(CreateUpdateUserDictModel):
 class BaseUserUpdate(CreateUpdateUserDictModel):
     password: str | None
     email: EmailStr | None
+    first_name: str
+    last_name: str
     is_active: bool | None
     is_superuser: bool | None
 
@@ -74,9 +74,6 @@ class BaseRole(Generic[RoleID], CreateUpdateDictModel):
     id: RoleID
     name: str
 
-    class Config:
-        orm_mode = True
-
 
 class BaseRoleCreate(CreateUpdateDictModel):
     name: str
@@ -97,9 +94,6 @@ class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
     user_id: UserID
     role_id: RoleID
 
-    class Config:
-        orm_mode = True
-
 
 class UserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
     user_id: UserID
@@ -108,3 +102,37 @@ class UserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
 
 UR = TypeVar("UR", bound=BaseUserRole)
 URU = TypeVar("URU", bound=UserRoleUpdate)
+
+
+class BaseAccessRight(Generic[AccessRightID], CreateUpdateDictModel):
+    id: AccessRightID
+    name: str
+
+
+class BaseAccessRightCreate(CreateUpdateDictModel):
+    name: str
+
+
+class BaseAccessRightUpdate(Generic[AccessRightID], CreateUpdateDictModel):
+    id: AccessRightID
+    name: str
+
+
+AR = TypeVar("AR", bound=BaseAccessRight)
+ARC = TypeVar("ARC", bound=BaseAccessRightCreate)
+ARU = TypeVar("ARU", bound=BaseAccessRightUpdate)
+
+
+class BaseRoleAccessRight(Generic[AccessRightID, RoleID], CreateUpdateDictModel):
+    id: AccessRightID
+    access_right_id: AccessRightID
+    role_id: RoleID
+
+
+class BaseRoleAccessRightUpdate(Generic[AccessRightID, RoleID], CreateUpdateDictModel):
+    access_right_id: AccessRightID
+    role_id: RoleID
+
+
+RAR = TypeVar("RAR", bound=BaseRoleAccessRight)
+RARU = TypeVar("RARU", bound=BaseRoleAccessRightUpdate)

@@ -1,14 +1,19 @@
 from typing import Any, Generic
 from uuid import UUID
 
-from fastapi import Request
+from fastapi import Depends, Request
 
 from api import schemas
+from api.roles import APIRoles
+from app.services.users import auth_backend, get_user_manager
 from core import exceptions
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db import models
+from db import base, db, models, roles
 from db.base import BaseRoleDatabase, BaseUserRoleDatabase
+from db.models import UUIDIDMixin
+from db.roles import SARoleDB, SAUserRoleDB
+from managers.role import BaseRoleManager
 
 
 class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
@@ -144,3 +149,17 @@ class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
 RoleManagerDependency = DependencyCallable[
     BaseRoleManager[models.RP, models.URP, models.URUP]
 ]
+
+
+class RoleManager(UUIDIDMixin, BaseRoleManager[SARole, UUID]):
+    pass
+
+
+async def get_role_manager(
+    role_db: SARoleDB = Depends(get_role_db),
+    user_role_db: SAUserRoleDB = Depends(get_user_role_db),
+):
+    yield RoleManager(role_db, user_role_db=user_role_db)
+
+
+api_roles = APIRoles[User, UUID](get_user_manager, get_role_manager, [auth_backend])

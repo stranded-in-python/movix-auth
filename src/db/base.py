@@ -32,11 +32,11 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
         """Get a single user by email."""
         ...
 
-    async def create(self, create_dict: dict[str, t.Any]) -> UP:
+    async def create(self, create_dict: t.Mapping[str, t.Any]) -> UP:
         """Create a user."""
         ...
 
-    async def update(self, user: UP, update_dict: dict[str, t.Any]) -> UP:
+    async def update(self, user: UP, update_dict: t.Mapping[str, t.Any]) -> UP:
         """Update a user."""
         ...
 
@@ -50,7 +50,7 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
 
     async def get_sign_in_history(
         self, user_id: ID, pagination_params: PaginateQueryParams
-    ) -> list[TRow]:
+    ) -> t.Iterable[TRow]:
         """Get recorded events in users sigh-in history"""
         ...
 
@@ -64,11 +64,11 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
         """Get a role by name"""
         ...
 
-    async def create(self, create_dict: dict[str, t.Any]) -> RP:
+    async def create(self, create_dict: t.Mapping[str, t.Any]) -> RP:
         """Create a role."""
         ...
 
-    async def update(self, role: RP, update_dict: dict[str, t.Any]) -> RP:
+    async def update(self, role: RP, update_dict: t.Mapping[str, t.Any]) -> RP:
         """Update a role."""
         ...
 
@@ -78,7 +78,7 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
 
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> list[TRow]:
+    ) -> t.Iterable[TRow]:
         """Delete a role."""
         ...
 
@@ -93,7 +93,7 @@ class BaseUserRoleDatabase(t.Generic[URP, URUP, ID]):
     async def remove_user_role(self, user_role: URUP) -> URP:
         ...
 
-    async def get_user_roles(self, user_id: ID) -> list[URP]:
+    async def get_user_roles(self, user_id: ID) -> t.Iterable[URP]:
         ...
 
 
@@ -102,11 +102,13 @@ class BaseAccessRightDatabase(t.Generic[ARP, ID]):
         """Get a single access right by id."""
         ...
 
-    async def create(self, create_dict: dict[str, t.Any]) -> ARP:
+    async def create(self, create_dict: t.Mapping[str, t.Any]) -> ARP:
         """Create an access right."""
         ...
 
-    async def update(self, access_right: ARP, update_dict: dict[str, t.Any]) -> ARP:
+    async def update(
+        self, access_right: ARP, update_dict: t.Mapping[str, t.Any]
+    ) -> ARP:
         """Update an access right."""
         ...
 
@@ -120,12 +122,12 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
         """Get a single access right by id."""
         ...
 
-    async def create(self, create_dict: dict[str, t.Any]) -> RARP:
+    async def create(self, create_dict: t.Mapping[str, t.Any]) -> RARP:
         """Create an access right."""
         ...
 
     async def update(
-        self, role_access_right: RARP, update_dict: dict[str, t.Any]
+        self, role_access_right: RARP, update_dict: t.Mapping[str, t.Any]
     ) -> RARP:
         """Update an access right."""
         ...

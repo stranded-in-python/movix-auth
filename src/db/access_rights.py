@@ -1,28 +1,28 @@
 import uuid
-from typing import Any, Dict, cast
+from typing import Any, Iterable, Mapping
 
-from sqlalchemy import ForeignKey, String, select
+from sqlalchemy import ForeignKey, Result, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
-
-from .base import BaseAccessRightDatabase, BaseRoleAccessRightDatabase, SQLAlchemyBase
-from .generics import GUID
-from .models import ARP, ID, RARP
+from core import schemas
+from db import base, generics, models
 
 
-class SAAccessRight(SQLAlchemyBase):
+class SAAccessRight(base.SQLAlchemyBase):
     """Base SQLAlchemy access_right table definition."""
 
     __tablename__ = "access_right"
 
-    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(
+        generics.GUID, primary_key=True, default=uuid.uuid4
+    )
     name: Mapped[str] = mapped_column(String(length=100), nullable=False, index=True)
 
 
-class SAAccessRightDB(BaseAccessRightDatabase):
+class SAAccessRightDB(base.BaseAccessRightDatabase[schemas.AccessRight, uuid.UUID]):
     session: AsyncSession
     access_right_table: type[SAAccessRight]
 
@@ -30,34 +30,39 @@ class SAAccessRightDB(BaseAccessRightDatabase):
         self.session = session
         self.access_right_table = access_right_table
 
-    async def get_all_access_rights(self) -> list[ARP] | None:
+    async def get_all_access_rights(self) -> Iterable[schemas.AccessRight] | None:
         statement = select(self.access_right_table)
-        access_rights = await self._get_access_right(statement)
+        access_rights = await self._get_access_rights(statement)
         if access_rights is None:
-            return
-        return list(access_rights)
+            return None
+        return list(schemas.AccessRight.from_orm(ar) for ar in access_rights)
 
     @cache_decorator()
-    async def get(self, access_right_id: ID) -> None | ARP:
+    async def get(self, access_right_id: uuid.UUID) -> None | schemas.AccessRight:
         statement = select(self.access_right_table).where(
             self.access_right_table.id == access_right_id
         )
-        return await self._get_access_right(statement)
+        ar = await self._get_access_right(statement)
+        return schemas.AccessRight.from_orm(ar)
 
-    async def create(self, create_dict: Dict[str, Any]) -> ARP:
+    async def create(self, create_dict: Mapping[str, Any]) -> schemas.AccessRight:
         access_right = self.access_right_table(**create_dict)
         self.session.add(access_right)
         await self.session.commit()
-        return cast(ARP, access_right)
+        return schemas.AccessRight.from_orm(access_right)
 
-    async def update(self, access_right: ARP, update_dict: Dict[str, Any]) -> ARP:
+    async def update(
+        self, access_right: schemas.AccessRight, update_dict: Mapping[str, Any]
+    ) -> schemas.AccessRight:
+        ar_model = self.get(access_right.id)
         for key, value in update_dict.items():
+            setattr(ar_model, key, value)
             setattr(access_right, key, value)
-        self.session.add(access_right)
+        self.session.add(ar_model)
         await self.session.commit()
         return access_right
 
-    async def delete(self, access_right_id: ID) -> None:
+    async def delete(self, access_right_id: uuid.UUID) -> None:
         statement = select(self.access_right_table).where(
             self.access_right_table.id == access_right_id
         )
@@ -65,9 +70,15 @@ class SAAccessRightDB(BaseAccessRightDatabase):
         await self.session.delete(access_right_to_delete)
         await self.session.commit()
 
-    async def _get_access_right(self, statement: Select) -> None | ARP:
+    async def _get_access_right(self, statement: Select) -> None | SAAccessRight:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+
+    async def _get_access_rights(self, statement: Select) -> None | Result:
+        results = await self.session.execute(statement)
+        if not results:
+            return results
+        return results.unique()
 
     def __getstate__(self):
         """pickle.dumps()"""
@@ -77,25 +88,29 @@ class SAAccessRightDB(BaseAccessRightDatabase):
         return state
 
 
-class SARoleAccessRight(SQLAlchemyBase):
+class SARoleAccessRight(base.SQLAlchemyBase):
     __tablename__ = "role_access_right"
 
-    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(
+        generics.GUID, primary_key=True, default=uuid.uuid4
+    )
     role_id: Mapped[uuid.UUID] = mapped_column(
-        GUID,
+        generics.GUID,
         ForeignKey("role.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
         index=True,
     )
     access_right_id: Mapped[uuid.UUID] = mapped_column(
-        GUID,
+        generics.GUID,
         ForeignKey("access_right.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
         index=True,
     )
 
 
-class SARoleAccessRightDB(BaseRoleAccessRightDatabase):
+class SARoleAccessRightDB(
+    base.BaseRoleAccessRightDatabase[schemas.RoleAccessRight, uuid.UUID]
+):
     session: AsyncSession
     role_access_right_table: type[SARoleAccessRight]
 
@@ -106,7 +121,9 @@ class SARoleAccessRightDB(BaseRoleAccessRightDatabase):
         self.role_access_right_table = role_access_right_table
 
     @cache_decorator()
-    async def get(self, role_id: ID, access_right_id: ID) -> None | RARP:
+    async def get(
+        self, role_id: uuid.UUID, access_right_id: uuid.UUID
+    ) -> schemas.RoleAccessRight | None:
         statement = (
             select(self.role_access_right_table)
             .where(self.role_access_right_table.role_id == role_id)
@@ -114,15 +131,15 @@ class SARoleAccessRightDB(BaseRoleAccessRightDatabase):
         )
         return await self._get_role_access_right(statement)
 
-    async def create(self, create_dict: Dict[str, Any]) -> RARP:
+    async def create(self, create_dict: Mapping[str, Any]) -> schemas.RoleAccessRight:
         role_access_right = self.role_access_right_table(**create_dict)
         self.session.add(role_access_right)
         await self.session.commit()
-        return cast(RARP, role_access_right)
+        return schemas.RoleAccessRight.from_orm(role_access_right)
 
     async def update(
-        self, role_access_right: RARP, update_dict: Dict[str, Any]
-    ) -> RARP:
+        self, role_access_right: schemas.RoleAccessRight, update_dict: Mapping[str, Any]
+    ) -> schemas.RoleAccessRight:
         for key, value in update_dict.items():
             setattr(role_access_right, key, value)
         self.session.add(role_access_right)
@@ -134,7 +151,7 @@ class SARoleAccessRightDB(BaseRoleAccessRightDatabase):
         await self.session.commit()
 
     @cache_decorator()
-    async def get_all_access_rights_of_user(self, role_id: ID) -> None | list[RARP]:
+    async def get_all_access_rights_of_user(self, role_id: ID) -> None | Iterable[RARP]:
         statement = select(self.role_access_right_table).where(
             self.role_access_right_table.role_id == role_id
         )
