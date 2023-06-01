@@ -3,11 +3,11 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, Type
 
-from sqlalchemy import ForeignKey, String, select
+from sqlalchemy import ForeignKey, Integer, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
-from authentication.strategy.db.adapter import TokenManager
+from authentication.strategy.db.adapter import TokenBlacklistManager
 from cache.cache import cache_decorator
 
 from .base import SQLAlchemyBase
@@ -41,7 +41,7 @@ class SARefreshTokenBlacklist(SABaseToken, SQLAlchemyBase):
     __tablename__ = "refresh_token_blacklist"
 
 
-class SABaseTokenBlacklistDB(TokenManager[schemas.Token], abc.ABC):
+class SABaseTokenBlacklistDB(TokenBlacklistManager[schemas.Token], abc.ABC):
     """
     Access token database adapter for SQLAlchemy.
 
@@ -75,24 +75,13 @@ class SABaseTokenBlacklistDB(TokenManager[schemas.Token], abc.ABC):
             return None
         return schemas.Token.from_orm(token_model)
 
-    async def create(self, create_dict: Dict[str, Any]) -> schemas.Token:
+    async def enlist(self, create_dict: Dict[str, Any]) -> schemas.Token:
         token = self.access_token_table(**create_dict)
         self.session.add(token)
         await self.session.commit()
         return schemas.Token.from_orm(token)
 
-    async def update(
-        self, access_token: schemas.Token, update_dict: Dict[str, Any]
-    ) -> schemas.Token:
-        stored = await self.get_by_token(access_token.token)
-        for key, value in update_dict.items():
-            setattr(access_token, key, value)
-            setattr(stored, key, value)
-        self.session.add(stored)
-        await self.session.commit()
-        return access_token
-
-    async def delete(self, access_token: schemas.Token) -> None:
+    async def forget(self, access_token: schemas.Token) -> None:
         await self.session.delete(access_token)
         await self.session.commit()
 

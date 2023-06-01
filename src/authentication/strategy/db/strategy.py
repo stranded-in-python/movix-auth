@@ -4,7 +4,7 @@ from typing import Any, Dict, Generic, Optional
 
 import core.exceptions as exceptions
 from authentication.strategy.base import Strategy
-from authentication.strategy.db.adapter import AccessTokenDatabase
+from authentication.strategy.db.adapter import TokenManager
 from authentication.strategy.db.models import AP
 from db import models
 from managers.user import BaseUserManager
@@ -14,7 +14,7 @@ class DatabaseStrategy(
     Strategy[models.UP, models.ID], Generic[models.UP, models.ID, AP]
 ):
     def __init__(
-        self, database: AccessTokenDatabase[AP], lifetime_seconds: Optional[int] = None
+        self, database: TokenManager[AP], lifetime_seconds: Optional[int] = None
     ):
         self.database = database
         self.lifetime_seconds = lifetime_seconds
