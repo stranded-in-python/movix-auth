@@ -7,11 +7,11 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
-from core import schemas
 from core.pagination import PaginateQueryParams
 
 from .base import BaseRoleDatabase, BaseUserRoleDatabase, SQLAlchemyBase
 from .generics import GUID
+from .schemas import schemas
 
 UUID_ID = uuid.UUID
 TRow = TypeVar("TRow")
@@ -33,6 +33,8 @@ class SARoleDB(BaseRoleDatabase[schemas.RoleRead, UUID_ID]):
     def __init__(self, session: AsyncSession, role_table: type[SARole]):
         self.session = session
         self.role_table = role_table
+
+    """Access token protocol that ORM model should follow."""
 
     @cache_decorator()
     async def search(

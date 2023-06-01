@@ -20,7 +20,9 @@ class DatabaseStrategy(
         self.lifetime_seconds = lifetime_seconds
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[models.UP, models.SIHE],
     ) -> Optional[models.UP]:
         if token is None:
             return None

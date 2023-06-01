@@ -1,17 +1,15 @@
-from datetime import datetime
-from typing import ClassVar, Protocol, TypeVar
-from uuid import UUID
+import datetime
+from typing import Protocol, TypeVar
+
+from db import models
 
 
-class AccessTokenProtocol(Protocol):
+class AccessTokenProtocol(Protocol[models.ID]):
     """Access token protocol that ORM model should follow."""
 
-    token: ClassVar[str]
-    user_id: ClassVar[UUID]
-    created_at: ClassVar[datetime]
-
-    def __init__(self, *args, **kwargs) -> None:
-        ...  # pragma: no cover
+    token: str
+    user_id: models.ID
+    created_at: datetime.datetime
 
 
 AP = TypeVar("AP", bound=AccessTokenProtocol)

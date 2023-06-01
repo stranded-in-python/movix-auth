@@ -7,8 +7,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
-from core import schemas
-from db import base, generics
+
+from . import base, generics
+from .schemas import schemas
 
 
 class SAAccessRight(base.SQLAlchemyBase):
@@ -129,7 +130,10 @@ class SARoleAccessRightDB(
             .where(self.role_access_right_table.role_id == role_id)
             .where(self.role_access_right_table.access_right_id == access_right_id)
         )
-        return await self._get_role_access_right(statement)
+        model = await self._get_role_access_right(statement)
+        if not model:
+            return None
+        return schemas.RoleAccessRight.from_orm(model)
 
     async def create(self, create_dict: Mapping[str, Any]) -> schemas.RoleAccessRight:
         role_access_right = self.role_access_right_table(**create_dict)
@@ -140,8 +144,10 @@ class SARoleAccessRightDB(
     async def update(
         self, role_access_right: schemas.RoleAccessRight, update_dict: Mapping[str, Any]
     ) -> schemas.RoleAccessRight:
+        model = self.get(role_access_right.id)
         for key, value in update_dict.items():
             setattr(role_access_right, key, value)
+            setattr(model, key, value)
         self.session.add(role_access_right)
         await self.session.commit()
         return role_access_right

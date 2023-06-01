@@ -5,7 +5,7 @@ from typing import Any, Dict, Generic, Optional
 from authentication.strategy.db.models import AP
 
 
-class AccessTokenDatabase(Protocol, Generic[AP]):
+class TokenManager(Protocol, Generic[AP]):
     """Protocol for retrieving, creating and updating access tokens from a database."""
 
     async def get_by_token(
