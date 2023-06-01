@@ -8,7 +8,7 @@ from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
 from core import schemas
-from db import base, generics, models
+from db import base, generics
 
 
 class SAAccessRight(base.SQLAlchemyBase):

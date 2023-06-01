@@ -1,17 +1,17 @@
 import uuid
-from typing import Any, Dict, Optional, TypeVar, cast
+from typing import Any, Iterable, Mapping, TypeVar
 
-from sqlalchemy import ForeignKey, String, func, select
+from sqlalchemy import ForeignKey, Result, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
+from core import schemas
 from core.pagination import PaginateQueryParams
 
 from .base import BaseRoleDatabase, BaseUserRoleDatabase, SQLAlchemyBase
 from .generics import GUID
-from .models import RP, URP, URUP
 
 UUID_ID = uuid.UUID
 TRow = TypeVar("TRow")
@@ -26,7 +26,7 @@ class SARole(SQLAlchemyBase):
     name: Mapped[str] = mapped_column(String(length=100), nullable=False, index=True)
 
 
-class SARoleDB(BaseRoleDatabase[RP, UUID_ID]):
+class SARoleDB(BaseRoleDatabase[schemas.RoleRead, UUID_ID]):
     session: AsyncSession
     user_table: type[SARole]
 
@@ -37,7 +37,7 @@ class SARoleDB(BaseRoleDatabase[RP, UUID_ID]):
     @cache_decorator()
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> list[RP]:
+    ) -> Iterable[schemas.RoleRead]:
         statement = select(self.role_table)
         if filter_param:
             statement.where(self.role_table.name == filter_param)
@@ -49,30 +49,38 @@ class SARoleDB(BaseRoleDatabase[RP, UUID_ID]):
 
         results = await self.session.execute(statement)
 
-        return cast(list[RP], list(results.fetchall()))
+        return list(schemas.RoleRead.from_orm(result) for result in results.fetchall())
 
     @cache_decorator()
-    async def get_by_id(self, role_id: UUID_ID) -> RP | None:
+    async def get_by_id(self, role_id: UUID_ID) -> schemas.RoleRead | None:
         statement = select(self.role_table).where(self.role_table.id == role_id)
-        return await self._get_role(statement)
+        model = await self._get_role(statement)
+        if not model:
+            return None
+        return schemas.RoleRead.from_orm(model)
 
     @cache_decorator()
-    async def get_by_name(self, name: str) -> RP | None:
+    async def get_by_name(self, name: str) -> schemas.RoleRead | None:
         statement = select(self.role_table).where(
             func.lower(self.role_table.name) == func.lower(name)
         )
-        return await self._get_role(statement)
+        model = await self._get_role(statement)
+        return schemas.RoleRead.from_orm(model)
 
-    async def create(self, create_dict: Dict[str, Any]) -> RP:
+    async def create(self, create_dict: Mapping[str, Any]) -> schemas.RoleRead:
         role = self.role_table(**create_dict)
         self.session.add(role)
         await self.session.commit()
-        return cast(RP, role)
+        return schemas.RoleRead.from_orm(role)
 
-    async def update(self, role: RP, update_dict: Dict[str, Any]) -> RP:
+    async def update(
+        self, role: schemas.RoleRead, update_dict: Mapping[str, Any]
+    ) -> schemas.RoleRead:
+        model = self.get_by_id(role.id)
         for key, value in update_dict.items():
+            setattr(model, key, value)
             setattr(role, key, value)
-        self.session.add(role)
+        self.session.add(model)
         await self.session.commit()
         return role
 
@@ -82,7 +90,7 @@ class SARoleDB(BaseRoleDatabase[RP, UUID_ID]):
         await self.session.delete(role_to_delete)
         await self.session.commit()
 
-    async def _get_role(self, statement: Select) -> RP | None:
+    async def _get_role(self, statement: Select) -> Result | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
@@ -112,7 +120,9 @@ class SAUserRole(SQLAlchemyBase):
     )
 
 
-class SAUserRoleDB(BaseUserRoleDatabase[URP, URUP, UUID_ID]):
+class SAUserRoleDB(
+    BaseUserRoleDatabase[schemas.UserRoleRead, schemas.UserRoleUpdate, UUID_ID]
+):
     session: AsyncSession
     user_role_table: type[SAUserRole]
 
@@ -121,31 +131,37 @@ class SAUserRoleDB(BaseUserRoleDatabase[URP, URUP, UUID_ID]):
         self.user_role_table = user_role_table
 
     @cache_decorator()
-    async def get_user_role(self, user_id: UUID_ID, role_id: UUID_ID) -> URP | None:
+    async def get_user_role(
+        self, user_id: UUID_ID, role_id: UUID_ID
+    ) -> schemas.UserRoleRead | None:
         statement = select(self.user_role_table).where(
             (self.user_role_table.user_id == user_id)
             & (self.user_role_table.role_id == role_id)
         )
 
         results = await self.session.execute(statement)
-        return cast(URP | None, results.unique().scalar_one_or_none())
+        return schemas.UserRoleRead.from_orm(results.unique().scalar_one_or_none())
 
-    async def assign_user_role(self, user_id: UUID_ID, role_id: UUID_ID) -> URP:
+    async def assign_user_role(
+        self, user_id: UUID_ID, role_id: UUID_ID
+    ) -> schemas.UserRoleRead:
         user_role = self.user_role_table(user_id=user_id, role_id=role_id)
 
         self.session.add(user_role)
         await self.session.commit()
 
-        return cast(URP, user_role)
+        return schemas.UserRoleRead.from_orm(user_role)
 
-    async def remove_user_role(self, user_role: URP) -> None:
+    async def remove_user_role(self, user_role: schemas.UserRoleRead) -> None:
         instance = await self.get_user_role(user_role.user_id, user_role.role_id)
 
         await self.session.delete(instance)
         await self.session.commit()
 
     @cache_decorator()
-    async def get_user_roles(self, user_id: UUID_ID) -> list[URP] | None:
+    async def get_user_roles(
+        self, user_id: UUID_ID
+    ) -> Iterable[schemas.UserRoleRead] | None:
         statement = select(self.user_role_table).where(
             self.user_role_table.user_id == user_id
         )
@@ -154,7 +170,9 @@ class SAUserRoleDB(BaseUserRoleDatabase[URP, URUP, UUID_ID]):
         if not results:
             return
 
-        return cast(list[URP], list(results.fetchall()))
+        return list(
+            schemas.UserRoleRead.from_orm(result) for result in results.fetchall()
+        )
 
     def __getstate__(self):
         """pickle.dumps()"""
