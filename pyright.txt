@@ -1,0 +1,16 @@
+No configuration file found.
+pyproject.toml file found at /home/sbkubric/workspace/movix/projects/movix-auth.
+Loading pyproject.toml file at /home/sbkubric/workspace/movix/projects/movix-auth/pyproject.toml
+Assuming Python version 3.11
+Assuming Python platform Linux
+Auto-excluding **/node_modules
+Auto-excluding **/__pycache__
+Auto-excluding **/.*
+stubPath /home/sbkubric/workspace/movix/projects/movix-auth/typings is not a valid directory.
+Searching for source files
+Auto-excluding /home/sbkubric/workspace/movix/projects/movix-auth/venv
+File or directory "/home/sbkubric/workspace/movix/projects/movix-auth/2" does not exist.
+Found 66 source files
+pyright 1.1.281
+0 errors, 0 warnings, 0 informations 
+Completed in 4.286sec

@@ -17,8 +17,17 @@ paths:
               properties:
                 username:
                   type: string
+                  required: true
                 password:
                   type: string
+                  required: true
+                email:
+                  type: string
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+
       responses:
         "201":
           description: User registered successfully
@@ -37,8 +46,10 @@ paths:
               properties:
                 username:
                   type: string
+                  required: true
                 password:
                   type: string
+                  required: true
       responses:
         "200":
           description: Login successful
@@ -75,9 +86,13 @@ paths:
                 type: object
                 properties:
                   access_token:
-                    type: string
+                    type: string # проверяем подпись
+                  refresh_token:
+                    type: string # храним в бд id и в payload
+
         "401":
           description: Unauthorized (e.g., invalid refresh token)
+
 
   /logout:
     post:
@@ -86,9 +101,34 @@ paths:
         "204":
           description: Logout successful
 
+
   /user:
+    get:
+      summary: Get sensitive data of current user
+      responses:
+        "200":
+          description: Data get successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  first_name:
+                    type: string
+                  last_name:
+                    type: string
+
+        "403":
+          description: Forbidden
+
     put:
-      summary: Change login or password
+      summary: Change login or pw
       requestBody:
         required: true
         content:
@@ -100,11 +140,14 @@ paths:
                   type: string
                 password:
                   type: string
+                password_old:
+                  type: string
       responses:
         "200":
-          description: Login or password changed successfully
+          description: Login or pw changed successfully
         "400":
           description: Bad request (e.g., missing required fields)
+
 
   /user/sign-in-history:
     get:
@@ -125,6 +168,7 @@ paths:
                     ip:
                       type: string
 
+
   /roles:
     post:
       summary: Create a role
@@ -140,8 +184,19 @@ paths:
       responses:
         "201":
           description: Role created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+
         "400":
           description: Bad request (e.g., missing required fields)
+
 
     get:
       summary: View all roles
@@ -176,6 +231,9 @@ paths:
             schema:
               type: object
               properties:
+                id:
+                  type:
+                    integer
                 name:
                   type: string
       responses:
@@ -247,3 +305,6 @@ paths:
                       type: string
         "404":
           description: User not found
+
+components:
+  schemas:
