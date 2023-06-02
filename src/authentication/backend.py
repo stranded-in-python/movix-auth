@@ -6,9 +6,10 @@ from authentication.strategy import Strategy, StrategyDestroyNotSupportedError
 from authentication.transport import Transport, TransportLogoutNotSupportedError
 from core.dependency_types import DependencyCallable
 from db import models
+from db.schemas import generics
 
 
-class AuthenticationBackend(Generic[models.UP, models.ID]):
+class AuthenticationBackend(Generic[models.UP, models.UC, models.SIHE]):
     """
     Combination of an authentication transport and strategy.
 
@@ -27,20 +28,27 @@ class AuthenticationBackend(Generic[models.UP, models.ID]):
         self,
         name: str,
         transport: Transport,
-        get_strategy: DependencyCallable[Strategy[models.UP, models.ID]],
+        get_strategy: DependencyCallable[
+            Strategy[models.UP, generics.UC, generics.UU, models.SIHE]
+        ],
     ):
         self.name = name
         self.transport = transport
         self.get_strategy = get_strategy
 
     async def login(
-        self, strategy: Strategy[models.UP, models.ID], user: models.UP
+        self,
+        strategy: Strategy[models.UP, generics.UC, generics.UU, models.SIHE],
+        user: models.UP,
     ) -> Response:
         token = await strategy.write_token(user)
         return await self.transport.get_login_response(token)
 
     async def logout(
-        self, strategy: Strategy[models.UP, models.ID], user: models.UP, token: str
+        self,
+        strategy: Strategy[models.UP, generics.UC, generics.UU, models.SIHE],
+        user: models.UP,
+        token: str,
     ) -> Response:
         try:
             await strategy.destroy_token(token, user)

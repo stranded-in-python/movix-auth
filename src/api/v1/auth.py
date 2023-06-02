@@ -6,13 +6,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
 from db import models
-from managers.user import BaseUserManager, UserManagerDependency
+from db.schemas import generics
+from managers.user import UserMgrDependencyType, UserMgrType
 from openapi import OpenAPIResponseType
+
+StrategyType = Strategy[models.UP, generics.UC, generics.UU, models.SIHE]
 
 
 def get_auth_router(
     backend: AuthenticationBackend,
-    get_user_manager: UserManagerDependency[models.UP, models.ID],
+    get_user_manager: UserMgrDependencyType,
     authenticator: Authenticator,
     requires_verification: bool = False,
 ) -> APIRouter:
@@ -49,8 +52,8 @@ def get_auth_router(
     async def login(
         request: Request,
         credentials: OAuth2PasswordRequestForm = Depends(),
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-        strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
+        user_manager: UserMgrType = Depends(get_user_manager),
+        strategy: StrategyType = Depends(backend.get_strategy),
     ):
         user = await user_manager.authenticate(credentials)
 
@@ -82,7 +85,7 @@ def get_auth_router(
     )
     async def logout(
         user_token: Tuple[models.UP, str] = Depends(get_current_user_token),
-        strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
+        strategy: StrategyType = Depends(backend.get_strategy),
     ):
         user, token = user_token
         return await backend.logout(strategy, user, token)

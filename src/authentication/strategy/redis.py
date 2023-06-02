@@ -6,10 +6,14 @@ import redis.asyncio
 import core.exceptions as exceptions
 from authentication.strategy.base import Strategy
 from db import models
+from db.schemas import generics
 from managers.user import BaseUserManager
 
 
-class RedisStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID]):
+class RedisStrategy(
+    Strategy[models.UP, generics.UC, generics.UU, models.SIHE],
+    Generic[models.UP, generics.UC, generics.UU, models.SIHE],
+):
     def __init__(
         self,
         redis: redis.asyncio.Redis,
@@ -22,7 +26,9 @@ class RedisStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID
         self.key_prefix = key_prefix
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[models.UP, generics.UC, generics.UU, models.SIHE],
     ) -> Optional[models.UP]:
         if token is None:
             return None

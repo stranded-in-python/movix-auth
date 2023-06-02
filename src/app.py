@@ -35,10 +35,16 @@ app.include_router(
     ),
     tags=["roles"],
 )
-# app.include_router(
-#     api_access_rights.get_access_rights_router(),
-#     tags=["access rights"]
-# )
+app.include_router(
+    container.api_access_rights.get_access_rights_router(
+        schemas.AccessRight,
+        schemas.AccessRightCreate,
+        schemas.AccessRightUpdate,
+        schemas.RoleAccessRight,
+        schemas.RoleAccessRightUpdate,
+    ),
+    tags=["access rights"],
+)
 
 
 @app.on_event("startup")

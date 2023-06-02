@@ -1,21 +1,25 @@
-from typing import Type
+from typing import Iterable, Type
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 import core.exceptions as exceptions
-from api import schemas
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import Authenticator
 from core.pagination import PaginateQueryParams
 from db import models
+from db.schemas import generics
 from managers.user import BaseUserManager, UserManagerDependency
+
+UserMgrType = BaseUserManager[generics.U, generics.UC, generics.UU, generics.SIHE]
 
 
 def get_users_router(
-    get_user_manager: UserManagerDependency[models.UP, models.ID],
-    user_schema: Type[schemas.U],
-    user_update_schema: Type[schemas.UU],
-    event_schema: Type[schemas.SIHE],
+    get_user_manager: UserManagerDependency[
+        generics.U, generics.UC, generics.UU, generics.SIHE
+    ],
+    user_schema: Type[generics.U],
+    user_update_schema: Type[generics.UU],
+    event_schema: Type[generics.SIHE],
     authenticator: Authenticator,
 ) -> APIRouter:
     router = APIRouter()
@@ -39,7 +43,7 @@ def get_users_router(
         },
     )
     async def get_current_user(
-        user: models.UP = Depends(get_current_active_user),
+        user: generics.U = Depends(get_current_active_user),
     ) -> user_schema:
         return user_schema.from_orm(user)
 
@@ -86,8 +90,8 @@ def get_users_router(
     async def update_current_user(
         request: Request,
         user_update: user_update_schema,
-        user: models.UP = Depends(get_current_active_user),
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        user: generics.U = Depends(get_current_active_user),
+        user_manager: UserMgrType = Depends(get_user_manager),
     ) -> user_schema:
         try:
             user = await user_manager.update(
@@ -119,13 +123,11 @@ def get_users_router(
         tags=['User'],
     )
     async def sign_in_history(
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-        user: models.UP = Depends(get_current_active_user),
+        user_manager: UserMgrType = Depends(get_user_manager),
+        user: generics.U = Depends(get_current_active_user),
         paginate_params: PaginateQueryParams = Depends(PaginateQueryParams),
-    ) -> list[schemas.BaseSignInHistoryEvent]:
-        return list(
-            event_schema.from_orm(event[0])
-            for event in await user_manager.get_sign_in_history(user, paginate_params)
-        )
+    ) -> Iterable[generics.BaseSignInHistoryEvent]:
+        events = await user_manager.get_sign_in_history(user, paginate_params)
+        return events
 
     return router

@@ -67,5 +67,11 @@ class RoleAccessRight(
     ...
 
 
+class RoleAccessRightUpdate(
+    generics.ORMModeMixin, generics.BaseRoleAccessRightUpdate[uuid.UUID, uuid.UUID]
+):
+    ...
+
+
 class Token(generics.ORMModeMixin, generics.BaseToken[uuid.UUID, uuid.UUID]):
     ...

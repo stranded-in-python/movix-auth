@@ -2,21 +2,35 @@ from typing import Generic, Sequence, Type
 
 from fastapi import APIRouter
 
-from api import schemas
 from api.v1.roles import get_roles_router
 from authentication import AuthenticationBackend, Authenticator
 from db import models
-from managers.rights import RoleManagerDependency
+from db.schemas import generics
+from managers.role import RoleManagerDependency
 from managers.user import UserManagerDependency
 
 
-class APIRoles(Generic[models.RP, models.ID]):
+class APIRoles(
+    Generic[
+        generics.U,
+        generics.UC,
+        generics.UU,
+        generics.SIHE,
+        models.RP,
+        models.URP,
+        models.URUP,
+    ]
+):
     authenticator: Authenticator
 
     def __init__(
         self,
-        get_user_manager: UserManagerDependency[models.UP, models.ID],
-        get_role_manager: RoleManagerDependency[models.RP, models.ID],
+        get_user_manager: UserManagerDependency[
+            generics.U, generics.UC, generics.UU, generics.SIHE
+        ],
+        get_role_manager: RoleManagerDependency[
+            models.RP, models.URP, generics.RC, generics.RU, models.URUP
+        ],
         auth_backends: Sequence[AuthenticationBackend],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
@@ -26,11 +40,11 @@ class APIRoles(Generic[models.RP, models.ID]):
 
     def get_roles_router(
         self,
-        role_schema: Type[schemas.R],
-        role_create_schema: Type[schemas.RC],
-        role_update_schema: Type[schemas.RU],
-        user_role_schema: Type[schemas.UR],
-        user_role_update_schema: Type[schemas.URU],
+        role_schema: Type[generics.R],
+        role_create_schema: Type[generics.RC],
+        role_update_schema: Type[generics.RU],
+        user_role_schema: Type[generics.UR],
+        user_role_update_schema: Type[generics.URU],
     ) -> APIRouter:
         """
         Return a router with routes to manage roles.

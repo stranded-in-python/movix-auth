@@ -144,7 +144,7 @@ class SARoleAccessRightDB(
     async def update(
         self, role_access_right: schemas.RoleAccessRight, update_dict: Mapping[str, Any]
     ) -> schemas.RoleAccessRight:
-        model = self.get(role_access_right.id)
+        model = self.get(role_access_right.role_id, role_access_right.access_right_id)
         for key, value in update_dict.items():
             setattr(role_access_right, key, value)
             setattr(model, key, value)
@@ -152,21 +152,29 @@ class SARoleAccessRightDB(
         await self.session.commit()
         return role_access_right
 
-    async def delete(self, role_access_right: RARP) -> None:
+    async def delete(self, role_access_right_id: uuid.UUID) -> None:
+        statement = select(self.role_access_right_table).where(
+            self.role_access_right_table.id == role_access_right_id
+        )
+        role_access_right = await self._get_role_access_right(statement)
         await self.session.delete(role_access_right)
         await self.session.commit()
 
     @cache_decorator()
-    async def get_all_access_rights_of_user(self, role_id: ID) -> None | Iterable[RARP]:
+    async def get_all_access_rights_of_user(
+        self, role_id: uuid.UUID
+    ) -> None | Iterable[schemas.RoleAccessRight]:
         statement = select(self.role_access_right_table).where(
             self.role_access_right_table.role_id == role_id
         )
         arights = await self._get_role_access_right(statement)
         if not arights:
             return
-        return list(arights)
+        return list(schemas.RoleAccessRight.from_orm(right) for right in arights)
 
-    async def _get_role_access_right(self, statement: Select) -> None | RARP:
+    async def _get_role_access_right(
+        self, statement: Select
+    ) -> None | schemas.RoleAccessRight:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 

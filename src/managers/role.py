@@ -6,7 +6,7 @@ from fastapi import Depends, Request
 from core import exceptions
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db import db, models
+from db import getters, models
 from db.base import BaseRoleDatabase, BaseUserRoleDatabase
 from db.models import UUIDIDMixin
 from db.roles import SARoleDB, SAUserRoleDB
@@ -14,7 +14,9 @@ from db.schemas import generics, schemas
 from managers.role import BaseRoleManager
 
 
-class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
+class BaseRoleManager(
+    Generic[models.RP, models.URP, generics.RC, generics.RU, models.URUP]
+):
     role_db: BaseRoleDatabase[models.RP, UUID]
     user_role_db: BaseUserRoleDatabase[models.URP, models.URUP, UUID]
 
@@ -101,7 +103,7 @@ class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
         )
         return True if entry else False
 
-    async def assign_user_role(self, user_role: models.URUP):
+    async def assign_user_role(self, user_role: models.URUP) -> models.URP:
         entry = await self.user_role_db.assign_user_role(
             user_role.user_id, user_role.role_id
         )
@@ -112,7 +114,7 @@ class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
     async def remove_user_role(self, user_role: models.URUP):
         await self.user_role_db.remove_user_role(user_role)
 
-    async def get_user_roles(self, user_id):
+    async def get_user_roles(self, user_id) -> Iterable[models.URP]:
         ids = await self.user_role_db.get_user_roles(user_id)
 
         return ids
@@ -145,19 +147,25 @@ class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
 
 
 RoleManagerDependency = DependencyCallable[
-    BaseRoleManager[models.RP, models.URP, models.URUP]
+    BaseRoleManager[models.RP, models.URP, generics.RC, generics.RU, models.URUP]
 ]
 
 
 class RoleManager(
     UUIDIDMixin,
-    BaseRoleManager[schemas.RoleRead, schemas.UserRoleRead, schemas.UserRoleUpdate],
+    BaseRoleManager[
+        schemas.RoleRead,
+        schemas.UserRoleRead,
+        schemas.RoleCreate,
+        schemas.RoleUpdate,
+        schemas.UserRoleUpdate,
+    ],
 ):
     pass
 
 
 async def get_role_manager(
-    role_db: SARoleDB = Depends(db.get_role_db),
-    user_role_db: SAUserRoleDB = Depends(db.get_user_role_db),
+    role_db: SARoleDB = Depends(getters.get_role_db),
+    user_role_db: SAUserRoleDB = Depends(getters.get_user_role_db),
 ):
     yield RoleManager(role_db, user_role_db=user_role_db)

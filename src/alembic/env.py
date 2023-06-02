@@ -17,7 +17,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
-from app.db import Base
+from db.base import SQLAlchemyBase as Base
 
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
@@ -80,6 +80,8 @@ def run_migrations_online() -> None:
 
     """
     configuration = config.get_section(config.config_ini_section)
+    if not configuration:
+        raise RuntimeError("No config has been found")
     configuration["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
         configuration, prefix="sqlalchemy.", poolclass=pool.NullPool

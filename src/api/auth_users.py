@@ -2,18 +2,17 @@ from typing import Generic, Sequence, Type
 
 from fastapi import APIRouter
 
-from api import schemas
 from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
 from api.v1.user import get_users_router
 from authentication import AuthenticationBackend, Authenticator
-from core.jwt_utils import SecretType
 from db import models
+from db.schemas import generics
 from managers.user import UserManagerDependency
 
 
-class APIUsers(Generic[models.UP, models.ID]):
+class APIUsers(Generic[generics.U, generics.UC, generics.UU, generics.SIHE]):
     """
     Main object that ties together the component for users authentication.
 
@@ -29,7 +28,9 @@ class APIUsers(Generic[models.UP, models.ID]):
 
     def __init__(
         self,
-        get_user_manager: UserManagerDependency[models.UP, models.ID],
+        get_user_manager: UserManagerDependency[
+            generics.U, generics.UC, generics.UU, generics.SIHE
+        ],
         auth_backends: Sequence[AuthenticationBackend],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
@@ -37,7 +38,7 @@ class APIUsers(Generic[models.UP, models.ID]):
         self.current_user = self.authenticator.current_user
 
     def get_register_router(
-        self, user_schema: Type[schemas.U], user_create_schema: Type[schemas.UC]
+        self, user_schema: Type[generics.U], user_create_schema: Type[generics.UC]
     ) -> APIRouter:
         """
         Return a router with a register route.
@@ -69,9 +70,9 @@ class APIUsers(Generic[models.UP, models.ID]):
 
     def get_users_router(
         self,
-        user_schema: Type[schemas.U],
-        user_update_schema: Type[schemas.UU],
-        event_schema: Type[schemas.SIHE],
+        user_schema: Type[generics.U],
+        user_update_schema: Type[generics.UU],
+        event_schema: Type[generics.SIHE],
     ) -> APIRouter:
         """
         Return a router with routes to manage users.

@@ -1,26 +1,33 @@
-from typing import Type
+from typing import Iterable, Type
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from api import schemas
 from api.v1.common import ErrorCode
 from authentication import Authenticator
 from core import exceptions
 from core.pagination import PaginateQueryParams
 from db import models
+from db.schemas import generics
 from managers.role import BaseRoleManager, RoleManagerDependency
-from managers.user import BaseUserManager, UserManagerDependency
+from managers.user import UserMgrDependencyType, UserMgrType
+
+RoleMgrDependency = RoleManagerDependency[
+    models.RP, models.URP, generics.RC, generics.RU, models.URUP
+]
+RoleMgrType = BaseRoleManager[
+    models.RP, models.URP, generics.RC, generics.RU, models.URUP
+]
 
 
 def get_roles_router(
-    get_user_manager: UserManagerDependency[models.UP, models.ID],
-    get_role_manager: RoleManagerDependency[models.RP, models.ID],
-    role_schema: Type[schemas.R],
-    role_create_schema: Type[schemas.RC],
-    role_update_schema: Type[schemas.RU],
-    user_role_schema: Type[schemas.UR],
-    user_role_update_schema: Type[schemas.UR],
+    get_user_manager: UserMgrDependencyType,
+    get_role_manager: RoleMgrDependency,
+    role_schema: Type[generics.R],
+    role_create_schema: Type[generics.RC],
+    role_update_schema: Type[generics.RU],
+    user_role_schema: Type[generics.UR],
+    user_role_update_schema: Type[generics.URU],
     authenticator: Authenticator,
 ) -> APIRouter:
     router = APIRouter()
@@ -40,14 +47,11 @@ def get_roles_router(
         request: Request,
         page_params: PaginateQueryParams = Depends(PaginateQueryParams),
         filter_param: str | None = None,
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
-    ) -> list[role_schema]:
+        role_manager: RoleMgrType = Depends(get_role_manager),
+    ) -> Iterable[role_schema]:
         # TODO Проверить права доступа у пользователя
-
-        return list(
-            role_schema.from_orm(role[0])
-            for role in await role_manager.search(page_params, filter_param)
-        )
+        roles = await role_manager.search(page_params, filter_param)
+        return roles
 
     @router.post(
         "/roles",
@@ -61,13 +65,13 @@ def get_roles_router(
     async def create_role(
         request: Request,
         role_create: role_create_schema,
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+        role_manager: RoleMgrType = Depends(get_role_manager),
     ) -> role_schema:
         # TODO Проверить права доступа у пользователя
 
         try:
             role = await role_manager.create(role_create, request=request)
-            return role_schema.from_orm(role)
+            return role
 
         except exceptions.RoleAlreadyExists:
             raise HTTPException(
@@ -86,12 +90,12 @@ def get_roles_router(
     async def get_role(
         request: Request,
         role_id: UUID,
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+        role_manager: RoleMgrType = Depends(get_role_manager),
     ) -> role_schema:
         # TODO Проверить права доступа у пользователя
         try:
             role = await role_manager.get(role_id)
-            return role_schema.from_orm(role)
+            return role
 
         except exceptions.RoleNotExists:
             raise HTTPException(
@@ -110,7 +114,7 @@ def get_roles_router(
     async def update_role(
         request: Request,
         role_update: role_update_schema,
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+        role_manager: RoleMgrType = Depends(get_role_manager),
     ) -> role_schema:
         try:
             # TODO Проверить доступ пользователя
@@ -118,7 +122,7 @@ def get_roles_router(
             role = await role_manager.get(role_update.id)
 
             role = await role_manager.update(role_update, role, request=request)
-            return role_schema.from_orm(role)
+            return role
 
         except exceptions.RoleNotExists:
             raise HTTPException(
@@ -144,7 +148,7 @@ def get_roles_router(
     async def delete_role(
         request: Request,
         role_id: UUID,
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+        role_manager: RoleMgrType = Depends(get_role_manager),
     ) -> role_schema:
         try:
             # TODO Проверить доступ пользователя
@@ -152,7 +156,7 @@ def get_roles_router(
             role = await role_manager.get(role_id)
 
             role = await role_manager.delete(role, request=request)
-            return role_schema.from_orm(role)
+            return role
 
         except exceptions.RoleNotExists:
             raise HTTPException(
@@ -172,8 +176,8 @@ def get_roles_router(
     )
     async def check_user_role(
         user_role: user_role_update_schema,
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+        user_manager: UserMgrType = Depends(get_user_manager),
+        role_manager: RoleMgrType = Depends(get_role_manager),
     ) -> None:
         try:
             # TODO Проверить доступ пользователя
@@ -205,8 +209,8 @@ def get_roles_router(
     )
     async def assign_role(
         user_role: user_role_update_schema,
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+        user_manager: UserMgrType = Depends(get_user_manager),
+        role_manager: RoleMgrType = Depends(get_role_manager),
     ) -> None:
         try:
             # TODO Проверить доступ пользователя
@@ -243,8 +247,8 @@ def get_roles_router(
     )
     async def remove_user_role(
         user_role: user_role_update_schema,
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
+        user_manager: UserMgrType = Depends(get_user_manager),
+        role_manager: RoleMgrType = Depends(get_role_manager),
     ):
         try:
             # TODO Проверить доступ пользователя
@@ -274,18 +278,14 @@ def get_roles_router(
     )
     async def user_roles(
         user_id: UUID,
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-        role_manager: BaseRoleManager[models.RP, models.ID] = Depends(get_role_manager),
-    ) -> list[UUID]:
+        user_manager: UserMgrType = Depends(get_user_manager),
+        role_manager: RoleMgrType = Depends(get_role_manager),
+    ) -> Iterable[generics.R]:
         try:
             # TODO Проверить доступ пользователя
             user = await user_manager.get(user_id)
-
-            _user_roles = await role_manager.get_user_roles(user.id)
-
-            return list(
-                user_role_schema.from_orm(role_id[0]).id for role_id in _user_roles
-            )
+            roles = await role_manager.get_user_roles(user.id)
+            return roles
 
         except exceptions.UserNotExists:
             raise HTTPException(

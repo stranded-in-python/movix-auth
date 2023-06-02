@@ -1,12 +1,6 @@
 from authentication.authenticator import Authenticator
 from authentication.backend import AuthenticationBackend
 from authentication.strategy import JWTStrategy, Strategy
-
-try:
-    from authentication.strategy import RedisStrategy
-except ImportError:  # pragma: no cover
-    pass
-
 from authentication.transport import BearerTransport, CookieTransport, Transport
 
 __all__ = [
@@ -15,7 +9,6 @@ __all__ = [
     "BearerTransport",
     "CookieTransport",
     "JWTStrategy",
-    "RedisStrategy",
     "Strategy",
     "Transport",
 ]

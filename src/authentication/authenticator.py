@@ -9,7 +9,8 @@ from authentication.backend import AuthenticationBackend
 from authentication.strategy import Strategy
 from core.dependency_types import DependencyCallable
 from db import models
-from managers.user import BaseUserManager, UserManagerDependency
+from db.schemas import generics
+from managers.user import BaseUserManager, UserMgrDependencyType
 
 INVALID_CHARS_PATTERN = re.compile(r"[^0-9a-zA-Z_]")
 INVALID_LEADING_CHARS_PATTERN = re.compile(r"^[^a-zA-Z_]+")
@@ -51,7 +52,7 @@ class Authenticator:
     def __init__(
         self,
         backends: Sequence[AuthenticationBackend],
-        get_user_manager: UserManagerDependency[models.UP, models.ID],
+        get_user_manager: UserMgrDependencyType,
     ):
         self.backends = backends
         self.get_user_manager = get_user_manager
@@ -142,7 +143,7 @@ class Authenticator:
     async def _authenticate(
         self,
         *args,
-        user_manager: BaseUserManager[models.UP, models.ID],
+        user_manager: BaseUserManager[models.UP, generics.UC, generics.UU, models.SIHE],
         optional: bool = False,
         active: bool = False,
         superuser: bool = False,
@@ -156,9 +157,9 @@ class Authenticator:
         for backend in self.backends:
             if backend in enabled_backends:
                 token = kwargs[name_to_variable_name(backend.name)]
-                strategy: Strategy[models.UP, models.ID] = kwargs[
-                    name_to_strategy_variable_name(backend.name)
-                ]
+                strategy: Strategy[
+                    models.UP, generics.UC, generics.UU, models.SIHE
+                ] = kwargs[name_to_strategy_variable_name(backend.name)]
                 if token is not None:
                     user = await strategy.read_token(token, user_manager)
                     if user:

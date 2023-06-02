@@ -5,6 +5,14 @@ class AppException(Exception):
     pass
 
 
+class AccessRightAlreadyExists(AppException):
+    pass
+
+
+class AccessRightNotExists(AppException):
+    pass
+
+
 class InvalidID(AppException):
     pass
 
@@ -51,4 +59,12 @@ class UserHaveNotRole(AppException):
 
 
 class RoleAlreadyAssign(AppException):
+    pass
+
+
+class RoleHaveNotAccessRight(AppException):
+    pass
+
+
+class AccessRightAlreadyAssign(AppException):
     pass

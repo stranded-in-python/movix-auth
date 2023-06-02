@@ -6,10 +6,14 @@ import core.exceptions as exceptions
 from authentication.strategy.base import Strategy, StrategyDestroyNotSupportedError
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt
 from db import models
+from db.schemas import generics
 from managers.user import BaseUserManager
 
 
-class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID]):
+class JWTStrategy(
+    Strategy[models.UP, generics.UC, generics.UU, models.SIHE],
+    Generic[models.UP, generics.UC, generics.UU, models.SIHE],
+):
     def __init__(
         self,
         secret: SecretType,
@@ -33,7 +37,9 @@ class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID])
         return self.public_key or self.secret
 
     async def read_token(
-        self, token: str | None, user_manager: BaseUserManager[models.UP, models.ID]
+        self,
+        token: str | None,
+        user_manager: BaseUserManager[models.UP, generics.UC, generics.UU, models.SIHE],
     ) -> models.UP | None:
         if token is None:
             return None

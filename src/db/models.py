@@ -85,6 +85,14 @@ class RoleAccessRightProtocol(Protocol[ID]):
 RARP = TypeVar("RARP", bound=RoleAccessRightProtocol)
 
 
+class RoleAccessRightUpdateProtocol(Protocol[ID]):
+    role_id: ID
+    access_right_id: ID
+
+
+RARUP = TypeVar("RARUP", bound=RoleAccessRightUpdateProtocol)
+
+
 class SignInHistoryEvent(Protocol[ID]):
     id: ID
     user_id: ID

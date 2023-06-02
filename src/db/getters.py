@@ -37,8 +37,12 @@ async def get_user_role_db(session: AsyncSession = Depends(get_async_session)):
     yield roles.SAUserRoleDB(session, roles.SAUserRole)
 
 
-async def get_access_token_db(session: AsyncSession = Depends(get_async_session)):
-    yield tokens.SAAccessTokenBlacklistDB(session, tokens.SAAccessTokenBlacklist)
+async def get_access_blacklist_db(session: AsyncSession = Depends(get_async_session)):
+    yield tokens.SAAccessBlacklistDB(session, tokens.SAAccessTokenBlacklist)
+
+
+async def get_refresh_blacklist_db(session: AsyncSession = Depends(get_async_session)):
+    yield tokens.SARefreshBlacklistDB(session, tokens.SAAccessTokenBlacklist)
 
 
 async def get_access_rights_db(session: AsyncSession = Depends(get_async_session)):

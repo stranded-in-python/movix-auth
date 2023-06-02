@@ -3,19 +3,21 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Generic, Optional
 
 import core.exceptions as exceptions
-from authentication.strategy.base import Strategy
-from authentication.strategy.db.adapter import TokenBlacklistManager
-from authentication.strategy.db.models import AP
 from db import models
+from db.schemas import generics
 from managers.user import BaseUserManager
+
+from .adapter import TokenBlacklistManager
+from .base import Strategy
 
 
 class DatabaseStrategy(
-    Strategy[models.UP, models.ID], Generic[models.UP, models.ID, AP]
+    Strategy[models.UP, generics.UC, generics.UU, models.SIHE],
+    Generic[models.UP, generics.UC, generics.UU, models.SIHE, models.AP],
 ):
     def __init__(
         self,
-        database: TokenBlacklistManager[AP],
+        database: TokenBlacklistManager[models.AP],
         lifetime_seconds: Optional[int] = None,
     ):
         self.database = database
@@ -24,7 +26,7 @@ class DatabaseStrategy(
     async def read_token(
         self,
         token: Optional[str],
-        user_manager: BaseUserManager[models.UP, models.SIHE],
+        user_manager: BaseUserManager[models.UP, generics.UC, generics.UU, models.SIHE],
     ) -> Optional[models.UP]:
         if token is None:
             return None
@@ -47,13 +49,13 @@ class DatabaseStrategy(
 
     async def write_token(self, user: models.UP) -> str:
         access_token_dict = self._create_access_token_dict(user)
-        access_token = await self.database.create(access_token_dict)
+        access_token = await self.database.enlist(access_token_dict)
         return access_token.token
 
     async def destroy_token(self, token: str, user: models.UP) -> None:
         access_token = await self.database.get_by_token(token)
         if access_token is not None:
-            await self.database.delete(access_token)
+            await self.database.forget(access_token)
 
     def _create_access_token_dict(self, user: models.UP) -> Dict[str, Any]:
         token = secrets.token_urlsafe()

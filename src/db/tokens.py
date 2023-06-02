@@ -3,11 +3,11 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, Type
 
-from sqlalchemy import ForeignKey, Integer, String, select
+from sqlalchemy import ForeignKey, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
-from authentication.strategy.db.adapter import TokenBlacklistManager
+from authentication.strategy.adapter import TokenBlacklistManager
 from cache.cache import cache_decorator
 
 from .base import SQLAlchemyBase
