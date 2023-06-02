@@ -7,7 +7,6 @@ from sqlalchemy import ForeignKey, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
-from authentication.strategy.adapter import TokenBlacklistManager
 from cache.cache import cache_decorator
 
 from .base import SQLAlchemyBase
@@ -41,7 +40,7 @@ class SARefreshTokenBlacklist(SABaseToken, SQLAlchemyBase):
     __tablename__ = "refresh_token_blacklist"
 
 
-class SABaseTokenBlacklistDB(TokenBlacklistManager[schemas.Token], abc.ABC):
+class SABaseTokenBlacklistDB(abc.ABC):
     """
     Access token database adapter for SQLAlchemy.
 

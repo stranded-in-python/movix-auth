@@ -16,7 +16,6 @@ from db import getters, models
 from db.base import BaseUserDatabase
 from db.schemas import generics, schemas
 from db.users import SAUserDB
-from managers.user import BaseUserManager
 
 RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"

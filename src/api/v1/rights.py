@@ -7,35 +7,39 @@ from api.v1.common import ErrorCode
 from authentication import Authenticator
 from core import exceptions
 from core.pagination import PaginateQueryParams
-from db import models
 from db.schemas import generics
 from managers.rights import AccessRightManagerDependency, BaseAccessRightManager
 from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import UserMgrDependencyType
 
 RoleMgrDependencyType = RoleManagerDependency[
-    models.RP, models.URP, generics.RC, generics.RU, models.URUP
+    generics.R, generics.UR, generics.RC, generics.RU, generics.URU
 ]
 RoleMgrType = BaseRoleManager[
-    models.RP, models.URP, generics.RC, generics.RU, models.URUP
-]
-AccessRightMgrDependencyType = AccessRightManagerDependency[
-    models.ARP, generics.ARC, generics.ARU, models.RARP, models.RARUP
+    generics.R, generics.UR, generics.RC, generics.RU, generics.URU
 ]
 AccessRightMgrType = BaseAccessRightManager[
-    models.ARP, generics.ARC, generics.ARU, models.RARP, models.RARUP, models.ID
+    generics.AR, generics.ARC, generics.ARU, generics.RAR, generics.RARU, generics.ID
 ]
 
 
 def get_access_rights_router(
     get_user_manager: UserMgrDependencyType,
     get_role_manager: RoleMgrDependencyType,
-    get_access_right_manager: AccessRightMgrDependencyType,
+    get_access_right_manager: AccessRightManagerDependency[
+        generics.AR,
+        generics.ARC,
+        generics.ARU,
+        generics.RAR,
+        generics.RARU,
+        generics.ID,
+    ],
     access_right_schema: Type[generics.AR],
     access_right_create_schema: Type[generics.ARC],
     access_right_update_schema: Type[generics.ARU],
     role_access_right_schema: Type[generics.RAR],
     role_access_right_update_schema: Type[generics.RARU],
+    id_schema: type[generics.ID],
     authenticator: Authenticator,
 ) -> APIRouter:
     router = APIRouter()
@@ -51,7 +55,7 @@ def get_access_rights_router(
     )
     async def get_access_right(
         request: Request,
-        access_right_id: UUID,
+        access_right_id: id_schema,
         access_right_manager: AccessRightMgrType = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
@@ -149,7 +153,7 @@ def get_access_rights_router(
     )
     async def delete_access_right(
         request: Request,
-        access_right_id: UUID,
+        access_right_id: id_schema,
         access_right_manager: AccessRightMgrType = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
@@ -267,24 +271,29 @@ def get_access_rights_router(
 
     @router.get(
         "/roles/{roles_id}/rights",
-        response_model=Iterable[models.ARP],
+        response_model=Iterable[generics.AR],
         summary="List the role's access right",
         description="Get list the role's access right",
         response_description="Message entity",
         tags=['Access right'],
     )
     async def get_role_rights(
-        role_id: models.ID,
+        role_id: generics.ID,
         access_right_manager: AccessRightMgrType = Depends(get_access_right_manager),
         role_manager: BaseAccessRightManager[
-            models.ARP, generics.ARC, generics.ARU, models.RARP, models.RARUP, models.ID
+            generics.AR,
+            generics.ARC,
+            generics.ARU,
+            generics.RAR,
+            generics.RARU,
+            generics.ID,
         ] = Depends(get_role_manager),
-    ) -> Iterable[models.ARP]:
+    ) -> Iterable[generics.AR]:
         try:
             role = await role_manager.get(role_id)
 
             rights: Iterable[
-                models.ARP
+                generics.AR
             ] = await access_right_manager.get_role_access_rights(role.id)
             return rights
 

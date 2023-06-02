@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
@@ -42,6 +44,7 @@ app.include_router(
         schemas.AccessRightUpdate,
         schemas.RoleAccessRight,
         schemas.RoleAccessRightUpdate,
+        uuid.UUID,
     ),
     tags=["access rights"],
 )

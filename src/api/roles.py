@@ -4,7 +4,6 @@ from fastapi import APIRouter
 
 from api.v1.roles import get_roles_router
 from authentication import AuthenticationBackend, Authenticator
-from db import models
 from db.schemas import generics
 from managers.role import RoleManagerDependency
 from managers.user import UserManagerDependency
@@ -16,9 +15,9 @@ class APIRoles(
         generics.UC,
         generics.UU,
         generics.SIHE,
-        models.RP,
-        models.URP,
-        models.URUP,
+        generics.R,
+        generics.UR,
+        generics.URU,
     ]
 ):
     authenticator: Authenticator
@@ -29,7 +28,7 @@ class APIRoles(
             generics.U, generics.UC, generics.UU, generics.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            models.RP, models.URP, generics.RC, generics.RU, models.URUP
+            generics.R, generics.UR, generics.RC, generics.RU, generics.URU
         ],
         auth_backends: Sequence[AuthenticationBackend],
     ):

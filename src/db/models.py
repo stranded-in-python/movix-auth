@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, ClassVar, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar
 from uuid import UUID
 
 import core.exceptions as ex

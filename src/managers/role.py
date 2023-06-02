@@ -11,7 +11,6 @@ from db.base import BaseRoleDatabase, BaseUserRoleDatabase
 from db.models import UUIDIDMixin
 from db.roles import SARoleDB, SAUserRoleDB
 from db.schemas import generics, schemas
-from managers.role import BaseRoleManager
 
 
 class BaseRoleManager(

@@ -13,4 +13,4 @@ File or directory "/home/sbkubric/workspace/movix/projects/movix-auth/2" does no
 Found 66 source files
 pyright 1.1.281
 0 errors, 0 warnings, 0 informations 
-Completed in 4.377sec
+Completed in 4.286sec

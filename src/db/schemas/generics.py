@@ -11,6 +11,7 @@ UserRoleID = TypeVar("UserRoleID", bound=uuid.UUID)
 TokenID = TypeVar('TokenID', bound=uuid.UUID)
 EventID = TypeVar('EventID', bound=uuid.UUID)
 EmailString = TypeVar('EmailString', bound=EmailStr)
+ID = TypeVar('ID', bound=uuid.UUID)
 
 
 class CreateUpdateDictModel(BaseModel):

@@ -6,13 +6,13 @@ from authentication import AuthenticationBackend, Authenticator
 from db.schemas import generics
 from managers.rights import AccessRightManagerDependency
 from managers.role import RoleManagerDependency
-from managers.user import UserManagerDependency, UserMgrDependencyType
+from managers.user import UserManagerDependency
 
 RoleMgrDependencyType = RoleManagerDependency[
-    models.RP, models.URP, generics.RC, generics.RU, models.URUP
+    generics.R, generics.UR, generics.RC, generics.RU, generics.URU
 ]
 AccessRightMgrDependencyType = AccessRightManagerDependency[
-    models.ARP, generics.ARC, generics.ARU, models.RARP, models.RARUP
+    generics.AR, generics.ARC, generics.ARU, generics.RAR, generics.RARU, generics.ID
 ]
 
 
@@ -22,14 +22,15 @@ class APIAccessRight(
         generics.UC,
         generics.SIHE,
         generics.UU,
-        models.RP,
-        models.URP,
-        models.URUP,
-        models.ARP,
+        generics.R,
+        generics.UR,
+        generics.URU,
+        generics.AR,
         generics.ARC,
         generics.ARU,
-        models.RARP,
-        models.RARUP,
+        generics.RAR,
+        generics.RARU,
+        generics.ID,
     ]
 ):
     authenticator: Authenticator
@@ -40,10 +41,15 @@ class APIAccessRight(
             generics.U, generics.UC, generics.UU, generics.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            models.RP, models.URP, generics.RC, generics.RU, models.URUP
+            generics.R, generics.UR, generics.RC, generics.RU, generics.URU
         ],
         get_access_rights_manager: AccessRightManagerDependency[
-            models.ARP, generics.ARC, generics.ARU, models.RARP, models.RARUP
+            generics.AR,
+            generics.ARC,
+            generics.ARU,
+            generics.RAR,
+            generics.RARU,
+            generics.ID,
         ],
         auth_backends: Sequence[AuthenticationBackend],
     ):
@@ -60,6 +66,7 @@ class APIAccessRight(
         access_right_update_schema: Type[generics.ARU],
         role_access_right_schema: Type[generics.RAR],
         role_access_right_update_schema: Type[generics.RARU],
+        id_schema: Type[generics.ID],
     ) -> APIRouter:
         return get_access_rights_router(
             self.get_user_manager,
@@ -70,5 +77,6 @@ class APIAccessRight(
             access_right_update_schema,
             role_access_right_schema,
             role_access_right_update_schema,
+            id_schema,
             self.authenticator,
         )

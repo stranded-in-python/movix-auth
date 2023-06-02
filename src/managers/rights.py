@@ -10,7 +10,6 @@ from db import access_rights, getters, models
 from db.base import BaseAccessRightDatabase, BaseRoleAccessRightDatabase
 from db.models import UUIDIDMixin
 from db.schemas import generics, schemas
-from managers.rights import BaseAccessRightManager
 
 
 class BaseAccessRightManager(
