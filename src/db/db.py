@@ -38,7 +38,7 @@ async def get_user_role_db(session: AsyncSession = Depends(get_async_session)):
 
 
 async def get_access_token_db(session: AsyncSession = Depends(get_async_session)):
-    yield tokens.SAAccessTokenDB(session, tokens.SAAccessTokenBlacklist)
+    yield tokens.SAAccessTokenBlacklistDB(session, tokens.SAAccessTokenBlacklist)
 
 
 async def get_access_rights_db(session: AsyncSession = Depends(get_async_session)):

@@ -1,7 +1,7 @@
 import os
 from logging import config as logging_config
 
-from pydantic import BaseSettings
+from pydantic import BaseSettings, SecretStr
 
 from core.logger import LOG_LEVEL, get_logging_config
 
@@ -37,8 +37,8 @@ class Settings(BaseSettings):
     )
     # DATABASE_URL: str = 'postgresql+asyncpg://yamp_dummy:qweasd123@localhost:5434/yamp_movies_db'
     # Параметры аутентификации
-    reset_password_token_secret: str = "SECRET"
-    verification_token_secret: str = "SECRET"
+    reset_password_token_secret: SecretStr
+    verification_token_secret: SecretStr
 
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))
@@ -46,7 +46,9 @@ class Settings(BaseSettings):
     log_level: str = LOG_LEVEL
 
 
-settings = Settings()
+settings = Settings(
+    reset_password_token_secret='SECRET', verification_token_secret='SECRET'  # type: ignore
+)
 
 
 # Применяем настройки логирования

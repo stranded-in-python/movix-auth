@@ -14,9 +14,6 @@ class SQLAlchemyBase(DeclarativeBase):
     metadata = metadata_obj
 
 
-TRow = t.TypeVar("TRow")
-
-
 class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
     """Base adapter for retrieving, creating and updating users from a database."""
 
@@ -50,7 +47,7 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
 
     async def get_sign_in_history(
         self, user_id: ID, pagination_params: PaginateQueryParams
-    ) -> t.Iterable[TRow]:
+    ) -> t.Iterable[SIHE]:
         """Get recorded events in users sigh-in history"""
         ...
 
@@ -78,7 +75,7 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
 
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> t.Iterable[TRow]:
+    ) -> t.Iterable[RP]:
         """Delete a role."""
         ...
 

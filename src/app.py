@@ -1,12 +1,9 @@
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
-import app.schemas as a_sch
-from app.services.access_rights import api_access_rights
-from app.services.auth import auth_backend
-from app.services.roles import api_roles
-from app.services.users import api_users
+from api import container
 from core.config import settings
+from db.schemas import schemas
 
 app = FastAPI(
     title=settings.project_name,
@@ -16,20 +13,25 @@ app = FastAPI(
 )
 
 app.include_router(
-    api_users.get_register_router(a_sch.UserRead, a_sch.UserCreate), tags=["register"]
+    container.api_users.get_register_router(schemas.UserRead, schemas.UserCreate),
+    tags=["register"],
 )
-app.include_router(api_users.get_auth_router(auth_backend), tags=["auth"])
 app.include_router(
-    api_users.get_users_router(a_sch.UserRead, a_sch.UserUpdate, a_sch.EventRead),
+    container.api_users.get_auth_router(container.auth_backend), tags=["auth"]
+)
+app.include_router(
+    container.api_users.get_users_router(
+        schemas.UserRead, schemas.UserUpdate, schemas.EventRead
+    ),
     tags=["users"],
 )
 app.include_router(
-    api_roles.get_roles_router(
-        a_sch.RoleRead,
-        a_sch.RoleCreate,
-        a_sch.RoleUpdate,
-        a_sch.UserRoleRead,
-        a_sch.UserRoleUpdate,
+    container.api_roles.get_roles_router(
+        schemas.RoleRead,
+        schemas.RoleCreate,
+        schemas.RoleUpdate,
+        schemas.UserRoleRead,
+        schemas.UserRoleUpdate,
     ),
     tags=["roles"],
 )

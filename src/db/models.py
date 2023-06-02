@@ -5,14 +5,25 @@ from uuid import UUID
 import core.exceptions as ex
 
 ID = TypeVar("ID")
+EmailStr = TypeVar('EmailStr')
 
 
-class UserProtocol(Protocol[ID]):
+class UserCreateProtocol(Protocol[EmailStr]):
+    username: str
+    email: EmailStr
+    first_name: str
+    last_name: str
+    password: str
+    is_active: bool
+    is_superuser: bool
+
+
+class UserProtocol(Protocol[ID, EmailStr]):
     """User protocol that ORM model should follow."""
 
     id: ID
     username: str
-    email: str
+    email: EmailStr
     first_name: str
     last_name: str
     hashed_password: str
@@ -21,6 +32,7 @@ class UserProtocol(Protocol[ID]):
 
 
 UP = TypeVar("UP", bound=UserProtocol)
+UC = TypeVar("UC", bound=UserCreateProtocol)
 
 
 class RoleProtocol(Protocol[ID]):

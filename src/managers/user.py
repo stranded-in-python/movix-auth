@@ -1,24 +1,21 @@
+import uuid
 from datetime import datetime
-from typing import Any, Generic, Optional, Union
-from uuid import UUID
+from typing import Any, Generic, Iterable, Optional, Union
 
 import jwt
-from auth import auth_backend
 from fastapi import Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 import core.exceptions as exceptions
 import core.password.password as pw
-from api import schemas
-from api.auth_users import APIUsers
-from api.schemas import BaseSignInHistoryEvent
-from app.db import User, get_user_db
 from core.config import settings
 from core.dependency_types import DependencyCallable
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt
 from core.pagination import PaginateQueryParams
 from db import models
 from db.base import BaseUserDatabase
+from db.db import get_user_db
+from db.schemas import generics, schemas
 from db.users import SAUserDB
 from managers.user import BaseUserManager
 
@@ -26,7 +23,7 @@ RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
 
-class BaseUserManager(Generic[models.UP, models.SIHE]):
+class BaseUserManager(Generic[models.UP, models.UC, models.SIHE]):
     reset_password_token_secret: SecretType
     reset_password_token_lifetime_seconds: int = 3600
     reset_password_token_audience: str = RESET_PASSWORD_TOKEN_AUDIENCE
@@ -35,12 +32,12 @@ class BaseUserManager(Generic[models.UP, models.SIHE]):
     verification_token_lifetime_seconds: int = 3600
     verification_token_audience: str = VERIFY_USER_TOKEN_AUDIENCE
 
-    user_db: BaseUserDatabase[models.UP, UUID, models.SIHE]
+    user_db: BaseUserDatabase[models.UP, uuid.UUID, models.SIHE]
     password_helper: pw.PasswordHelperProtocol
 
     def __init__(
         self,
-        user_db: BaseUserDatabase[models.UP, UUID, models.SIHE],
+        user_db: BaseUserDatabase[models.UP, uuid.UUID, models.SIHE],
         password_helper: Optional[pw.PasswordHelperProtocol] = None,
     ):
         self.user_db = user_db
@@ -49,32 +46,28 @@ class BaseUserManager(Generic[models.UP, models.SIHE]):
         else:
             self.password_helper = password_helper
 
-    def parse_id(self, value: Any) -> UUID:
+    def parse_id(self, value: Any) -> uuid.UUID:
         """
-        Parse a value into a correct UUID instance.
+        Parse a value into a correct uuid.UUID instance.
 
         :param value: The value to parse.
-        :raises InvalidID: The UUID value is invalid.
-        :return: An UUID object.
+        :raises InvalidID: The uuid.UUID value is invalid.
+        :return: An uuid.UUID object.
         """
         raise NotImplementedError()
 
     async def create(
-        self,
-        user_create: schemas.UC,
-        safe: bool = False,
-        request: Request | None = None,
+        self, user_create: models.UC, safe: bool = False, request: Request | None = None
     ) -> models.UP:
         await self.validate_password(user_create.password, user_create)
 
         existing_user = await self.user_db.get_by_username(user_create.email)
         if existing_user is not None:
             raise exceptions.UserAlreadyExists()
+        uc: generics.UC = generics.UC(**user_create.__dict__)
 
         user_dict = (
-            user_create.create_update_dict()
-            if safe
-            else user_create.create_update_dict_superuser()
+            uc.create_update_dict() if safe else uc.create_update_dict_superuser()
         )
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
@@ -85,7 +78,7 @@ class BaseUserManager(Generic[models.UP, models.SIHE]):
 
         return created_user
 
-    async def get(self, user_id: UUID) -> models.UP:
+    async def get(self, user_id: uuid.UUID) -> models.UP:
         user = await self.user_db.get(user_id)
 
         if user is None:
@@ -169,7 +162,7 @@ class BaseUserManager(Generic[models.UP, models.SIHE]):
 
     async def update(
         self,
-        user_update: schemas.UU,
+        user_update: generics.UU,
         user: models.UP,
         safe: bool = False,
         request: Optional[Request] = None,
@@ -190,12 +183,14 @@ class BaseUserManager(Generic[models.UP, models.SIHE]):
         await self.on_after_delete(user, request)
 
     async def get_sign_in_history(
-        self, user: Union[schemas.UC, models.UP], pagination_params: PaginateQueryParams
+        self,
+        user: Union[generics.UC, models.UP],
+        pagination_params: PaginateQueryParams,
     ) -> list[models.SignInHistoryEvent]:
         raise NotImplementedError()
 
     async def validate_password(
-        self, password: str, user: Union[schemas.UC, models.UP]
+        self, password: str, user: generics.UC | models.UP
     ) -> None:
         return
 
@@ -302,29 +297,37 @@ class BaseUserManager(Generic[models.UP, models.SIHE]):
         return await self.user_db.update(user, validated_update_dict)
 
 
-UserManagerDependency = DependencyCallable[BaseUserManager[models.UP, models.SIHE]]
+UserManagerDependency = DependencyCallable[
+    BaseUserManager[generics.U, generics.UC, generics.SIHE]
+]
 
 
-class UserManager(models.UUIDIDMixin, BaseUserManager[User, UUID]):
+class UserManager(
+    models.UUIDIDMixin,
+    BaseUserManager[schemas.UserRead, schemas.UserCreate, schemas.EventRead],
+):
     reset_password_token_secret = settings.reset_password_token_secret
     verification_token_secret = settings.verification_token_secret
 
     async def get_sign_in_history(
-        self, user: User, pagination_params: PaginateQueryParams
-    ) -> list[models.SignInHistoryEvent]:
+        self, user: schemas.UserRead, pagination_params: PaginateQueryParams
+    ) -> Iterable[models.SignInHistoryEvent]:
         return await self.user_db.get_sign_in_history(user.id, pagination_params)
 
-    async def _record_in_sighin_history(self, user: User, request: Request):
+    async def _record_in_sighin_history(self, user: schemas.UserRead, request: Request):
         if request.client is None:
             return
-        event = BaseSignInHistoryEvent(
-            timestamp=datetime.now(), fingerprint=request.client.host
+        event = schemas.EventRead(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            timestamp=datetime.now(),
+            fingerprint=request.client.host,
         )
         await self.user_db.record_in_sighin_history(user_id=user.id, event=event)
 
     async def on_after_login(
         self,
-        user: User,
+        user: schemas.UserRead,
         request: Request | None = None,
         response: Response | None = None,
     ) -> None:
@@ -332,24 +335,21 @@ class UserManager(models.UUIDIDMixin, BaseUserManager[User, UUID]):
             return
         await self._record_in_sighin_history(user, request)
 
-    async def on_after_register(self, user: User, request: Request | None = None):
+    async def on_after_register(
+        self, user: schemas.UserRead, request: Request | None = None
+    ):
         print(f"User {user.id} has registered.")
 
     async def on_after_forgot_password(
-        self, user: User, token: str, request: Request | None = None
+        self, user: schemas.UserRead, token: str, request: Request | None = None
     ):
         print(f"User {user.id} has forgot their password. Reset token: {token}")
 
     async def on_after_request_verify(
-        self, user: User, token: str, request: Request | None = None
+        self, user: schemas.UserRead, token: str, request: Request | None = None
     ):
         print(f"Verification requested for user {user.id}. Verification token: {token}")
 
 
 async def get_user_manager(user_db: SAUserDB = Depends(get_user_db)):
     yield UserManager(user_db)
-
-
-api_users = APIUsers[User, UUID](get_user_manager, [auth_backend])
-
-current_active_user = api_users.current_user(active=True)

@@ -1,21 +1,25 @@
 import uuid
 
+from pydantic import EmailStr
+
 from db.schemas import generics
 
 
-class UserRead(generics.ORMModeMixin, generics.BaseUser[uuid.UUID]):
+class UserRead(generics.ORMModeMixin, generics.BaseUser[uuid.UUID, EmailStr]):
     ...
 
 
-class UserCreate(generics.ORMModeMixin, generics.BaseUserCreate):
+class UserCreate(generics.ORMModeMixin, generics.BaseUserCreate[EmailStr]):
     ...
 
 
-class UserUpdate(generics.ORMModeMixin, generics.BaseUserUpdate):
+class UserUpdate(generics.ORMModeMixin, generics.BaseUserUpdate[EmailStr]):
     ...
 
 
-class EventRead(generics.ORMModeMixin, generics.BaseSignInHistoryEvent):
+class EventRead(
+    generics.ORMModeMixin, generics.BaseSignInHistoryEvent[uuid.UUID, uuid.UUID]
+):
     ...
 
 

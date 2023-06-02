@@ -1,18 +1,16 @@
-from typing import Any, Generic
+from typing import Any, Generic, Iterable
 from uuid import UUID
 
 from fastapi import Depends, Request
 
-from api import schemas
-from api.roles import APIRoles
-from app.services.users import auth_backend, get_user_manager
 from core import exceptions
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db import base, db, models, roles
+from db import db, models
 from db.base import BaseRoleDatabase, BaseUserRoleDatabase
 from db.models import UUIDIDMixin
 from db.roles import SARoleDB, SAUserRoleDB
+from db.schemas import generics, schemas
 from managers.role import BaseRoleManager
 
 
@@ -32,11 +30,11 @@ class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
     def parse_id(self, value: Any) -> UUID:
         """
         Parse a value into a correct UUID instance.
-        Must implement in Generic[UUID]
+         Must implement in Generic[UUID]
 
-        :param value: The value to parse.
-        :raises InvalidID: The UUID value is invalid.
-        :return: An UUID object.
+         :param value: The value to parse.
+         :raises InvalidID: The UUID value is invalid.
+         :return: An UUID object.
         """
         raise NotImplementedError()
 
@@ -45,7 +43,7 @@ class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
     # region User dictionary
 
     async def create(
-        self, role_create: schemas.RC, request: Request | None = None
+        self, role_create: generics.RC, request: Request | None = None
     ) -> models.RP:
         role = await self.role_db.get_by_name(role_create.name)
         if role:
@@ -66,7 +64,7 @@ class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
         return role
 
     async def update(
-        self, role_update: schemas.RU, role: models.RP, request: Request | None = None
+        self, role_update: generics.RU, role: models.RP, request: Request | None = None
     ) -> models.RP:
         role_dict = role_update.create_update_dict()
 
@@ -88,7 +86,7 @@ class BaseRoleManager(Generic[models.RP, models.URP, models.URUP]):
 
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> list[models.RP]:
+    ) -> Iterable[models.RP]:
         roles = await self.role_db.search(pagination_params, filter_param)
 
         return roles
@@ -151,15 +149,15 @@ RoleManagerDependency = DependencyCallable[
 ]
 
 
-class RoleManager(UUIDIDMixin, BaseRoleManager[SARole, UUID]):
+class RoleManager(
+    UUIDIDMixin,
+    BaseRoleManager[schemas.RoleRead, schemas.UserRoleRead, schemas.UserRoleUpdate],
+):
     pass
 
 
 async def get_role_manager(
-    role_db: SARoleDB = Depends(get_role_db),
-    user_role_db: SAUserRoleDB = Depends(get_user_role_db),
+    role_db: SARoleDB = Depends(db.get_role_db),
+    user_role_db: SAUserRoleDB = Depends(db.get_user_role_db),
 ):
     yield RoleManager(role_db, user_role_db=user_role_db)
-
-
-api_roles = APIRoles[User, UUID](get_user_manager, get_role_manager, [auth_backend])

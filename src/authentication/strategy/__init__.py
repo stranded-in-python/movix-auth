@@ -1,9 +1,9 @@
 from authentication.strategy.base import Strategy, StrategyDestroyNotSupportedError
 from authentication.strategy.db import (
     AP,
-    AccessTokenDatabase,
     AccessTokenProtocol,
     DatabaseStrategy,
+    TokenBlacklistManager,
 )
 from authentication.strategy.jwt import JWTStrategy
 
@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover
 
 __all__ = [
     "AP",
-    "AccessTokenDatabase",
+    "TokenBlacklistManager",
     "AccessTokenProtocol",
     "DatabaseStrategy",
     "JWTStrategy",

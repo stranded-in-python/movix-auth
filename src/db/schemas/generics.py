@@ -9,6 +9,8 @@ UserID = TypeVar("UserID", bound=uuid.UUID)
 RoleID = TypeVar("RoleID", bound=uuid.UUID)
 UserRoleID = TypeVar("UserRoleID", bound=uuid.UUID)
 TokenID = TypeVar('TokenID', bound=uuid.UUID)
+EventID = TypeVar('EventID', bound=uuid.UUID)
+EmailString = TypeVar('EmailString', bound=EmailStr)
 
 
 class CreateUpdateDictModel(BaseModel):
@@ -26,34 +28,36 @@ class CreateUpdateUserDictModel(CreateUpdateDictModel):
         )
 
 
-class BaseUser(Generic[UserID], CreateUpdateUserDictModel):
+class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
     """Base User model."""
 
     id: UserID
-    email: EmailStr
+    username: str
+    email: EmailString
     first_name: str
     last_name: str
+    hashed_password: str
     is_active: bool = True
     is_superuser: bool = False
 
 
-class BaseUserCreate(CreateUpdateUserDictModel):
+class BaseUserCreate(Generic[EmailString], CreateUpdateUserDictModel):
     username: str
-    password: str
-    email: str
+    email: EmailString
     first_name: str
     last_name: str
-    is_active: bool | None = True
-    is_superuser: bool | None = False
+    password: str
+    is_active: bool = True
+    is_superuser: bool = False
 
 
-class BaseUserUpdate(CreateUpdateUserDictModel):
+class BaseUserUpdate(Generic[EmailString], CreateUpdateUserDictModel):
     password: str | None
     email: EmailStr | None
     first_name: str
     last_name: str
-    is_active: bool | None
-    is_superuser: bool | None
+    is_active: bool = True
+    is_superuser: bool = False
 
 
 U = TypeVar("U", bound=BaseUser)
@@ -61,9 +65,11 @@ UC = TypeVar("UC", bound=BaseUserCreate)
 UU = TypeVar("UU", bound=BaseUserUpdate)
 
 
-class BaseSignInHistoryEvent(CreateUpdateDictModel):
-    timestamp: datetime.datetime | None
-    fingerprint: str | None
+class BaseSignInHistoryEvent(Generic[EventID, UserID], CreateUpdateDictModel):
+    id: EventID
+    user_id: UserID
+    timestamp: datetime.datetime
+    fingerprint: str
 
 
 SIHE = TypeVar("SIHE", bound=BaseSignInHistoryEvent)
