@@ -57,7 +57,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     async def create(
         self,
-        user_create: schemas.UC,
+        user_create: schemas.BaseUserCreate,
         safe: bool = False,
         request: Request | None = None,
     ) -> models_protocol.UP:
@@ -299,10 +299,6 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
 UserManagerDependency = DependencyCallable[
     BaseUserManager[models_protocol.UP,  models_protocol.SIHE]
 ]
-UserMgrType = BaseUserManager[generics.U, generics.SIHE]
-UserMgrDependencyType = UserManagerDependency[
-    generics.U, generics.SIHE
-]
 
 
 class UserManager(
@@ -316,7 +312,7 @@ class UserManager(
 
     async def get_sign_in_history(
         self, user: models.UserRead, pagination_params: PaginateQueryParams
-    ) -> Iterable[models_protocol.SignInHistoryEvent]:
+    ) -> Iterable[models.EventRead]:
         return await self.user_db.get_sign_in_history(user.id, pagination_params)
 
     async def _record_in_sighin_history(self, user: models.UserRead, request: Request):

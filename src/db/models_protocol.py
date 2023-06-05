@@ -8,6 +8,28 @@ ID = TypeVar("ID")
 EmailStr = TypeVar('EmailStr')
 
 
+class UUIDIDMixin:
+    @staticmethod
+    def parse_id(value: Any) -> UUID:
+        if isinstance(value, UUID):
+            return value
+        try:
+            return UUID(value)
+        except ValueError as e:
+            raise ex.InvalidID() from e
+
+
+class IntegerIDMixin:
+    @staticmethod
+    def parse_id(value: Any) -> int:
+        if isinstance(value, float):
+            raise ex.InvalidID()
+        try:
+            return int(value)
+        except ValueError as e:
+            raise ex.InvalidID() from e
+       
+
 class UserCreateProtocol(Protocol[EmailStr]):
     username: str
     email: EmailStr
@@ -31,8 +53,8 @@ class UserProtocol(Protocol[ID, EmailStr]):
     is_superuser: bool
 
 
-UP = TypeVar("UP", bound=UserProtocol)
-UC = TypeVar("UC", bound=UserCreateProtocol)
+UP = TypeVar("UP", bound=UserProtocol[UUIDIDMixin, str])
+UC = TypeVar("UC", bound=UserCreateProtocol[str])
 
 
 class RoleProtocol(Protocol[ID]):
@@ -42,7 +64,7 @@ class RoleProtocol(Protocol[ID]):
     name: str
 
 
-RP = TypeVar("RP", bound=RoleProtocol)
+RP = TypeVar("RP", bound=RoleProtocol[UUIDIDMixin])
 
 
 class UserRoleProtocol(Protocol[ID]):
@@ -53,7 +75,7 @@ class UserRoleProtocol(Protocol[ID]):
     role_id: ID
 
 
-URP = TypeVar("URP", bound=UserRoleProtocol)
+URP = TypeVar("URP", bound=UserRoleProtocol[UUIDIDMixin])
 
 
 class UserRoleUpdateProtocol(Protocol[ID]):
@@ -61,7 +83,7 @@ class UserRoleUpdateProtocol(Protocol[ID]):
     role_id: ID
 
 
-URUP = TypeVar("URUP", bound=UserRoleUpdateProtocol)
+URUP = TypeVar("URUP", bound=UserRoleUpdateProtocol[UUIDIDMixin])
 
 
 class AccessRightProtocol(Protocol[ID]):
@@ -71,7 +93,7 @@ class AccessRightProtocol(Protocol[ID]):
     name: str
 
 
-ARP = TypeVar("ARP", bound=AccessRightProtocol)
+ARP = TypeVar("ARP", bound=AccessRightProtocol[UUIDIDMixin])
 
 
 class RoleAccessRightProtocol(Protocol[ID]):
@@ -82,7 +104,7 @@ class RoleAccessRightProtocol(Protocol[ID]):
     access_right_id: ID
 
 
-RARP = TypeVar("RARP", bound=RoleAccessRightProtocol)
+RARP = TypeVar("RARP", bound=RoleAccessRightProtocol[UUIDIDMixin])
 
 
 class RoleAccessRightUpdateProtocol(Protocol[ID]):
@@ -90,7 +112,7 @@ class RoleAccessRightUpdateProtocol(Protocol[ID]):
     access_right_id: ID
 
 
-RARUP = TypeVar("RARUP", bound=RoleAccessRightUpdateProtocol)
+RARUP = TypeVar("RARUP", bound=RoleAccessRightUpdateProtocol[UUIDIDMixin])
 
 
 class SignInHistoryEvent(Protocol[ID]):
@@ -100,7 +122,7 @@ class SignInHistoryEvent(Protocol[ID]):
     fingerprint: str
 
 
-SIHE = TypeVar("SIHE", bound=SignInHistoryEvent)
+SIHE = TypeVar("SIHE", bound=SignInHistoryEvent[UUIDIDMixin])
 
 
 class AccessTokenProtocol(Protocol[ID]):
@@ -111,26 +133,4 @@ class AccessTokenProtocol(Protocol[ID]):
     created_at: datetime
 
 
-AP = TypeVar("AP", bound=AccessTokenProtocol)
-
-
-class UUIDIDMixin:
-    @staticmethod
-    def parse_id(value: Any) -> UUID:
-        if isinstance(value, UUID):
-            return value
-        try:
-            return UUID(value)
-        except ValueError as e:
-            raise ex.InvalidID() from e
-
-
-class IntegerIDMixin:
-    @staticmethod
-    def parse_id(value: Any) -> int:
-        if isinstance(value, float):
-            raise ex.InvalidID()
-        try:
-            return int(value)
-        except ValueError as e:
-            raise ex.InvalidID() from e
+AP = TypeVar("AP", bound=AccessTokenProtocol[UUIDIDMixin])

@@ -55,7 +55,7 @@ class BaseUserUpdate(CreateUpdateUserDictModel):
     is_superuser: bool | None
 
 
-U = TypeVar("U", bound=BaseUser)
+U = TypeVar("U", bound=BaseUser[UUID])
 UC = TypeVar("UC", bound=BaseUserCreate)
 UU = TypeVar("UU", bound=BaseUserUpdate)
 
@@ -88,7 +88,6 @@ class EventRead(BaseSignInHistoryEvent):
         orm_mode = True
 
 
-
 class BaseRole(Generic[RoleID], CreateUpdateDictModel):
     """Base Role model."""
 
@@ -105,9 +104,9 @@ class BaseRoleUpdate(Generic[RoleID], CreateUpdateDictModel):
     name: str
 
 
-R = TypeVar("R", bound=BaseRole)
+R = TypeVar("R", bound=BaseRole[UUID])
 RC = TypeVar("RC", bound=BaseRoleCreate)
-RU = TypeVar("RU", bound=BaseRoleUpdate)
+RU = TypeVar("RU", bound=BaseRoleUpdate[UUID])
 
 
 class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
@@ -121,8 +120,8 @@ class UserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
     role_id: RoleID
 
 
-UR = TypeVar("UR", bound=BaseUserRole)
-URU = TypeVar("URU", bound=UserRoleUpdate)
+UR = TypeVar("UR", bound=BaseUserRole[UUID, UUID, UUID])
+URU = TypeVar("URU", bound=UserRoleUpdate[UUID, UUID])
 
 
 class BaseAccessRight(Generic[AccessRightID], CreateUpdateDictModel):
@@ -139,9 +138,9 @@ class BaseAccessRightUpdate(Generic[AccessRightID], CreateUpdateDictModel):
     name: str
 
 
-AR = TypeVar("AR", bound=BaseAccessRight)
+AR = TypeVar("AR", bound=BaseAccessRight[UUID])
 ARC = TypeVar("ARC", bound=BaseAccessRightCreate)
-ARU = TypeVar("ARU", bound=BaseAccessRightUpdate)
+ARU = TypeVar("ARU", bound=BaseAccessRightUpdate[UUID])
 
 
 class BaseRoleAccessRight(Generic[AccessRightID, RoleID], CreateUpdateDictModel):
@@ -155,5 +154,5 @@ class BaseRoleAccessRightUpdate(Generic[AccessRightID, RoleID], CreateUpdateDict
     role_id: RoleID
 
 
-RAR = TypeVar("RAR", bound=BaseRoleAccessRight)
-RARU = TypeVar("RARU", bound=BaseRoleAccessRightUpdate)
+RAR = TypeVar("RAR", bound=BaseRoleAccessRight[UUID, UUID])
+RARU = TypeVar("RARU", bound=BaseRoleAccessRightUpdate[UUID, UUID])

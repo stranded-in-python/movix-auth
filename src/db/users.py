@@ -139,7 +139,7 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
         self, user_id: uuid.UUID, update_dict: dict[str, Any]
     ) -> models.UserRead:
         statement = select(self.user_table).where(self.user_table.id == user_id)
-        user = await self._get_user(statement)
+        user = self.user_table(**update_dict)
         for key, value in update_dict.items():
             setattr(user, key, value)
         self.session.add(user)
