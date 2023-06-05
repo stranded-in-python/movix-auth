@@ -145,7 +145,7 @@ class BaseRoleManager(
 
 
 RoleManagerDependency = DependencyCallable[
-    BaseRoleManager[models_protocol.RP, models_protocol.URP, generics.RC, generics.RU, models_protocol.URUP]
+    BaseRoleManager[models_protocol.RP, models_protocol.URUP]
 ]
 
 

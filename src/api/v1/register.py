@@ -2,16 +2,20 @@ from typing import Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from api import schemas
 import core.exceptions as ex
 from api.v1.common import ErrorCode, ErrorModel
 from db.schemas import generics
-from managers.user import UserMgrDependencyType, UserMgrType
+from db import models_protocol
+from managers.user import BaseUserManager, UserManagerDependency
 
 
 def get_register_router(
-    get_user_manager: UserMgrDependencyType,
-    user_schema: Type[generics.U],
-    user_create_schema: Type[generics.UC],
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP, models_protocol.SIHE
+    ],
+    user_schema: Type[schemas.U],
+    user_create_schema: Type[schemas.UC],
 ) -> APIRouter:
     """Generate a router with the register route."""
     router = APIRouter()
@@ -56,7 +60,7 @@ def get_register_router(
     async def register(
         request: Request,
         user_create: user_create_schema,
-        user_service: UserMgrType = Depends(get_user_manager),
+        user_service: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
     ) -> user_schema:
         try:
             created_user: user_schema = await user_service.create(

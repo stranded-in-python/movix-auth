@@ -7,7 +7,7 @@ from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
 from db import models_protocol
 from db.schemas import generics
-from managers.user import UserMgrDependencyType, UserMgrType
+from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
 
 StrategyType = Strategy[models_protocol.UP, models_protocol.SIHE]
@@ -15,7 +15,9 @@ StrategyType = Strategy[models_protocol.UP, models_protocol.SIHE]
 
 def get_auth_router(
     backend: AuthenticationBackend,
-    get_user_manager: UserMgrDependencyType,
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP, models_protocol.SIHE
+    ],
     authenticator: Authenticator,
     requires_verification: bool = False,
 ) -> APIRouter:
@@ -24,7 +26,7 @@ def get_auth_router(
     router.prefix = "/api/v1"
 
     get_current_user_token = authenticator.current_user_token(
-        active=True, verified=requires_verification
+        active=True
     )
 
     login_responses: OpenAPIResponseType = {
@@ -52,7 +54,7 @@ def get_auth_router(
     async def login(
         request: Request,
         credentials: OAuth2PasswordRequestForm = Depends(),
-        user_manager: UserMgrType = Depends(get_user_manager),
+        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
         strategy: StrategyType = Depends(backend.get_strategy),
     ):
         user = await user_manager.authenticate(credentials)

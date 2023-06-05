@@ -24,14 +24,14 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
     with a specific set of parameters.
     """
 
-    authenticator: Authenticator
+    authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
 
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
             models_protocol.UP, models_protocol.SIHE
         ],
-        auth_backends: Sequence[AuthenticationBackend],
+        auth_backends: Sequence[AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
         self.get_user_manager = get_user_manager
@@ -55,7 +55,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         return get_reset_password_router(self.get_user_manager)
 
     def get_auth_router(
-        self, backend: AuthenticationBackend, requires_verification: bool = False
+        self, backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE], requires_verification: bool = False
     ) -> APIRouter:
         """
         Return an auth router for a given authentication backend.

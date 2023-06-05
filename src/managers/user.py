@@ -66,6 +66,9 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
         existing_user = await self.user_db.get_by_email(user_create.email)
         if existing_user:
             raise exceptions.UserAlreadyExists()
+        existing_user = await self.user_db.get_by_username(user_create.username)
+        if existing_user:
+            raise exceptions.UserAlreadyExists()
 
         user_dict = (
             user_create.create_update_dict() if safe else user_create.create_update_dict_superuser()

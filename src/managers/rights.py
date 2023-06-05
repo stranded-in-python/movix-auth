@@ -134,7 +134,7 @@ class BaseAccessRightManager(
 
 AccessRightManagerDependency = DependencyCallable[
     BaseAccessRightManager[
-        models_protocol.ARP, generics.ARC, generics.ARU, models_protocol.RARP, models_protocol.RARUP, models_protocol.ID
+        models_protocol.ARP, models_protocol.RARP, models_protocol.ID
     ]
 ]
 

@@ -5,32 +5,28 @@ from fastapi import APIRouter
 from api.v1.roles import get_roles_router
 from authentication import AuthenticationBackend, Authenticator
 import api.schemas as schemas
+
+from db import models_protocol
 from managers.role import RoleManagerDependency
 from managers.user import UserManagerDependency
 
 
 class APIRoles(
     Generic[
-        schemas.U,
-        schemas.UC,
-        schemas.UU,
-        schemas.SIHE,
-        schemas.R,
-        schemas.UR,
-        schemas.URU,
+        models_protocol.RP, models_protocol.UP, models_protocol.SIHE
     ]
 ):
-    authenticator: Authenticator
+    authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
 
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            schemas.U, schemas.SIHE
+            models_protocol.UP, models_protocol.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            schemas.R, schemas.UR, schemas.RC, schemas.RU, schemas.URU
+            models_protocol.RP
         ],
-        auth_backends: Sequence[AuthenticationBackend],
+        auth_backends: Sequence[AuthenticationBackend[[models_protocol.UP, models_protocol.SIHE]]],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
         self.get_user_manager = get_user_manager

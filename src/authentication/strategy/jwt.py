@@ -50,8 +50,8 @@ class JWTStrategy(
             user_id = data.get("sub")
             if user_id is None:
                 return None
-        except jwt.PyJWTError:
-            return None
+        except jwt.PyJWTError as e:
+            raise e
 
         try:
             parsed_id = user_manager.parse_id(user_id)
