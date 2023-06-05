@@ -49,8 +49,8 @@ class BaseUserCreate(CreateUpdateUserDictModel):
 class BaseUserUpdate(CreateUpdateUserDictModel):
     password: str | None
     email: EmailStr | None
-    first_name: str
-    last_name: str
+    first_name: str | None
+    last_name: str | None
     is_active: bool | None
     is_superuser: bool | None
 
@@ -60,12 +60,33 @@ UC = TypeVar("UC", bound=BaseUserCreate)
 UU = TypeVar("UU", bound=BaseUserUpdate)
 
 
+class UserRead(BaseUser[UUID]):
+    class Config:
+        orm_mode = True
+
+
+class UserCreate(BaseUserCreate):
+    class Config:
+        orm_mode = True
+
+
+class UserUpdate(BaseUserUpdate):
+    class Config:
+        orm_mode = True
+
+
 class BaseSignInHistoryEvent(CreateUpdateDictModel):
     timestamp: datetime.datetime | None
     fingerprint: str | None
 
 
 SIHE = TypeVar("SIHE", bound=BaseSignInHistoryEvent)
+
+
+class EventRead(BaseSignInHistoryEvent):
+    class Config:
+        orm_mode = True
+
 
 
 class BaseRole(Generic[RoleID], CreateUpdateDictModel):

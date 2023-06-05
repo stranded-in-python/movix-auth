@@ -21,9 +21,9 @@ from sqlalchemy.sql import Select
 from cache.cache import cache_decorator
 from core.pagination import PaginateQueryParams
 
-from .base import BaseUserDatabase, SQLAlchemyBase
-from .generics import GUID
-from .schemas import schemas
+from db.base import BaseUserDatabase, SQLAlchemyBase
+from db.generics import GUID
+from db.schemas import models
 
 UUID_ID = uuid.UUID
 
@@ -42,7 +42,14 @@ class SAUser(SQLAlchemyBase):
     hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    signin = relationship("SQLAlchemySignInHistoryTable")
+
+    first_name: Mapped[str] = mapped_column(
+        String(length=32), unique=False, index=True, nullable=False
+    )
+    last_name: Mapped[str] = mapped_column(
+        String(length=32), unique=False, index=True, nullable=False
+    )
+    signin = relationship("SASignInHistory")
 
 
 class SASignInHistory(SQLAlchemyBase):
@@ -74,7 +81,7 @@ class SQLAlchemyOAuthAccountTable(SQLAlchemyBase):
     account_email: Mapped[str] = mapped_column(String(length=320), nullable=False)
 
 
-class SAUserDB(BaseUserDatabase[schemas.UserRead, uuid.UUID, schemas.EventRead]):
+class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
     """
     Database adapter for SQLAlchemy.
 
@@ -95,51 +102,52 @@ class SAUserDB(BaseUserDatabase[schemas.UserRead, uuid.UUID, schemas.EventRead])
         self.history_table = history_table
 
     @cache_decorator()
-    async def get(self, user_id: uuid.UUID) -> schemas.UserRead | None:
+    async def get(self, user_id: uuid.UUID) -> models.UserRead | None:
         statement = select(self.user_table).where(self.user_table.id == user_id)
         usr_model = await self._get_user(statement)
         if not usr_model:
             return None
-        return schemas.UserRead.from_orm(usr_model)
+        return models.UserRead.from_orm(usr_model)
 
     @cache_decorator()
-    async def get_by_username(self, username: str) -> schemas.UserRead | None:
+    async def get_by_username(self, username: str) -> models.UserRead | None:
         statement = select(self.user_table).where(
             func.lower(self.user_table.username) == func.lower(username)
         )
         usr_model = await self._get_user(statement)
         if not usr_model:
             return None
-        return schemas.UserRead.from_orm(usr_model)
+        return models.UserRead.from_orm(usr_model)
 
     @cache_decorator()
-    async def get_by_email(self, email: str) -> schemas.UserRead | None:
+    async def get_by_email(self, email: str) -> models.UserRead | None:
         statement = select(self.user_table).where(
             func.lower(self.user_table.email) == func.lower(email)
         )
         usr_model = await self._get_user(statement)
         if not usr_model:
             return None
-        return schemas.UserRead.from_orm(usr_model)
+        return models.UserRead.from_orm(usr_model)
 
-    async def create(self, create_dict: dict[str, Any]) -> schemas.UserRead:
+    async def create(self, create_dict: dict[str, Any]) -> models.UserRead:
         user = self.user_table(**create_dict)
         self.session.add(user)
         await self.session.commit()
-        return schemas.UserRead.from_orm(user)
+        return models.UserRead.from_orm(user)
 
     async def update(
-        self, user: schemas.UserRead, update_dict: dict[str, Any]
-    ) -> schemas.UserRead:
-        model = await self.get(user.id)
+        self, user_id: uuid.UUID, update_dict: dict[str, Any]
+    ) -> models.UserRead:
+        statement = select(self.user_table).where(self.user_table.id == user_id)
+        user = await self._get_user(statement)
         for key, value in update_dict.items():
-            setattr(model, key, value)
             setattr(user, key, value)
-        self.session.add(model)
+        self.session.add(user)
         await self.session.commit()
-        return user
 
-    async def delete(self, user: schemas.UserRead) -> None:
+        return models.UserRead.from_orm(user)
+
+    async def delete(self, user: models.UserRead) -> None:
         await self.session.delete(user)
         await self.session.commit()
 
@@ -148,16 +156,16 @@ class SAUserDB(BaseUserDatabase[schemas.UserRead, uuid.UUID, schemas.EventRead])
         return results.unique().scalar_one_or_none()
 
     async def record_in_sighin_history(
-        self, user_id: uuid.UUID, event: schemas.EventRead
+        self, user_id: uuid.UUID, event: models.EventRead
     ):
-        e = self.history_table(user_id=user_id, **event.dict())
+        e = self.history_table(**event.dict())
         self.session.add(e)
         await self.session.commit()
 
     @cache_decorator()
     async def get_sign_in_history(
         self, user_id: uuid.UUID, pagination_params: PaginateQueryParams
-    ) -> Iterable[schemas.EventRead]:
+    ) -> Iterable[models.EventRead]:
         statement: Select = (
             select(self.history_table)
             .where(self.history_table.user_id == user_id)
@@ -168,7 +176,7 @@ class SAUserDB(BaseUserDatabase[schemas.UserRead, uuid.UUID, schemas.EventRead])
         events = await self._get_events(statement)
         if not events:
             return []
-        return list(schemas.EventRead.from_orm(event) for event in events)
+        return list(models.EventRead.from_orm(event[0]) for event in events)
 
     async def _get_events(self, statement: Select) -> Sequence[Row]:
         results = await self.session.execute(statement)

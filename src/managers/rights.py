@@ -6,31 +6,31 @@ from fastapi import Depends, Request
 from core import exceptions
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db import access_rights, getters, models
+from db import access_rights, getters, models_protocol
 from db.base import BaseAccessRightDatabase, BaseRoleAccessRightDatabase
-from db.models import UUIDIDMixin
-from db.schemas import generics, schemas
+from db.models_protocol import UUIDIDMixin
+from db.schemas import generics, models
 
 
 class BaseAccessRightManager(
     Generic[
-        models.ARP, generics.ARC, generics.ARU, models.RARP, models.RARUP, models.ID
+        models_protocol.ARP, generics.ARC, generics.ARU, models_protocol.RARP, models_protocol.RARUP, models_protocol.ID
     ]
 ):
-    access_rights_db: BaseAccessRightDatabase[models.ARP, models.ID]
-    role_access_rights_db: BaseRoleAccessRightDatabase[models.RARP, models.ID]
+    access_rights_db: BaseAccessRightDatabase[models_protocol.ARP, models_protocol.ID]
+    role_access_rights_db: BaseRoleAccessRightDatabase[models_protocol.RARP, models_protocol.ID]
 
     def __init__(
         self,
-        access_rights_db: BaseAccessRightDatabase[models.ARP, models.ID],
-        role_access_rights_db: BaseRoleAccessRightDatabase[models.RARP, models.ID],
+        access_rights_db: BaseAccessRightDatabase[models_protocol.ARP, models_protocol.ID],
+        role_access_rights_db: BaseRoleAccessRightDatabase[models_protocol.RARP, models_protocol.ID],
     ):
         self.access_rights_db = access_rights_db
         self.role_access_rights_db = role_access_rights_db
 
     async def create(
         self, access_right_create: generics.ARC, request: Request | None = None
-    ) -> models.ARP:
+    ) -> models_protocol.ARP:
         access_right = await self.access_rights_db.get_by_name(access_right_create.name)
         if access_right:
             raise exceptions.AccessRightAlreadyExists
@@ -42,7 +42,7 @@ class BaseAccessRightManager(
         await self.on_after_create(created_access, request)
         return created_access
 
-    async def get(self, access_right_id: models.ID) -> models.ARP:
+    async def get(self, access_right_id: models_protocol.ID) -> models_protocol.ARP:
         access_right = await self.access_rights_db.get(access_right_id)
 
         if access_right is None:
@@ -52,9 +52,9 @@ class BaseAccessRightManager(
     async def update(
         self,
         access_right_update: generics.ARU,
-        access_right: models.ARP,
+        access_right: models_protocol.ARP,
         request: Request | None = None,
-    ) -> models.ARP:
+    ) -> models_protocol.ARP:
         access_dict = access_right_update.create_update_dict()
 
         updated_access = await self.access_rights_db.update(access_right, access_dict)
@@ -63,8 +63,8 @@ class BaseAccessRightManager(
         return updated_access
 
     async def delete(
-        self, access_right: models.ARP, request: Request | None = None
-    ) -> models.ARP:
+        self, access_right: models_protocol.ARP, request: Request | None = None
+    ) -> models_protocol.ARP:
         await self.on_before_delete(access_right, request)
 
         await self.access_rights_db.delete(access_right.id)
@@ -75,22 +75,22 @@ class BaseAccessRightManager(
 
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> Iterable[models.ARP]:
+    ) -> Iterable[models_protocol.ARP]:
         access_right = await self.access_rights_db.search(
             pagination_params, filter_param
         )
 
         return access_right
 
-    async def check_role_acccess_right(self, role_access_right: models.RARUP) -> bool:
+    async def check_role_acccess_right(self, role_access_right: models_protocol.RARUP) -> bool:
         entry = await self.role_access_rights_db.get(
             role_access_right.role_id, role_access_right.access_right_id
         )
         return True if entry else False
 
     async def assign_role_access_right(
-        self, role_access_right: models.RARUP
-    ) -> models.RARP:
+        self, role_access_right: models_protocol.RARUP
+    ) -> models_protocol.RARP:
         entry = await self.role_access_rights_db.create(
             {
                 'role_id': role_access_right.role_id,
@@ -99,7 +99,7 @@ class BaseAccessRightManager(
         )
         return entry
 
-    async def remove_role_access_right(self, role_access_right: models.RARUP):
+    async def remove_role_access_right(self, role_access_right: models_protocol.RARUP):
         rar = await self.role_access_rights_db.get(
             role_access_right.role_id, role_access_right.access_right_id
         )
@@ -107,34 +107,34 @@ class BaseAccessRightManager(
             return None
         await self.role_access_rights_db.remove_role_access_right(rar)
 
-    async def get_role_access_rights(self, role_id: models.ID) -> Iterable[models.RARP]:
+    async def get_role_access_rights(self, role_id: models_protocol.ID) -> Iterable[models_protocol.RARP]:
         ids = await self.role_access_rights_db.get_role_access_rights(role_id)
         return ids
 
     async def on_after_create(
-        self, access_right: models.ARP, request: Request | None = None
+        self, access_right: models_protocol.ARP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_update(
-        self, access_right: models.ARP, request: Request | None = None
+        self, access_right: models_protocol.ARP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_before_delete(
-        self, access_right: models.ARP, request: Request | None = None
+        self, access_right: models_protocol.ARP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_delete(
-        self, access_right: models.ARP, request: Request | None = None
+        self, access_right: models_protocol.ARP, request: Request | None = None
     ) -> None:
         ...
 
 
 AccessRightManagerDependency = DependencyCallable[
     BaseAccessRightManager[
-        models.ARP, generics.ARC, generics.ARU, models.RARP, models.RARUP, models.ID
+        models_protocol.ARP, generics.ARC, generics.ARU, models_protocol.RARP, models_protocol.RARUP, models_protocol.ID
     ]
 ]
 
@@ -142,11 +142,11 @@ AccessRightManagerDependency = DependencyCallable[
 class AccessRightManager(
     UUIDIDMixin,
     BaseAccessRightManager[
-        schemas.AccessRight,
-        schemas.AccessRightCreate,
-        schemas.AccessRightUpdate,
-        schemas.RoleAccessRight,
-        schemas.RoleAccessRightUpdate,
+        models.AccessRight,
+        models.AccessRightCreate,
+        models.AccessRightUpdate,
+        models.RoleAccessRight,
+        models.RoleAccessRightUpdate,
         uuid.UUID,
     ],
 ):

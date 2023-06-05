@@ -4,20 +4,20 @@ from fastapi import APIRouter
 
 from api.v1.roles import get_roles_router
 from authentication import AuthenticationBackend, Authenticator
-from db.schemas import generics
+import api.schemas as schemas
 from managers.role import RoleManagerDependency
 from managers.user import UserManagerDependency
 
 
 class APIRoles(
     Generic[
-        generics.U,
-        generics.UC,
-        generics.UU,
-        generics.SIHE,
-        generics.R,
-        generics.UR,
-        generics.URU,
+        schemas.U,
+        schemas.UC,
+        schemas.UU,
+        schemas.SIHE,
+        schemas.R,
+        schemas.UR,
+        schemas.URU,
     ]
 ):
     authenticator: Authenticator
@@ -25,10 +25,10 @@ class APIRoles(
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            generics.U, generics.UC, generics.UU, generics.SIHE
+            schemas.U, schemas.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            generics.R, generics.UR, generics.RC, generics.RU, generics.URU
+            schemas.R, schemas.UR, schemas.RC, schemas.RU, schemas.URU
         ],
         auth_backends: Sequence[AuthenticationBackend],
     ):
@@ -39,11 +39,11 @@ class APIRoles(
 
     def get_roles_router(
         self,
-        role_schema: Type[generics.R],
-        role_create_schema: Type[generics.RC],
-        role_update_schema: Type[generics.RU],
-        user_role_schema: Type[generics.UR],
-        user_role_update_schema: Type[generics.URU],
+        role_schema: Type[schemas.R],
+        role_create_schema: Type[schemas.RC],
+        role_update_schema: Type[schemas.RU],
+        user_role_schema: Type[schemas.UR],
+        user_role_update_schema: Type[schemas.URU],
     ) -> APIRouter:
         """
         Return a router with routes to manage roles.

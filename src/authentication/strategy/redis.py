@@ -5,7 +5,7 @@ import redis.asyncio
 
 import core.exceptions as exceptions
 from authentication.strategy.base import Strategy
-from db import models
+import db.models_protocol as models
 from db.schemas import generics
 from managers.user import BaseUserManager
 

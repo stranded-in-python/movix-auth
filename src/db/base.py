@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db.models import ARP, ID, RARP, RP, SIHE, UP, URP, URUP
+from db.models_protocol import ARP, ID, RARP, RP, SIHE, UP, URP, URUP
 
 metadata_obj = MetaData(schema="users")
 
@@ -33,11 +33,11 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
         """Create a user."""
         ...
 
-    async def update(self, user: UP, update_dict: dict[str, t.Any]) -> UP:
+    async def update(self, user_id: ID, update_dict: dict[str, t.Any]) -> UP:
         """Update a user."""
         ...
 
-    async def delete(self, user: UP) -> None:
+    async def delete(self, user_id: ID) -> None:
         """Delete a user."""
         ...
 

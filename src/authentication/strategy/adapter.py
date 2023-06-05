@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Protocol  # pragma: no cover
 from typing import Any, Dict, Generic, Optional
 
-from db import models
+from db import models_protocol as models
 
 
 class TokenBlacklistManager(Protocol, Generic[models.AP]):

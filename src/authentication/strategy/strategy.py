@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Generic, Optional
 
 import core.exceptions as exceptions
-from db import models
+import db.models_protocol as models
 from db.schemas import generics
 from managers.user import BaseUserManager
 
@@ -12,8 +12,8 @@ from .base import Strategy
 
 
 class DatabaseStrategy(
-    Strategy[models.UP, generics.UC, generics.UU, models.SIHE],
-    Generic[models.UP, generics.UC, generics.UU, models.SIHE, models.AP],
+    Strategy[models.UP, models.SIHE],
+    Generic[models.UP, models.SIHE, models.AP],
 ):
     def __init__(
         self,
@@ -26,7 +26,7 @@ class DatabaseStrategy(
     async def read_token(
         self,
         token: Optional[str],
-        user_manager: BaseUserManager[models.UP, generics.UC, generics.UU, models.SIHE],
+        user_manager: BaseUserManager[models.UP, models.SIHE],
     ) -> Optional[models.UP]:
         if token is None:
             return None

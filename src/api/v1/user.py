@@ -3,23 +3,24 @@ from typing import Iterable, Type
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 import core.exceptions as exceptions
+from api import schemas
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import Authenticator
 from core.pagination import PaginateQueryParams
-from db import models
+from db import models_protocol
 from db.schemas import generics
 from managers.user import BaseUserManager, UserManagerDependency
 
-UserMgrType = BaseUserManager[generics.U, generics.UC, generics.UU, generics.SIHE]
+UserMgrType = BaseUserManager[generics.U, generics.SIHE]
 
 
 def get_users_router(
     get_user_manager: UserManagerDependency[
-        generics.U, generics.UC, generics.UU, generics.SIHE
+        models_protocol.UP, models_protocol.SIHE
     ],
-    user_schema: Type[generics.U],
-    user_update_schema: Type[generics.UU],
-    event_schema: Type[generics.SIHE],
+    user_schema: Type[schemas.U],
+    user_update_schema: Type[schemas.UU],
+    event_schema: Type[schemas.SIHE],
     authenticator: Authenticator,
 ) -> APIRouter:
     router = APIRouter()

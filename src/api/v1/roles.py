@@ -7,16 +7,16 @@ from api.v1.common import ErrorCode
 from authentication import Authenticator
 from core import exceptions
 from core.pagination import PaginateQueryParams
-from db import models
+from db import models_protocol
 from db.schemas import generics
 from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import UserMgrDependencyType, UserMgrType
 
 RoleMgrDependency = RoleManagerDependency[
-    models.RP, models.URP, generics.RC, generics.RU, models.URUP
+    models_protocol.RP, models_protocol.URP, generics.RC, generics.RU, models_protocol.URUP
 ]
 RoleMgrType = BaseRoleManager[
-    models.RP, models.URP, generics.RC, generics.RU, models.URUP
+    models_protocol.RP, models_protocol.URP, generics.RC, generics.RU, models_protocol.URUP
 ]
 
 

@@ -1,11 +1,11 @@
-import uuid
+# import uuid
 
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
 from api import container
+from api import schemas
 from core.config import settings
-from db.schemas import schemas
 
 app = FastAPI(
     title=settings.project_name,
@@ -23,31 +23,33 @@ app.include_router(
 )
 app.include_router(
     container.api_users.get_users_router(
-        schemas.UserRead, schemas.UserUpdate, schemas.EventRead
+        schemas.UserRead,
+        schemas.UserUpdate,
+        schemas.EventRead,
     ),
     tags=["users"],
 )
-app.include_router(
-    container.api_roles.get_roles_router(
-        schemas.RoleRead,
-        schemas.RoleCreate,
-        schemas.RoleUpdate,
-        schemas.UserRoleRead,
-        schemas.UserRoleUpdate,
-    ),
-    tags=["roles"],
-)
-app.include_router(
-    container.api_access_rights.get_access_rights_router(
-        schemas.AccessRight,
-        schemas.AccessRightCreate,
-        schemas.AccessRightUpdate,
-        schemas.RoleAccessRight,
-        schemas.RoleAccessRightUpdate,
-        uuid.UUID,
-    ),
-    tags=["access rights"],
-)
+# app.include_router(
+#     container.api_roles.get_roles_router(
+#         schemas.RoleRead,
+#         schemas.RoleCreate,
+#         schemas.RoleUpdate,
+#         schemas.UserRoleRead,
+#         schemas.UserRoleUpdate,
+#     ),
+#     tags=["roles"],
+# )
+# app.include_router(
+#     container.api_access_rights.get_access_rights_router(
+#         schemas.AccessRight,
+#         schemas.AccessRightCreate,
+#         schemas.AccessRightUpdate,
+#         schemas.RoleAccessRight,
+#         schemas.RoleAccessRightUpdate,
+#         uuid.UUID,
+#     ),
+#     tags=["access rights"],
+# )
 
 
 @app.on_event("startup")

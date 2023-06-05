@@ -11,7 +11,7 @@ from cache.cache import cache_decorator
 
 from .base import SQLAlchemyBase
 from .generics import GUID, TIMESTAMPAware, now_utc
-from .schemas import schemas
+from .schemas import models
 
 UUID_ID = uuid.UUID
 
@@ -59,7 +59,7 @@ class SABaseTokenBlacklistDB(abc.ABC):
     @cache_decorator()
     async def get_by_token(
         self, token: str, max_age: datetime | None = None
-    ) -> schemas.Token | None:
+    ) -> models.Token | None:
         statement = select(self.access_token_table).where(
             self.access_token_table.token == token  # type: ignore
         )
@@ -72,15 +72,15 @@ class SABaseTokenBlacklistDB(abc.ABC):
         token_model = results.scalar_one_or_none()
         if not token_model:
             return None
-        return schemas.Token.from_orm(token_model)
+        return models.Token.from_orm(token_model)
 
-    async def enlist(self, create_dict: Dict[str, Any]) -> schemas.Token:
+    async def enlist(self, create_dict: Dict[str, Any]) -> models.Token:
         token = self.access_token_table(**create_dict)
         self.session.add(token)
         await self.session.commit()
-        return schemas.Token.from_orm(token)
+        return models.Token.from_orm(token)
 
-    async def forget(self, access_token: schemas.Token) -> None:
+    async def forget(self, access_token: models.Token) -> None:
         await self.session.delete(access_token)
         await self.session.commit()
 

@@ -5,12 +5,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
-from db import models
+from db import models_protocol
 from db.schemas import generics
 from managers.user import UserMgrDependencyType, UserMgrType
 from openapi import OpenAPIResponseType
 
-StrategyType = Strategy[models.UP, generics.UC, generics.UU, models.SIHE]
+StrategyType = Strategy[models_protocol.UP, models_protocol.SIHE]
 
 
 def get_auth_router(
@@ -84,7 +84,7 @@ def get_auth_router(
         "/logout", name=f"auth:{backend.name}.logout", responses=logout_responses
     )
     async def logout(
-        user_token: Tuple[models.UP, str] = Depends(get_current_user_token),
+        user_token: Tuple[models_protocol.UP, str] = Depends(get_current_user_token),
         strategy: StrategyType = Depends(backend.get_strategy),
     ):
         user, token = user_token

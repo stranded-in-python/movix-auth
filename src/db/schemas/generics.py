@@ -14,6 +14,10 @@ EmailString = TypeVar('EmailString', bound=EmailStr)
 ID = TypeVar('ID', bound=uuid.UUID)
 
 
+class ORMModeMixin:
+    orm_mode = True
+
+
 class CreateUpdateDictModel(BaseModel):
     def create_update_dict(self):
         return self.dict(exclude_unset=True, exclude={"id"})
@@ -35,12 +39,14 @@ class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
     id: UserID
     username: str
     email: EmailString
+    hashed_password: str
     first_name: str
     last_name: str
-    hashed_password: str
     is_active: bool = True
     is_superuser: bool = False
 
+    class Config(ORMModeMixin):
+        ...
 
 class BaseUserCreate(Generic[EmailString], CreateUpdateUserDictModel):
     username: str
@@ -55,8 +61,8 @@ class BaseUserCreate(Generic[EmailString], CreateUpdateUserDictModel):
 class BaseUserUpdate(Generic[EmailString], CreateUpdateUserDictModel):
     password: str | None
     email: EmailStr | None
-    first_name: str
-    last_name: str
+    first_name: str | None
+    last_name: str | None
     is_active: bool = True
     is_superuser: bool = False
 
@@ -146,9 +152,6 @@ RAR = TypeVar("RAR", bound=BaseRoleAccessRight)
 RARU = TypeVar("RARU", bound=BaseRoleAccessRightUpdate)
 
 
-class ORMModeMixin:
-    class Config:
-        orm_mode = True
 
 
 class BaseToken(Generic[TokenID, UserID], BaseModel):

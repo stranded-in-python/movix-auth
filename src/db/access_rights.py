@@ -9,7 +9,7 @@ from sqlalchemy.sql import Select
 from cache.cache import cache_decorator
 
 from . import base, generics
-from .schemas import schemas
+from .schemas import models
 
 
 class SAAccessRight(base.SQLAlchemyBase):
@@ -23,7 +23,7 @@ class SAAccessRight(base.SQLAlchemyBase):
     name: Mapped[str] = mapped_column(String(length=100), nullable=False, index=True)
 
 
-class SAAccessRightDB(base.BaseAccessRightDatabase[schemas.AccessRight, uuid.UUID]):
+class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID]):
     session: AsyncSession
     access_right_table: type[SAAccessRight]
 
@@ -31,30 +31,30 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[schemas.AccessRight, uuid.UUI
         self.session = session
         self.access_right_table = access_right_table
 
-    async def get_all_access_rights(self) -> Iterable[schemas.AccessRight] | None:
+    async def get_all_access_rights(self) -> Iterable[models.AccessRight] | None:
         statement = select(self.access_right_table)
         access_rights = await self._get_access_rights(statement)
         if access_rights is None:
             return None
-        return list(schemas.AccessRight.from_orm(ar) for ar in access_rights)
+        return list(models.AccessRight.from_orm(ar) for ar in access_rights)
 
     @cache_decorator()
-    async def get(self, access_right_id: uuid.UUID) -> None | schemas.AccessRight:
+    async def get(self, access_right_id: uuid.UUID) -> None | models.AccessRight:
         statement = select(self.access_right_table).where(
             self.access_right_table.id == access_right_id
         )
         ar = await self._get_access_right(statement)
-        return schemas.AccessRight.from_orm(ar)
+        return models.AccessRight.from_orm(ar)
 
-    async def create(self, create_dict: Mapping[str, Any]) -> schemas.AccessRight:
+    async def create(self, create_dict: Mapping[str, Any]) -> models.AccessRight:
         access_right = self.access_right_table(**create_dict)
         self.session.add(access_right)
         await self.session.commit()
-        return schemas.AccessRight.from_orm(access_right)
+        return models.AccessRight.from_orm(access_right)
 
     async def update(
-        self, access_right: schemas.AccessRight, update_dict: Mapping[str, Any]
-    ) -> schemas.AccessRight:
+        self, access_right: models.AccessRight, update_dict: Mapping[str, Any]
+    ) -> models.AccessRight:
         ar_model = self.get(access_right.id)
         for key, value in update_dict.items():
             setattr(ar_model, key, value)
@@ -110,7 +110,7 @@ class SARoleAccessRight(base.SQLAlchemyBase):
 
 
 class SARoleAccessRightDB(
-    base.BaseRoleAccessRightDatabase[schemas.RoleAccessRight, uuid.UUID]
+    base.BaseRoleAccessRightDatabase[models.RoleAccessRight, uuid.UUID]
 ):
     session: AsyncSession
     role_access_right_table: type[SARoleAccessRight]
@@ -124,7 +124,7 @@ class SARoleAccessRightDB(
     @cache_decorator()
     async def get(
         self, role_id: uuid.UUID, access_right_id: uuid.UUID
-    ) -> schemas.RoleAccessRight | None:
+    ) -> models.RoleAccessRight | None:
         statement = (
             select(self.role_access_right_table)
             .where(self.role_access_right_table.role_id == role_id)
@@ -133,17 +133,17 @@ class SARoleAccessRightDB(
         model = await self._get_role_access_right(statement)
         if not model:
             return None
-        return schemas.RoleAccessRight.from_orm(model)
+        return models.RoleAccessRight.from_orm(model)
 
-    async def create(self, create_dict: Mapping[str, Any]) -> schemas.RoleAccessRight:
+    async def create(self, create_dict: Mapping[str, Any]) -> models.RoleAccessRight:
         role_access_right = self.role_access_right_table(**create_dict)
         self.session.add(role_access_right)
         await self.session.commit()
-        return schemas.RoleAccessRight.from_orm(role_access_right)
+        return models.RoleAccessRight.from_orm(role_access_right)
 
     async def update(
-        self, role_access_right: schemas.RoleAccessRight, update_dict: Mapping[str, Any]
-    ) -> schemas.RoleAccessRight:
+        self, role_access_right: models.RoleAccessRight, update_dict: Mapping[str, Any]
+    ) -> models.RoleAccessRight:
         model = self.get(role_access_right.role_id, role_access_right.access_right_id)
         for key, value in update_dict.items():
             setattr(role_access_right, key, value)
@@ -163,18 +163,18 @@ class SARoleAccessRightDB(
     @cache_decorator()
     async def get_all_access_rights_of_user(
         self, role_id: uuid.UUID
-    ) -> None | Iterable[schemas.RoleAccessRight]:
+    ) -> None | Iterable[models.RoleAccessRight]:
         statement = select(self.role_access_right_table).where(
             self.role_access_right_table.role_id == role_id
         )
         arights = await self._get_role_access_right(statement)
         if not arights:
             return
-        return list(schemas.RoleAccessRight.from_orm(right) for right in arights)
+        return list(models.RoleAccessRight.from_orm(right) for right in arights)
 
     async def _get_role_access_right(
         self, statement: Select
-    ) -> None | schemas.RoleAccessRight:
+    ) -> None | models.RoleAccessRight:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 

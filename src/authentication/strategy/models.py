@@ -1,7 +1,7 @@
 import datetime
 from typing import Protocol, TypeVar
 
-from db import models
+from db import models_protocol
 
 
 class AccessTokenProtocol(Protocol[models.ID]):

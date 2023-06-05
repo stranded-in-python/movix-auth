@@ -5,11 +5,11 @@ from fastapi import Response, status
 from authentication.strategy import Strategy, StrategyDestroyNotSupportedError
 from authentication.transport import Transport, TransportLogoutNotSupportedError
 from core.dependency_types import DependencyCallable
-from db import models
+from db import models_protocol as models
 from db.schemas import generics
 
 
-class AuthenticationBackend(Generic[models.UP, models.UC, models.SIHE]):
+class AuthenticationBackend(Generic[models.UP, models.SIHE]):
     """
     Combination of an authentication transport and strategy.
 
@@ -29,7 +29,7 @@ class AuthenticationBackend(Generic[models.UP, models.UC, models.SIHE]):
         name: str,
         transport: Transport,
         get_strategy: DependencyCallable[
-            Strategy[models.UP, generics.UC, generics.UU, models.SIHE]
+            Strategy[generics.U, generics.SIHE]
         ],
     ):
         self.name = name
@@ -38,7 +38,7 @@ class AuthenticationBackend(Generic[models.UP, models.UC, models.SIHE]):
 
     async def login(
         self,
-        strategy: Strategy[models.UP, generics.UC, generics.UU, models.SIHE],
+        strategy: Strategy[models.UP, models.SIHE],
         user: models.UP,
     ) -> Response:
         token = await strategy.write_token(user)
@@ -46,7 +46,7 @@ class AuthenticationBackend(Generic[models.UP, models.UC, models.SIHE]):
 
     async def logout(
         self,
-        strategy: Strategy[models.UP, generics.UC, generics.UU, models.SIHE],
+        strategy: Strategy[models.UP, models.SIHE],
         user: models.UP,
         token: str,
     ) -> Response:
