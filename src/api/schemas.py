@@ -55,11 +55,6 @@ class BaseUserUpdate(CreateUpdateUserDictModel):
     is_superuser: bool | None
 
 
-U = TypeVar("U", bound=BaseUser[UUID])
-UC = TypeVar("UC", bound=BaseUserCreate)
-UU = TypeVar("UU", bound=BaseUserUpdate)
-
-
 class UserRead(BaseUser[UUID]):
     class Config:
         orm_mode = True
@@ -73,6 +68,11 @@ class UserCreate(BaseUserCreate):
 class UserUpdate(BaseUserUpdate):
     class Config:
         orm_mode = True
+
+
+U = TypeVar("U", bound=UserRead)
+UC = TypeVar("UC", bound=UserCreate)
+UU = TypeVar("UU", bound=UserUpdate)
 
 
 class BaseSignInHistoryEvent(CreateUpdateDictModel):

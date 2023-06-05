@@ -1,7 +1,6 @@
 from typing import Generic, Protocol
 
 from db import models_protocol
-from db.schemas import generics
 from managers.user import BaseUserManager
 
 

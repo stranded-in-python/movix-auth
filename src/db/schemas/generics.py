@@ -48,6 +48,7 @@ class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
     class Config(ORMModeMixin):
         ...
 
+
 class BaseUserCreate(Generic[EmailString], CreateUpdateUserDictModel):
     username: str
     email: EmailString
@@ -67,19 +68,11 @@ class BaseUserUpdate(Generic[EmailString], CreateUpdateUserDictModel):
     is_superuser: bool = False
 
 
-U = TypeVar("U", bound=BaseUser)
-UC = TypeVar("UC", bound=BaseUserCreate)
-UU = TypeVar("UU", bound=BaseUserUpdate)
-
-
 class BaseSignInHistoryEvent(Generic[EventID, UserID], CreateUpdateDictModel):
     id: EventID
     user_id: UserID
     timestamp: datetime.datetime
     fingerprint: str
-
-
-SIHE = TypeVar("SIHE", bound=BaseSignInHistoryEvent)
 
 
 class BaseRole(Generic[RoleID], CreateUpdateDictModel):
@@ -98,11 +91,6 @@ class BaseRoleUpdate(Generic[RoleID], CreateUpdateDictModel):
     name: str
 
 
-R = TypeVar("R", bound=BaseRole)
-RC = TypeVar("RC", bound=BaseRoleCreate)
-RU = TypeVar("RU", bound=BaseRoleUpdate)
-
-
 class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
     id: UserRoleID
     user_id: UserID
@@ -112,10 +100,6 @@ class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
 class BaseUserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
     user_id: UserID
     role_id: RoleID
-
-
-UR = TypeVar("UR", bound=BaseUserRole)
-URU = TypeVar("URU", bound=BaseUserRoleUpdate)
 
 
 class BaseAccessRight(Generic[AccessRightID], CreateUpdateDictModel):
@@ -132,11 +116,6 @@ class BaseAccessRightUpdate(Generic[AccessRightID], CreateUpdateDictModel):
     name: str
 
 
-AR = TypeVar("AR", bound=BaseAccessRight)
-ARC = TypeVar("ARC", bound=BaseAccessRightCreate)
-ARU = TypeVar("ARU", bound=BaseAccessRightUpdate)
-
-
 class BaseRoleAccessRight(Generic[AccessRightID, RoleID], CreateUpdateDictModel):
     id: AccessRightID
     access_right_id: AccessRightID
@@ -148,17 +127,8 @@ class BaseRoleAccessRightUpdate(Generic[AccessRightID, RoleID], CreateUpdateDict
     role_id: RoleID
 
 
-RAR = TypeVar("RAR", bound=BaseRoleAccessRight)
-RARU = TypeVar("RARU", bound=BaseRoleAccessRightUpdate)
-
-
-
-
 class BaseToken(Generic[TokenID, UserID], BaseModel):
     id: TokenID
     token: str
     user_id: UserID
     created_at: datetime.datetime
-
-
-AT = TypeVar('AT', bound=BaseToken)

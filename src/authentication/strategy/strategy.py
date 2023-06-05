@@ -4,7 +4,6 @@ from typing import Any, Dict, Generic, Optional
 
 import core.exceptions as exceptions
 import db.models_protocol as models
-from db.schemas import generics
 from managers.user import BaseUserManager
 
 from .adapter import TokenBlacklistManager

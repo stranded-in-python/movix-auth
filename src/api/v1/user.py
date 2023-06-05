@@ -8,10 +8,7 @@ from api.v1.common import ErrorCode, ErrorModel
 from authentication import Authenticator
 from core.pagination import PaginateQueryParams
 from db import models_protocol
-from db.schemas import generics
 from managers.user import BaseUserManager, UserManagerDependency
-
-UserMgrType = BaseUserManager[generics.U, generics.SIHE]
 
 
 def get_users_router(
@@ -21,7 +18,7 @@ def get_users_router(
     user_schema: Type[schemas.U],
     user_update_schema: Type[schemas.UU],
     event_schema: Type[schemas.SIHE],
-    authenticator: Authenticator,
+    authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
 ) -> APIRouter:
     router = APIRouter()
     router.prefix = "/api/v1"
@@ -43,8 +40,8 @@ def get_users_router(
             }
         },
     )
-    async def get_current_user(
-        user: generics.U = Depends(get_current_active_user),
+    async def get_current_user(  # pyright: ignore
+        user: models_protocol.UP = Depends(get_current_active_user),
     ) -> user_schema:
         return user_schema.from_orm(user)
 
@@ -88,11 +85,11 @@ def get_users_router(
         },
         tags=['User'],
     )
-    async def update_current_user(
+    async def update_current_user(  # pyright: ignore
         request: Request,
         user_update: user_update_schema,
-        user: generics.U = Depends(get_current_active_user),
-        user_manager: UserMgrType = Depends(get_user_manager),
+        user: models_protocol.UP = Depends(get_current_active_user),
+        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
     ) -> user_schema:
         try:
             user = await user_manager.update(
@@ -123,11 +120,11 @@ def get_users_router(
         response_description="list of sign-ins",
         tags=['User'],
     )
-    async def sign_in_history(
-        user_manager: UserMgrType = Depends(get_user_manager),
-        user: generics.U = Depends(get_current_active_user),
+    async def sign_in_history(  # pyright: ignore
+        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
+        user: models_protocol.UP = Depends(get_current_active_user),
         paginate_params: PaginateQueryParams = Depends(PaginateQueryParams),
-    ) -> Iterable[generics.BaseSignInHistoryEvent]:
+    ) -> Iterable[models_protocol.SIHE]:
         events = await user_manager.get_sign_in_history(user, paginate_params)
         return events
 

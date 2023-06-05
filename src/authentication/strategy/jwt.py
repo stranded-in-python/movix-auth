@@ -6,7 +6,6 @@ import core.exceptions as exceptions
 from authentication.strategy.base import Strategy, StrategyDestroyNotSupportedError
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt
 from db import models_protocol
-from db.schemas import generics
 from managers.user import BaseUserManager
 
 

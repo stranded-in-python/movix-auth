@@ -1,7 +1,7 @@
 from authentication.strategy.adapter import TokenBlacklistManager
 from authentication.strategy.base import Strategy, StrategyDestroyNotSupportedError
 from authentication.strategy.jwt import JWTStrategy
-from authentication.strategy.strategy import DatabaseStrategy, TokenBlacklistManager
+from authentication.strategy.strategy import DatabaseStrategy
 
 __all__ = [
     "TokenBlacklistManager",

@@ -11,11 +11,11 @@ import core.exceptions as exceptions
 import core.password.password as pw
 from core.config import settings
 from core.dependency_types import DependencyCallable
-from core.jwt_utils import SecretType, decode_jwt, generate_jwt
+from core.jwt_utils import SecretType, decode_jwt, generate_jwt  # type: ignore
 from core.pagination import PaginateQueryParams
 from db import getters, models_protocol
 from db.base import BaseUserDatabase
-from db.schemas import generics, models
+from db.schemas import models
 from db.users import SAUserDB
 
 RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
@@ -57,7 +57,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     async def create(
         self,
-        user_create: schemas.BaseUserCreate,
+        user_create: schemas.UserCreate,
         safe: bool = False,
         request: Request | None = None,
     ) -> models_protocol.UP:
@@ -163,7 +163,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     async def update(
         self,
-        user_update: schemas.UU,
+        user_update: schemas.UserUpdate,
         user: models_protocol.UP,
         safe: bool = False,
         request: Request | None = None,
@@ -184,12 +184,12 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
         await self.on_after_delete(user, request)
 
     async def get_sign_in_history(
-        self, user: generics.UC | models_protocol.UP, pagination_params: PaginateQueryParams
+        self, user: models_protocol.UP, pagination_params: PaginateQueryParams
     ) -> Iterable[models_protocol.SIHE]:
         raise NotImplementedError()
 
     async def validate_password(
-        self, password: str, user: schemas.UC | models_protocol.UP
+        self, password: str, user: schemas.UserCreate | models_protocol.UP
     ) -> None:
         return
 
@@ -297,7 +297,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
 
 
 UserManagerDependency = DependencyCallable[
-    BaseUserManager[models_protocol.UP,  models_protocol.SIHE]
+    BaseUserManager[models_protocol.UP, models_protocol.SIHE]
 ]
 
 
@@ -306,6 +306,7 @@ class UserManager(
     BaseUserManager[
         models.UserRead, models.EventRead
     ],
+
 ):
     reset_password_token_secret = settings.reset_password_token_secret
     verification_token_secret = settings.verification_token_secret

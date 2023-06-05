@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Any, Protocol, TypeVar
 from uuid import UUID
 
+import pydantic
+
 import core.exceptions as ex
 
 ID = TypeVar("ID")
@@ -9,8 +11,7 @@ EmailStr = TypeVar('EmailStr')
 
 
 class UUIDIDMixin:
-    @staticmethod
-    def parse_id(value: Any) -> UUID:
+    def parse_id(self, value: Any) -> UUID:
         if isinstance(value, UUID):
             return value
         try:
@@ -20,15 +21,14 @@ class UUIDIDMixin:
 
 
 class IntegerIDMixin:
-    @staticmethod
-    def parse_id(value: Any) -> int:
+    def parse_id(self, value: Any) -> int:
         if isinstance(value, float):
             raise ex.InvalidID()
         try:
             return int(value)
         except ValueError as e:
             raise ex.InvalidID() from e
-       
+
 
 class UserCreateProtocol(Protocol[EmailStr]):
     username: str
@@ -53,7 +53,7 @@ class UserProtocol(Protocol[ID, EmailStr]):
     is_superuser: bool
 
 
-UP = TypeVar("UP", bound=UserProtocol[UUIDIDMixin, str])
+UP = TypeVar("UP", bound=UserProtocol[UUID, pydantic.EmailStr])
 UC = TypeVar("UC", bound=UserCreateProtocol[str])
 
 
@@ -64,7 +64,7 @@ class RoleProtocol(Protocol[ID]):
     name: str
 
 
-RP = TypeVar("RP", bound=RoleProtocol[UUIDIDMixin])
+RP = TypeVar("RP", bound=RoleProtocol[UUID])
 
 
 class UserRoleProtocol(Protocol[ID]):
@@ -75,7 +75,7 @@ class UserRoleProtocol(Protocol[ID]):
     role_id: ID
 
 
-URP = TypeVar("URP", bound=UserRoleProtocol[UUIDIDMixin])
+URP = TypeVar("URP", bound=UserRoleProtocol[UUID])
 
 
 class UserRoleUpdateProtocol(Protocol[ID]):
@@ -83,7 +83,7 @@ class UserRoleUpdateProtocol(Protocol[ID]):
     role_id: ID
 
 
-URUP = TypeVar("URUP", bound=UserRoleUpdateProtocol[UUIDIDMixin])
+URUP = TypeVar("URUP", bound=UserRoleUpdateProtocol[UUID])
 
 
 class AccessRightProtocol(Protocol[ID]):
@@ -93,7 +93,7 @@ class AccessRightProtocol(Protocol[ID]):
     name: str
 
 
-ARP = TypeVar("ARP", bound=AccessRightProtocol[UUIDIDMixin])
+ARP = TypeVar("ARP", bound=AccessRightProtocol[UUID])
 
 
 class RoleAccessRightProtocol(Protocol[ID]):
@@ -104,7 +104,7 @@ class RoleAccessRightProtocol(Protocol[ID]):
     access_right_id: ID
 
 
-RARP = TypeVar("RARP", bound=RoleAccessRightProtocol[UUIDIDMixin])
+RARP = TypeVar("RARP", bound=RoleAccessRightProtocol[UUID])
 
 
 class RoleAccessRightUpdateProtocol(Protocol[ID]):
@@ -112,7 +112,7 @@ class RoleAccessRightUpdateProtocol(Protocol[ID]):
     access_right_id: ID
 
 
-RARUP = TypeVar("RARUP", bound=RoleAccessRightUpdateProtocol[UUIDIDMixin])
+RARUP = TypeVar("RARUP", bound=RoleAccessRightUpdateProtocol[UUID])
 
 
 class SignInHistoryEvent(Protocol[ID]):
@@ -122,7 +122,7 @@ class SignInHistoryEvent(Protocol[ID]):
     fingerprint: str
 
 
-SIHE = TypeVar("SIHE", bound=SignInHistoryEvent[UUIDIDMixin])
+SIHE = TypeVar("SIHE", bound=SignInHistoryEvent[UUID])
 
 
 class AccessTokenProtocol(Protocol[ID]):
@@ -133,4 +133,4 @@ class AccessTokenProtocol(Protocol[ID]):
     created_at: datetime
 
 
-AP = TypeVar("AP", bound=AccessTokenProtocol[UUIDIDMixin])
+AP = TypeVar("AP", bound=AccessTokenProtocol[UUID])
