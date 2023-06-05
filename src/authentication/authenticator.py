@@ -1,6 +1,6 @@
 import re
 from inspect import Parameter, Signature
-from typing import Callable, List, Optional, Sequence, Tuple, cast
+from typing import Callable, Generic, List, Optional, Sequence, Tuple, cast
 
 from fastapi import Depends, HTTPException, status
 from makefun import with_signature
@@ -9,7 +9,6 @@ from authentication.backend import AuthenticationBackend
 from authentication.strategy import Strategy
 from core.dependency_types import DependencyCallable
 from db import models_protocol as models
-from db.schemas import generics
 from managers.user import BaseUserManager, UserMgrDependencyType
 
 INVALID_CHARS_PATTERN = re.compile(r"[^0-9a-zA-Z_]")
@@ -32,10 +31,10 @@ class DuplicateBackendNamesError(Exception):
     pass
 
 
-EnabledBackendsDependency = DependencyCallable[Sequence[AuthenticationBackend]]
+EnabledBackendsDependency = DependencyCallable[Sequence[AuthenticationBackend[models.UP, models.SIHE]]]
 
 
-class Authenticator:
+class Authenticator(Generic[models.UP, models.SIHE]):
     """
     Provides dependency callables to retrieve authenticated user.
 
@@ -47,11 +46,11 @@ class Authenticator:
     :param get_user_manager: User manager dependency callable.
     """
 
-    backends: Sequence[AuthenticationBackend]
+    backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]]
 
     def __init__(
         self,
-        backends: Sequence[AuthenticationBackend],
+        backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]],
         get_user_manager: UserMgrDependencyType,
     ):
         self.backends = backends
@@ -64,7 +63,7 @@ class Authenticator:
         verified: bool = False,
         superuser: bool = False,
         get_enabled_backends: Optional[EnabledBackendsDependency] = None,
-    ):
+    ) -> Tuple[Optional[models.UP], Optional[str]]:
         """
         Return a dependency callable to retrieve currently authenticated user and token.
 
@@ -89,7 +88,10 @@ class Authenticator:
         signature = self._get_dependency_signature(get_enabled_backends)
 
         @with_signature(signature)
-        async def current_user_token_dependency(*args, **kwargs):
+        async def current_user_token_dependency(
+            *args,
+            **kwargs
+        ) -> Tuple[Optional[models.UP], Optional[str]] :
             return await self._authenticate(
                 *args,
                 optional=optional,
