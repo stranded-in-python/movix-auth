@@ -123,7 +123,7 @@ class SAUserRole(SQLAlchemyBase):
 
 
 class SAUserRoleDB(
-    BaseUserRoleDatabase[models.UserRoleRead, UUID_ID]
+    BaseUserRoleDatabase[models.UserRole, UUID_ID]
 ):
     session: AsyncSession
     user_role_table: type[SAUserRole]
@@ -135,26 +135,26 @@ class SAUserRoleDB(
     @cache_decorator()
     async def get_user_role(
         self, user_id: UUID_ID, role_id: UUID_ID
-    ) -> models.UserRoleRead | None:
+    ) -> models.UserRole | None:
         statement = select(self.user_role_table).where(
             (self.user_role_table.user_id == user_id)
             & (self.user_role_table.role_id == role_id)
         )
 
         results = await self.session.execute(statement)
-        return models.UserRoleRead.from_orm(results.unique().scalar_one_or_none())
+        return models.UserRole.from_orm(results.unique().scalar_one_or_none())
 
     async def assign_user_role(
         self, user_id: UUID_ID, role_id: UUID_ID
-    ) -> models.UserRoleRead:
+    ) -> models.UserRole:
         user_role = self.user_role_table(user_id=user_id, role_id=role_id)
 
         self.session.add(user_role)
         await self.session.commit()
 
-        return models.UserRoleRead.from_orm(user_role)
+        return models.UserRole.from_orm(user_role)
 
-    async def remove_user_role(self, user_role: models.UserRoleRead) -> None:
+    async def remove_user_role(self, user_role: models.UserRole) -> None:
         instance = await self.get_user_role(user_role.user_id, user_role.role_id)
 
         await self.session.delete(instance)
@@ -163,7 +163,7 @@ class SAUserRoleDB(
     @cache_decorator()
     async def get_user_roles(
         self, user_id: UUID_ID
-    ) -> Iterable[models.UserRoleRead] | None:
+    ) -> Iterable[models.UserRole] | None:
         statement = select(self.user_role_table).where(
             self.user_role_table.user_id == user_id
         )
@@ -173,7 +173,7 @@ class SAUserRoleDB(
             return
 
         return list(
-            models.UserRoleRead.from_orm(result) for result in results.fetchall()
+            models.UserRole.from_orm(result) for result in results.fetchall()
         )
 
     def __getstate__(self):

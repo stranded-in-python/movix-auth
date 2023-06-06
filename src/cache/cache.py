@@ -59,11 +59,10 @@ class Cache(metaclass=utils.Singleton):
 
         value = None
         try:
-            if not isinstance(serialized, (bytes, bytearray, memoryview)):
-                raise TypeError(f"Failed to deserialize value for key {key}")
             value = pickle.loads(serialized)
         except (TypeError, pickle.PicklingError) as e:
             logging.error(e)
+
         return value
 
     async def set(self, key: str, value: Any):

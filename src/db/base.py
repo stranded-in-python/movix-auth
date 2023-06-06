@@ -87,7 +87,7 @@ class BaseUserRoleDatabase(t.Generic[URP, ID]):
     async def get_user_role(self, user_id: ID, role_id: ID) -> URP | None:
         ...
 
-    async def remove_user_role(self, user_role: URP) -> None:
+    async def remove_user_role(self, user_role: t.Any) -> None:
         ...
 
     async def get_user_roles(self, user_id: ID) -> t.Iterable[URP]:

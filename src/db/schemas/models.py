@@ -51,7 +51,7 @@ RC = TypeVar("RC", bound=RoleUpdate)
 RU = TypeVar("RU", bound=RoleCreate)
 
 
-class UserRoleRead(generics.BaseUserRole[uuid.UUID, uuid.UUID, uuid.UUID]):
+class UserRole(generics.BaseUserRole[uuid.UUID, uuid.UUID, uuid.UUID]):
     class Config(generics.ORMModeMixin):
         ...
 
@@ -61,7 +61,7 @@ class UserRoleUpdate(generics.BaseUserRoleUpdate[uuid.UUID, uuid.UUID]):
         ...
 
 
-UR = TypeVar("UR", bound=UserRoleRead)
+UR = TypeVar("UR", bound=UserRole)
 URU = TypeVar("URU", bound=UserRoleUpdate)
 
 

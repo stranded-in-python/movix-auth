@@ -115,10 +115,10 @@ class BaseRoleManager(
         # entry = await self.user_role_db.assign_user_role(entry_dict)
         return entry
 
-    async def remove_user_role(self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]):
+    async def remove_user_role(self, user_role: schemas.UserRoleRead):
         await self.user_role_db.remove_user_role(user_role)
 
-    async def get_user_roles(self, user_id) -> Iterable[models_protocol.URP]:
+    async def get_user_roles(self, user_id: UUID) -> Iterable[models_protocol.URP]:
         ids = await self.user_role_db.get_user_roles(user_id)
 
         return ids
@@ -151,18 +151,16 @@ class BaseRoleManager(
 
 
 RoleManagerDependency = DependencyCallable[
-    BaseRoleManager[models_protocol.RP]
+    BaseRoleManager[models_protocol.UP, models_protocol.RP, models_protocol.URP]
 ]
 
 
 class RoleManager(
     models_protocol.UUIDIDMixin,
     BaseRoleManager[
+        models.UserRead,
         models.RoleRead,
-        models.UserRoleRead,
-        models.RoleCreate,
-        models.RoleUpdate,
-        models.UserRoleUpdate,
+        models.UserRole,
     ],
 ):
     pass

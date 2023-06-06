@@ -115,13 +115,21 @@ class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
     role_id: RoleID
 
 
-class UserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
+class BaseUserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
     user_id: UserID
     role_id: RoleID
 
 
-UR = TypeVar("UR", bound=BaseUserRole[UUID, UUID, UUID])
-URU = TypeVar("URU", bound=UserRoleUpdate[UUID, UUID])
+class UserRoleRead(BaseUserRole[UUID, UUID, UUID]):
+    ...
+
+
+class UserRoleUpdate(BaseUserRoleUpdate[UUID, UUID]):
+    ...
+
+
+UR = TypeVar("UR", bound=UserRoleRead)
+URU = TypeVar("URU", bound=UserRoleUpdate)
 
 
 class BaseAccessRight(Generic[AccessRightID], CreateUpdateDictModel):

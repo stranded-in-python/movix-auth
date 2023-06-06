@@ -24,7 +24,9 @@ class APIRoles(
             models_protocol.UP, models_protocol.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            models_protocol.RP
+            models_protocol.UP,
+            models_protocol.RP,
+            models_protocol.URP,
         ],
         auth_backends: Sequence[AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]],
     ):
