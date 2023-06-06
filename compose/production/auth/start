@@ -4,5 +4,5 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-/usr/local/bin/python /src/superuser.py
+/usr/local/bin/python /app/superuser.py
 /usr/local/bin/gunicorn main
