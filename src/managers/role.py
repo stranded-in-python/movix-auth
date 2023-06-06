@@ -3,25 +3,26 @@ from uuid import UUID
 
 from fastapi import Depends, Request
 
+from api import schemas
 from core import exceptions
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
 from db import getters, models_protocol
 from db.base import BaseRoleDatabase, BaseUserRoleDatabase
 from db.roles import SARoleDB, SAUserRoleDB
-from db.schemas import generics, models
+from db.schemas import models
 
 
 class BaseRoleManager(
-    Generic[models_protocol.RP, models_protocol.URP, generics.RC, generics.RU, models_protocol.URUP]
+    Generic[models_protocol.UP, models_protocol.RP, models_protocol.URP]
 ):
     role_db: BaseRoleDatabase[models_protocol.RP, UUID]
-    user_role_db: BaseUserRoleDatabase[models_protocol.URP, models_protocol.URUP, UUID]
+    user_role_db: BaseUserRoleDatabase[models_protocol.URP, UUID]
 
     def __init__(
         self,
         role_db: BaseRoleDatabase[models_protocol.RP, UUID],
-        user_role_db: BaseUserRoleDatabase[models_protocol.URP, models_protocol.URUP, UUID],
+        user_role_db: BaseUserRoleDatabase[models_protocol.URP, UUID],
     ):
         self.role_db = role_db
         self.user_role_db = user_role_db
@@ -43,7 +44,9 @@ class BaseRoleManager(
     # region User dictionary
 
     async def create(
-        self, role_create: generics.RC, request: Request | None = None
+        self,
+        role_create: schemas.BaseRoleCreate,
+        request: Request | None = None
     ) -> models_protocol.RP:
         role = await self.role_db.get_by_name(role_create.name)
         if role:
@@ -64,7 +67,10 @@ class BaseRoleManager(
         return role
 
     async def update(
-        self, role_update: generics.RU, role: models_protocol.RP, request: Request | None = None
+        self,
+        role_update: schemas.BaseRoleUpdate[UUID],
+        role: models_protocol.RP,
+        request: Request | None = None
     ) -> models_protocol.RP:
         role_dict = role_update.create_update_dict()
 
@@ -95,13 +101,13 @@ class BaseRoleManager(
 
     # region User roles registry
 
-    async def check_user_role(self, user_role: models_protocol.URUP) -> bool:
+    async def check_user_role(self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]) -> bool:
         entry = await self.user_role_db.get_user_role(
             user_role.user_id, user_role.role_id
         )
         return True if entry else False
 
-    async def assign_user_role(self, user_role: models_protocol.URUP) -> models_protocol.URP:
+    async def assign_user_role(self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]) -> models_protocol.URP:
         entry = await self.user_role_db.assign_user_role(
             user_role.user_id, user_role.role_id
         )
@@ -109,7 +115,7 @@ class BaseRoleManager(
         # entry = await self.user_role_db.assign_user_role(entry_dict)
         return entry
 
-    async def remove_user_role(self, user_role: models_protocol.URUP):
+    async def remove_user_role(self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]):
         await self.user_role_db.remove_user_role(user_role)
 
     async def get_user_roles(self, user_id) -> Iterable[models_protocol.URP]:
@@ -145,7 +151,7 @@ class BaseRoleManager(
 
 
 RoleManagerDependency = DependencyCallable[
-    BaseRoleManager[models_protocol.RP, models_protocol.URUP]
+    BaseRoleManager[models_protocol.RP]
 ]
 
 
