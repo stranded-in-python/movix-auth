@@ -183,7 +183,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     async def delete(self, user: models_protocol.UP, request: Request | None = None) -> None:
         await self.on_before_delete(user, request)
-        await self.user_db.delete(user.id)
+        await self.user_db.delete(user)
         await self.on_after_delete(user, request)
 
     async def get_sign_in_history(
@@ -221,7 +221,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
             return None
         # Update password hash to a more robust one if needed
         if updated_password_hash:
-            await self.user_db.update(user.id, {"hashed_password": updated_password_hash})
+            await self.user_db.update(user, {"hashed_password": updated_password_hash})
 
         return user
 
@@ -296,7 +296,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
             else:
                 validated_update_dict[field] = value
 
-        return await self.user_db.update(user.id, validated_update_dict)
+        return await self.user_db.update(user, validated_update_dict)
 
 
 UserManagerDependency = DependencyCallable[
