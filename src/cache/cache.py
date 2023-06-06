@@ -28,7 +28,7 @@ class RedisCacheStorage(CacheStorageABC):
         self._client = redis
 
     async def get(self, key: str) -> bytes | bytearray | memoryview | None:
-        value = await self._client.get(key)
+        value: Any = await self._client.get(key)
         if not isinstance(value, (bytes, bytearray, memoryview)) and value is not None:
             raise TypeError(f"Failed to get serialized value for key {key}")
         return value
@@ -98,7 +98,7 @@ def is_serializable(thing: Any) -> bool:
     return True
 
 
-def prepare_key(func: Callable, *args, **kwargs) -> str:
+def prepare_key(func: Callable[..., Any], *args: Any, **kwargs: Any) -> str:
     key = {'callable': func.__name__, 'args': args, 'kwargs': sorted(kwargs.items())}
     serialized = ""
     try:
@@ -128,14 +128,14 @@ def get_cache() -> Cache:
     return Cache(storage)
 
 
-def cache_decorator(cache_storage: Cache = get_cache()) -> Callable:
+def cache_decorator(cache_storage: Cache = get_cache()) -> Callable[..., Any]:
     """
     Декоратор для кэширования результатов вызываемого объекта
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        async def inner(*args, **kwargs):
+        async def inner(*args: Any, **kwargs: Any):
             key = prepare_key(func, *args, **kwargs)
             cached_response = await cache_storage.get(key)
             response = cached_response.get('response') if cached_response else None

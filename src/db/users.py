@@ -1,14 +1,13 @@
 """FastAPI Users database adapter for SQLAlchemy."""
 import uuid
 from datetime import datetime
-from typing import Any, Iterable, Sequence, Type
+from typing import Any, Iterable, Sequence, Type, Tuple
 
 from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
     Integer,
-    Result,
     Row,
     String,
     func,
@@ -135,23 +134,22 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
         await self.session.commit()
         return models.UserRead.from_orm(user)
 
-    async def update(
-        self, user_id: uuid.UUID, update_dict: dict[str, Any]
-    ) -> models.UserRead:
-        statement = select(self.user_table).where(self.user_table.id == user_id)
-        user = self.user_table(**update_dict)
-        for key, value in update_dict.items():
-            setattr(user, key, value)
-        self.session.add(user)
-        await self.session.commit()
+    async def update(self, user: models.UserRead, update_dict: dict[str, Any]) -> models.UserRead:
+        user_model = self.user_table(**dict(user))
 
-        return models.UserRead.from_orm(user)
+        for key, value in update_dict.items():
+            setattr(user_model, key, value)
+        self.session.add(user_model)
+        await self.session.commit()
+        await self.session.refresh(user_model)
+        return models.UserRead.from_orm(user_model)
 
     async def delete(self, user: models.UserRead) -> None:
-        await self.session.delete(user)
+        user_model = self.user_table(**dict(user))
+        await self.session.delete(user_model)
         await self.session.commit()
 
-    async def _get_user(self, statement: Select) -> Result | None:
+    async def _get_user(self, statement: Select[Tuple[SAUser]]) -> SAUser | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
@@ -166,7 +164,7 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
     async def get_sign_in_history(
         self, user_id: uuid.UUID, pagination_params: PaginateQueryParams
     ) -> Iterable[models.EventRead]:
-        statement: Select = (
+        statement: Select[Any] = (
             select(self.history_table)
             .where(self.history_table.user_id == user_id)
             .limit(pagination_params.page_size)
@@ -178,7 +176,7 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
             return []
         return list(models.EventRead.from_orm(event[0]) for event in events)
 
-    async def _get_events(self, statement: Select) -> Sequence[Row]:
+    async def _get_events(self, statement: Select[Any]) -> Sequence[Row[Any]]:
         results = await self.session.execute(statement)
 
         return results.fetchall()

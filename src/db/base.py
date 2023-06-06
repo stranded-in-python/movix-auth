@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db.models_protocol import ARP, ID, RARP, RP, SIHE, UP, URP, URUP
+from db.models_protocol import ARP, ID, RARP, RP, SIHE, UP, URP
 
 metadata_obj = MetaData(schema="users")
 
@@ -33,11 +33,11 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
         """Create a user."""
         ...
 
-    async def update(self, user_id: ID, update_dict: dict[str, t.Any]) -> UP:
+    async def update(self, user: UP, update_dict: dict[str, t.Any]) -> UP:
         """Update a user."""
         ...
 
-    async def delete(self, user_id: ID) -> None:
+    async def delete(self, user: UP) -> None:
         """Delete a user."""
         ...
 
@@ -80,14 +80,14 @@ class BaseRoleDatabase(t.Generic[RP, ID]):
         ...
 
 
-class BaseUserRoleDatabase(t.Generic[URP, URUP, ID]):
+class BaseUserRoleDatabase(t.Generic[URP, ID]):
     async def assign_user_role(self, user_id: ID, role_id: ID) -> URP:
         ...
 
     async def get_user_role(self, user_id: ID, role_id: ID) -> URP | None:
         ...
 
-    async def remove_user_role(self, user_role: URUP) -> URP:
+    async def remove_user_role(self, user_role: URP) -> None:
         ...
 
     async def get_user_roles(self, user_id: ID) -> t.Iterable[URP]:
@@ -154,7 +154,7 @@ RETURN_TYPE = t.TypeVar("RETURN_TYPE")
 UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID, SIHE]]
 BaseRoleDatabaseDependency = DependencyCallable[BaseRoleDatabase[RP, ID]]
 BaseUserRoleRoleDatabaseDependency = DependencyCallable[
-    BaseUserRoleDatabase[URP, URUP, ID]
+    BaseUserRoleDatabase[URP, ID]
 ]
 BaseAccessRightDatabaseDependency = DependencyCallable[BaseAccessRightDatabase[ARP, ID]]
 BaseRoleAccessRightDatabaseDependency = DependencyCallable[

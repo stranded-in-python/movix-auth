@@ -1,7 +1,7 @@
 import uuid
-from typing import Any, Iterable, Mapping, TypeVar
+from typing import Any, Iterable, Mapping, Tuple, TypeVar
 
-from sqlalchemy import ForeignKey, Result, String, func, select
+from sqlalchemy import ForeignKey, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
@@ -92,7 +92,7 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
         await self.session.delete(role_to_delete)
         await self.session.commit()
 
-    async def _get_role(self, statement: Select) -> Result | None:
+    async def _get_role(self, statement: Select[Tuple[SARole]]) -> SARole | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
@@ -123,7 +123,7 @@ class SAUserRole(SQLAlchemyBase):
 
 
 class SAUserRoleDB(
-    BaseUserRoleDatabase[models.UserRoleRead, models.UserRoleUpdate, UUID_ID]
+    BaseUserRoleDatabase[models.UserRoleRead, UUID_ID]
 ):
     session: AsyncSession
     user_role_table: type[SAUserRole]
