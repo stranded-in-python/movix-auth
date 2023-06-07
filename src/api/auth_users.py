@@ -70,9 +70,9 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     def get_users_router(
         self,
-        user_schema: Type[schemas.U],
-        user_update_schema: Type[schemas.UU],
-        event_schema: Type[schemas.SIHE],
+        user_schema: Type[schemas.UserRead],
+        user_update_schema: Type[schemas.UserUpdate],
+        event_schema: Type[schemas.EventRead],
     ) -> APIRouter:
         """
         Return a router with routes to manage users.

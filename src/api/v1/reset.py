@@ -35,7 +35,7 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
 
 def get_reset_password_router(get_user_manager: UserManagerDependency[
         models_protocol.UP, models_protocol.SIHE
-    ]) -> APIRouter:
+]) -> APIRouter:
     """Generate a router with the reset pw routes."""
     router = APIRouter()
 
@@ -44,7 +44,7 @@ def get_reset_password_router(get_user_manager: UserManagerDependency[
         status_code=status.HTTP_202_ACCEPTED,
         name="reset:forgot_password",
     )
-    async def forgot_password(
+    async def forgot_password(  # pyright: ignore
         request: Request,
         email: EmailStr = Body(..., embed=True),
         user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
@@ -66,7 +66,7 @@ def get_reset_password_router(get_user_manager: UserManagerDependency[
         name="reset:reset_password",
         responses=RESET_PASSWORD_RESPONSES,
     )
-    async def reset_password(
+    async def reset_password(  # pyright: ignore
         request: Request,
         token: str = Body(...),
         password: str = Body(...),

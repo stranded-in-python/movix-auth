@@ -29,6 +29,7 @@ class BaseUser(Generic[UserID], CreateUpdateUserDictModel):
     """Base User model."""
 
     id: UserID
+    username: str
     email: EmailStr
     first_name: str
     last_name: str
@@ -93,7 +94,7 @@ class BaseRole(Generic[RoleID], CreateUpdateDictModel):
 
     id: RoleID
     name: str
-    
+  
 
 class BaseRoleCreate(CreateUpdateDictModel):
     name: str

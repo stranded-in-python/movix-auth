@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from api import schemas
 import core.exceptions as ex
 from api.v1.common import ErrorCode, ErrorModel
-from db.schemas import generics
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 
@@ -57,13 +56,13 @@ def get_register_router(
             }
         },
     )
-    async def register(
+    async def register(  # pyright: ignore
         request: Request,
         user_create: user_create_schema,
         user_service: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
     ) -> user_schema:
         try:
-            created_user: user_schema = await user_service.create(
+            created_user = await user_service.create(
                 user_create, safe=True, request=request
             )
         except ex.UserAlreadyExists:
@@ -80,6 +79,6 @@ def get_register_router(
                 },
             )
 
-        return created_user
+        return user_schema.from_orm(created_user)
 
     return router

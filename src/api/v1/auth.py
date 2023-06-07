@@ -6,19 +6,18 @@ from fastapi.security import OAuth2PasswordRequestForm
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
 from db import models_protocol
-from db.schemas import generics
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
 
-StrategyType = Strategy[models_protocol.UP, models_protocol.SIHE]
-
 
 def get_auth_router(
-    backend: AuthenticationBackend,
+    backend: AuthenticationBackend[
+        models_protocol.UP, models_protocol.SIHE
+    ],
     get_user_manager: UserManagerDependency[
         models_protocol.UP, models_protocol.SIHE
     ],
-    authenticator: Authenticator,
+    authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
     requires_verification: bool = False,
 ) -> APIRouter:
     """Generate a router with login/logout routes for an authentication backend."""
@@ -51,11 +50,11 @@ def get_auth_router(
     }
 
     @router.post("/login", name=f"auth:{backend.name}.login", responses=login_responses)
-    async def login(
+    async def login(  # pyright: ignore
         request: Request,
         credentials: OAuth2PasswordRequestForm = Depends(),
         user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
-        strategy: StrategyType = Depends(backend.get_strategy),
+        strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(backend.get_strategy),
     ):
         user = await user_manager.authenticate(credentials)
 
@@ -63,11 +62,6 @@ def get_auth_router(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.LOGIN_BAD_CREDENTIALS,
-            )
-        if requires_verification and not user.is_verified:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ErrorCode.LOGIN_USER_NOT_VERIFIED,
             )
         response = await backend.login(strategy, user)
         await user_manager.on_after_login(user, request, response)
@@ -85,9 +79,9 @@ def get_auth_router(
     @router.post(
         "/logout", name=f"auth:{backend.name}.logout", responses=logout_responses
     )
-    async def logout(
+    async def logout(  # pyright: ignore
         user_token: Tuple[models_protocol.UP, str] = Depends(get_current_user_token),
-        strategy: StrategyType = Depends(backend.get_strategy),
+        strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(backend.get_strategy),
     ):
         user, token = user_token
         return await backend.logout(strategy, user, token)

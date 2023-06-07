@@ -206,7 +206,7 @@ def get_roles_router(
             # TODO Проверить доступ пользователя
             if not await user_manager.get(user_role.user_id):
                 raise exceptions.UserNotExists
-          
+
             if not await role_manager.check_user_role(user_role):
                 raise exceptions.UserHaveNotRole
 
@@ -321,7 +321,7 @@ def get_roles_router(
             # TODO Проверить доступ пользователя
             user = await user_manager.get(user_id)
             roles = await role_manager.get_user_roles(user.id)
-           
+
             return list(user_role_schema.from_orm(role) for role in roles)
 
         except exceptions.UserNotExists:

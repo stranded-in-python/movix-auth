@@ -1,4 +1,4 @@
-from typing import Iterable, Type
+from typing import Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
@@ -17,7 +17,7 @@ def get_users_router(
     ],
     user_schema: Type[schemas.U],
     user_update_schema: Type[schemas.UU],
-    event_schema: Type[schemas.SIHE],
+    event_schema: Type[schemas.EventRead],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
 ) -> APIRouter:
     router = APIRouter()
@@ -42,7 +42,7 @@ def get_users_router(
     )
     async def get_current_user(  # pyright: ignore
         user: models_protocol.UP = Depends(get_current_active_user),
-    ) -> user_schema:
+    ) -> schemas.UserRead:
         return user_schema.from_orm(user)
 
     @router.put(
@@ -90,7 +90,7 @@ def get_users_router(
         user_update: user_update_schema,
         user: models_protocol.UP = Depends(get_current_active_user),
         user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
-    ) -> user_schema:
+    ) -> schemas.UserRead:
         try:
             user = await user_manager.update(
                 user_update, user, safe=True, request=request
@@ -114,7 +114,7 @@ def get_users_router(
 
     @router.get(
         "/users/me/sign-in-history",
-        response_model=list[event_schema],
+        response_model=list[schemas.BaseSignInHistoryEvent],
         summary="Get sign-in history",
         description="Get user's account sign-in history",
         response_description="list of sign-ins",
@@ -124,8 +124,9 @@ def get_users_router(
         user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
         user: models_protocol.UP = Depends(get_current_active_user),
         paginate_params: PaginateQueryParams = Depends(PaginateQueryParams),
-    ) -> Iterable[models_protocol.SIHE]:
+    ) -> list[event_schema]:
         events = await user_manager.get_sign_in_history(user, paginate_params)
-        return events
+
+        return list(event_schema.from_orm(event) for event in events)
 
     return router
