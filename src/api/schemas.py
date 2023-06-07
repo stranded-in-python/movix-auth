@@ -93,7 +93,7 @@ class BaseRole(Generic[RoleID], CreateUpdateDictModel):
 
     id: RoleID
     name: str
-
+    
 
 class BaseRoleCreate(CreateUpdateDictModel):
     name: str
@@ -104,9 +104,24 @@ class BaseRoleUpdate(Generic[RoleID], CreateUpdateDictModel):
     name: str
 
 
-R = TypeVar("R", bound=BaseRole[UUID])
-RC = TypeVar("RC", bound=BaseRoleCreate)
-RU = TypeVar("RU", bound=BaseRoleUpdate[UUID])
+class RoleRead(BaseRole[UUID]):
+    class Config:
+        orm_mode = True
+
+
+class RoleCreate(BaseRoleCreate):
+    class Config:
+        orm_mode = True
+
+
+class RoleUpdate(BaseRoleUpdate[UUID]):
+    class Config:
+        orm_mode = True
+
+
+R = TypeVar("R", bound=RoleRead)
+RC = TypeVar("RC", bound=RoleCreate)
+RU = TypeVar("RU", bound=RoleUpdate)
 
 
 class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
@@ -121,11 +136,13 @@ class BaseUserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
 
 
 class UserRoleRead(BaseUserRole[UUID, UUID, UUID]):
-    ...
+    class Config:
+        orm_mode = True
 
 
 class UserRoleUpdate(BaseUserRoleUpdate[UUID, UUID]):
-    ...
+    class Config:
+        orm_mode = True
 
 
 UR = TypeVar("UR", bound=UserRoleRead)
@@ -146,9 +163,24 @@ class BaseAccessRightUpdate(Generic[AccessRightID], CreateUpdateDictModel):
     name: str
 
 
-AR = TypeVar("AR", bound=BaseAccessRight[UUID])
-ARC = TypeVar("ARC", bound=BaseAccessRightCreate)
-ARU = TypeVar("ARU", bound=BaseAccessRightUpdate[UUID])
+class AccessRightRead(BaseAccessRight[UUID]):
+    class Config:
+        orm_mode = True
+
+
+class AccessRightCreate(BaseAccessRightCreate):
+    class Config:
+        orm_mode = True
+
+
+class AccessRightUpdate(BaseAccessRightUpdate[UUID]):
+    class Config:
+        orm_mode = True
+
+
+AR = TypeVar("AR", bound=AccessRightRead)
+ARC = TypeVar("ARC", bound=AccessRightCreate)
+ARU = TypeVar("ARU", bound=AccessRightUpdate)
 
 
 class BaseRoleAccessRight(Generic[AccessRightID, RoleID], CreateUpdateDictModel):
@@ -160,6 +192,16 @@ class BaseRoleAccessRight(Generic[AccessRightID, RoleID], CreateUpdateDictModel)
 class BaseRoleAccessRightUpdate(Generic[AccessRightID, RoleID], CreateUpdateDictModel):
     access_right_id: AccessRightID
     role_id: RoleID
+
+
+class RoleAccessRightRead(BaseRoleAccessRight[UUID, UUID]):
+    class Config:
+        orm_mode = True
+
+
+class RoleAccessRightUpdate(BaseRoleAccessRightUpdate[UUID, UUID]):
+    class Config:
+        orm_mode = True
 
 
 RAR = TypeVar("RAR", bound=BaseRoleAccessRight[UUID, UUID])

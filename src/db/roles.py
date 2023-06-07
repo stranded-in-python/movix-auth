@@ -51,7 +51,7 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
 
         results = await self.session.execute(statement)
 
-        return list(models.RoleRead.from_orm(result) for result in results.fetchall())
+        return list(models.RoleRead.from_orm(result[0]) for result in results.fetchall())
 
     @cache_decorator()
     async def get_by_id(self, role_id: UUID_ID) -> models.RoleRead | None:
@@ -67,8 +67,11 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
             func.lower(self.role_table.name) == func.lower(name)
         )
         model = await self._get_role(statement)
-        return models.RoleRead.from_orm(model)
 
+        if model:
+            return models.RoleRead.from_orm(model)
+        return None
+    
     async def create(self, create_dict: Mapping[str, Any]) -> models.RoleRead:
         role = self.role_table(**create_dict)
         self.session.add(role)
@@ -78,13 +81,15 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
     async def update(
         self, role: models.RoleRead, update_dict: Mapping[str, Any]
     ) -> models.RoleRead:
-        model = self.get_by_id(role.id)
+        role_model = self.role_table(**dict(role))
+
         for key, value in update_dict.items():
-            setattr(model, key, value)
-            setattr(role, key, value)
-        self.session.add(model)
+            setattr(role_model, key, value)
+        self.session.add(role_model)
         await self.session.commit()
-        return role
+        await self.session.refresh(role_model)
+
+        return models.RoleRead.from_orm(role_model)
 
     async def delete(self, role_id: UUID_ID) -> None:
         statement = select(self.role_table).where(self.role_table.id == role_id)
@@ -134,11 +139,10 @@ class SAUserRoleDB(
 
     @cache_decorator()
     async def get_user_role(
-        self, user_id: UUID_ID, role_id: UUID_ID
+        self, user_role_id: UUID_ID
     ) -> models.UserRole | None:
         statement = select(self.user_role_table).where(
-            (self.user_role_table.user_id == user_id)
-            & (self.user_role_table.role_id == role_id)
+            (self.user_role_table.id == user_role_id)
         )
 
         results = await self.session.execute(statement)
@@ -154,8 +158,8 @@ class SAUserRoleDB(
 
         return models.UserRole.from_orm(user_role)
 
-    async def remove_user_role(self, user_role: models.UserRole) -> None:
-        instance = await self.get_user_role(user_role.user_id, user_role.role_id)
+    async def remove_user_role(self, user_role_id: UUID_ID) -> None:
+        instance = await self.get_user_role(user_role_id)
 
         await self.session.delete(instance)
         await self.session.commit()

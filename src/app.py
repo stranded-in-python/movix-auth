@@ -1,5 +1,3 @@
-# import uuid
-
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
@@ -29,27 +27,26 @@ app.include_router(
     ),
     tags=["users"],
 )
-# app.include_router(
-#     container.api_roles.get_roles_router(
-#         schemas.RoleRead,
-#         schemas.RoleCreate,
-#         schemas.RoleUpdate,
-#         schemas.UserRoleRead,
-#         schemas.UserRoleUpdate,
-#     ),
-#     tags=["roles"],
-# )
-# app.include_router(
-#     container.api_access_rights.get_access_rights_router(
-#         schemas.AccessRight,
-#         schemas.AccessRightCreate,
-#         schemas.AccessRightUpdate,
-#         schemas.RoleAccessRight,
-#         schemas.RoleAccessRightUpdate,
-#         uuid.UUID,
-#     ),
-#     tags=["access rights"],
-# )
+app.include_router(
+    container.api_roles.get_roles_router(
+        schemas.RoleRead,
+        schemas.RoleCreate,
+        schemas.RoleUpdate,
+        schemas.UserRoleRead,
+        schemas.UserRoleUpdate,
+    ),
+    tags=["roles"],
+)
+app.include_router(
+    container.api_access_rights.get_access_rights_router(
+        schemas.AccessRightRead,
+        schemas.AccessRightCreate,
+        schemas.AccessRightUpdate,
+        schemas.RoleAccessRightRead,
+        schemas.RoleAccessRightUpdate,
+    ),
+    tags=["access rights"],
+)
 
 
 @app.on_event("startup")

@@ -87,7 +87,7 @@ class BaseUserRoleDatabase(t.Generic[URP, ID]):
     async def get_user_role(self, user_id: ID, role_id: ID) -> URP | None:
         ...
 
-    async def remove_user_role(self, user_role: t.Any) -> None:
+    async def remove_user_role(self, user_role_id: ID) -> None:
         ...
 
     async def get_user_roles(self, user_id: ID) -> t.Iterable[URP]:
@@ -137,7 +137,7 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
         """Update an access right."""
         ...
 
-    async def delete(self, role_access_right: RARP) -> None:
+    async def delete(self, role_access_right_id: ID) -> None:
         """Delete an access right by its id."""
         ...
 

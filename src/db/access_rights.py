@@ -1,11 +1,12 @@
 import uuid
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Sequence, Tuple
 
-from sqlalchemy import ForeignKey, Result, String, select
+from sqlalchemy import ForeignKey, Row, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
 
+from core.pagination import PaginateQueryParams
 from cache.cache import cache_decorator
 
 from . import base, generics
@@ -34,9 +35,25 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
     async def get_all_access_rights(self) -> Iterable[models.AccessRight] | None:
         statement = select(self.access_right_table)
         access_rights = await self._get_access_rights(statement)
-        if access_rights is None:
+        if not access_rights:
             return None
         return list(models.AccessRight.from_orm(ar) for ar in access_rights)
+
+    async def search(
+        self, pagination_params: PaginateQueryParams, filter_param: str | None = None
+    ) -> Iterable[models.AccessRight]:
+        statement = select(self.access_right_table)
+        if filter_param:
+            statement.where(self.access_right_table.name == filter_param)
+
+        statement.limit(pagination_params.page_size)
+        statement.offset(
+            (pagination_params.page_number - 1) * pagination_params.page_size
+        )
+
+        results = await self.session.execute(statement)
+
+        return list(models.AccessRight.from_orm(result[0]) for result in results.fetchall())
 
     @cache_decorator()
     async def get(self, access_right_id: uuid.UUID) -> None | models.AccessRight:
@@ -44,7 +61,10 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
             self.access_right_table.id == access_right_id
         )
         ar = await self._get_access_right(statement)
-        return models.AccessRight.from_orm(ar)
+
+        if ar:
+            return models.AccessRight.from_orm(ar)
+        return None
 
     async def create(self, create_dict: Mapping[str, Any]) -> models.AccessRight:
         access_right = self.access_right_table(**create_dict)
@@ -55,13 +75,15 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
     async def update(
         self, access_right: models.AccessRight, update_dict: Mapping[str, Any]
     ) -> models.AccessRight:
-        ar_model = self.get(access_right.id)
+        ar_model = self.access_right_table(**dict(access_right))
+
         for key, value in update_dict.items():
             setattr(ar_model, key, value)
-            setattr(access_right, key, value)
         self.session.add(ar_model)
         await self.session.commit()
-        return access_right
+        await self.session.refresh(ar_model)
+
+        return models.AccessRight.from_orm(ar_model)
 
     async def delete(self, access_right_id: uuid.UUID) -> None:
         statement = select(self.access_right_table).where(
@@ -71,15 +93,15 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
         await self.session.delete(access_right_to_delete)
         await self.session.commit()
 
-    async def _get_access_right(self, statement: Select) -> None | SAAccessRight:
+    async def _get_access_right(self, statement: Select[Tuple[SAAccessRight]]) -> None | SAAccessRight:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
-    async def _get_access_rights(self, statement: Select) -> None | Result:
+    async def _get_access_rights(self, statement: Select[Tuple[SAAccessRight]]) -> Sequence[Row[Tuple[SAAccessRight]]]:
         results = await self.session.execute(statement)
         if not results:
             return results
-        return results.unique()
+        return results.unique().fetchall()
 
     def __getstate__(self):
         """pickle.dumps()"""
@@ -153,7 +175,9 @@ class SARoleAccessRightDB(
         return role_access_right
 
     async def delete(self, role_access_right_id: uuid.UUID) -> None:
-        statement = select(self.role_access_right_table).where(
+        statement = select(
+            self.role_access_right_table
+        ).where(
             self.role_access_right_table.id == role_access_right_id
         )
         role_access_right = await self._get_role_access_right(statement)
@@ -167,16 +191,24 @@ class SARoleAccessRightDB(
         statement = select(self.role_access_right_table).where(
             self.role_access_right_table.role_id == role_id
         )
-        arights = await self._get_role_access_right(statement)
+        arights = await self._get_role_access_rights(statement)
         if not arights:
             return
         return list(models.RoleAccessRight.from_orm(right) for right in arights)
 
     async def _get_role_access_right(
-        self, statement: Select
-    ) -> None | models.RoleAccessRight:
+        self, statement: Select[Tuple[SARoleAccessRight]]
+    ) -> SARoleAccessRight | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+
+    async def _get_role_access_rights(
+        self, statement: Select[Tuple[SARoleAccessRight]]
+    ) -> Sequence[Row[Tuple[SARoleAccessRight]]]:
+        results = await self.session.execute(statement)
+        if not results:
+            return results
+        return results.unique().fetchall()
 
     def __getstate__(self):
         """pickle.dumps()"""
