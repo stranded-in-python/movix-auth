@@ -32,7 +32,7 @@ class RedisStrategy(
         if token is None:
             return None
 
-        user_id = await self.redis.get(f"{self.key_prefix}{token}")
+        user_id = self.redis.get(f"{self.key_prefix}{token}")
         if user_id is None:
             return None
 
@@ -44,10 +44,10 @@ class RedisStrategy(
 
     async def write_token(self, user: models.UP) -> str:
         token = secrets.token_urlsafe()
-        await self.redis.set(
+        self.redis.set(
             f"{self.key_prefix}{token}", str(user.id), ex=self.lifetime_seconds
         )
         return token
 
     async def destroy_token(self, token: str, user: models.UP) -> None:
-        await self.redis.delete(f"{self.key_prefix}{token}")
+        self.redis.delete(f"{self.key_prefix}{token}")

@@ -32,7 +32,7 @@ def get_roles_router(
     router = APIRouter()
     router.prefix = "/api/v1"
 
-    # get_current_active_user = authenticator.current_user(active=True)
+    get_current_adminuser = authenticator.current_user(active=True, admin=True)
 
     @router.get(
         "/roles/search",
@@ -40,6 +40,7 @@ def get_roles_router(
         summary="View all roles",
         description="View all roles",
         response_description="Role entities",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def search(  # pyright: ignore
@@ -63,6 +64,7 @@ def get_roles_router(
         summary="Create a role",
         description="Create a new item to the role directory",
         response_description="Role entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def create_role(  # pyright: ignore
@@ -92,6 +94,7 @@ def get_roles_router(
         summary="Get a role",
         description="Get a item from the role directory",
         response_description="Role entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def get_role(  # pyright: ignore
@@ -120,6 +123,7 @@ def get_roles_router(
         summary="Update a role",
         description="Update a role",
         response_description="Update role entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def update_role(  # pyright: ignore
@@ -158,6 +162,7 @@ def get_roles_router(
         summary="Delete a role",
         description="Delete a role",
         response_description="Deleted role entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def delete_role(  # pyright: ignore
@@ -191,6 +196,7 @@ def get_roles_router(
         },
         summary="Check user role",
         description="Check if user is assigned to the role",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def check_user_role(  # pyright: ignore
@@ -229,6 +235,7 @@ def get_roles_router(
         response_model=user_role_schema,
         summary="Assign a role",
         description="Assign a role to a user",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def assign_role(  # pyright: ignore
@@ -271,6 +278,7 @@ def get_roles_router(
         summary="Unassign a role",
         description="Unassign user's role",
         response_description="Message entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def remove_user_role(  # pyright: ignore
@@ -306,6 +314,7 @@ def get_roles_router(
         response_model=list[UUID],
         summary="List the user's roles",
         description="Get list the user's roles",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def user_roles(  # pyright: ignore

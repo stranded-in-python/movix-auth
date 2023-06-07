@@ -35,6 +35,7 @@ class BaseUser(Generic[UserID], CreateUpdateUserDictModel):
     last_name: str
     is_active: bool = True
     is_superuser: bool = False
+    is_admin: bool = False
 
 
 class BaseUserCreate(CreateUpdateUserDictModel):
@@ -45,6 +46,7 @@ class BaseUserCreate(CreateUpdateUserDictModel):
     last_name: str
     is_active: bool | None = True
     is_superuser: bool | None = False
+    is_admin: bool = False
 
 
 class BaseUserUpdate(CreateUpdateUserDictModel):
@@ -54,6 +56,7 @@ class BaseUserUpdate(CreateUpdateUserDictModel):
     last_name: str | None
     is_active: bool | None
     is_superuser: bool | None
+    is_admin: bool = False
 
 
 class UserRead(BaseUser[UUID]):
@@ -94,7 +97,7 @@ class BaseRole(Generic[RoleID], CreateUpdateDictModel):
 
     id: RoleID
     name: str
-  
+
 
 class BaseRoleCreate(CreateUpdateDictModel):
     name: str

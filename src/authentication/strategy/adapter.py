@@ -5,7 +5,7 @@ from typing import Any, Dict, Generic, Optional
 from db import models_protocol as models
 
 
-class TokenBlacklistManager(Protocol, Generic[models.AP]):
+class TokenBlacklistManager(Protocol[models.AP]):
     """Protocol for retrieving, creating and updating access tokens from a database."""
 
     async def get_by_token(

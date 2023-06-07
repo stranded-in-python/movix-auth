@@ -8,7 +8,7 @@ class StrategyDestroyNotSupportedError(Exception):
     pass
 
 
-class Strategy(Protocol, Generic[models_protocol.UP, models_protocol.SIHE]):
+class Strategy(Protocol[models_protocol.UP, models_protocol.SIHE]):
     async def read_token(
         self,
         token: str | None,

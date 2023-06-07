@@ -37,12 +37,15 @@ def get_access_rights_router(
     router = APIRouter()
     router.prefix = "/api/v1"
 
+    get_current_adminuser = authenticator.current_user(active=True, admin=True)
+
     @router.get(
         "/rights/search",
         response_model=list[access_right_schema],
         summary="View all access rights",
         description="View all access rights",
         response_description="Access entities",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def search(  # pyright: ignore
@@ -65,6 +68,7 @@ def get_access_rights_router(
         summary="Get an access right",
         description="Get a item from the access right directory",
         response_description="Access Right entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def get_access_right(  # pyright: ignore
@@ -91,6 +95,7 @@ def get_access_rights_router(
         summary="Create a access right",
         description="Create a new item to the access rights directory",
         response_description="Access right entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def create_access(  # pyright: ignore
@@ -119,6 +124,7 @@ def get_access_rights_router(
         summary="Change a access right",
         description="Change a access right",
         response_description="Changed access right entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def update_access_right(  # pyright: ignore
@@ -155,6 +161,7 @@ def get_access_rights_router(
         summary="Delete a access right",
         description="Delete a access right",
         response_description="Deleted access right entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def delete_access_right(  # pyright: ignore
@@ -189,6 +196,7 @@ def get_access_rights_router(
         summary="Check roles access right",
         description="Check if role is assigned to the access right",
         response_description="Message entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def check_access_right(  # pyright: ignore
@@ -199,7 +207,7 @@ def get_access_rights_router(
         ] = Depends(get_access_right_manager),
     ) -> None:
         try:
-            if not await access_right_manager.check_role_acccess_right(
+            if not await access_right_manager.check_role_access_right(
                 role_access_right
             ):
                 raise exceptions.UserHaveNotRole
@@ -215,6 +223,7 @@ def get_access_rights_router(
         summary="Assign a access right",
         description="Assign a access right to a role",
         response_description="Message entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def assign_access_right(  # pyright: ignore
@@ -236,7 +245,7 @@ def get_access_rights_router(
             if not await access_right_manager.get(role_access_right.access_right_id):
                 raise exceptions.AccessRightNotExists()
 
-            if await access_right_manager.check_role_acccess_right(role_access_right):
+            if await access_right_manager.check_role_access_right(role_access_right):
                 raise exceptions.AccessRightAlreadyAssign()
 
             await access_right_manager.assign_role_access_right(
@@ -263,6 +272,7 @@ def get_access_rights_router(
         summary="Unassign a access right",
         description="Unassign role's access right",
         response_description="Message entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def remove_role_access(  # pyright: ignore
@@ -301,6 +311,7 @@ def get_access_rights_router(
         summary="List the role's access right",
         description="Get list the role's access right",
         response_description="Message entity",
+        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def get_role_rights(  # pyright: ignore

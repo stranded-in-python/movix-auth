@@ -21,6 +21,8 @@ from db.base import SQLAlchemyBase as Base
 
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
+
+
 # target_metadata = None
 
 

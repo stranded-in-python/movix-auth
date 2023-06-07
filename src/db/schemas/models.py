@@ -7,11 +7,11 @@ from db.schemas import generics
 
 
 class UserRead(generics.BaseUser[uuid.UUID, EmailStr]):
-    hashed_password: str
+    ...
 
 
 class UserCreate(generics.BaseUserCreate[EmailStr]):
-    password: str
+    ...
 
 
 class UserUpdate(generics.BaseUserUpdate[EmailStr]):

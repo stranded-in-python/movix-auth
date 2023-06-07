@@ -6,7 +6,7 @@ from api import schemas
 from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
-from api.v1.user import get_users_router
+from api.v1.user import get_users_me_router, get_users_router
 from authentication import AuthenticationBackend, Authenticator
 from db import models_protocol
 from managers.user import UserManagerDependency
@@ -68,7 +68,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             backend, self.get_user_manager, self.authenticator, requires_verification
         )
 
-    def get_users_router(
+    def get_users_me_router(
         self,
         user_schema: Type[schemas.UserRead],
         user_update_schema: Type[schemas.UserUpdate],
@@ -81,10 +81,29 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         :param user_update_schema: Pydantic schema for updating a user.
         :param event_schema: Pydantic schema for event of user sign-in.
         """
-        return get_users_router(
+        return get_users_me_router(
             self.get_user_manager,
             user_schema,
             user_update_schema,
             event_schema,
+            self.authenticator,
+        )
+
+    def get_users_router(
+        self,
+        user_schema: Type[schemas.UserRead],
+        user_update_schema: Type[schemas.UserUpdate],
+    ) -> APIRouter:
+        """
+        Return a router with routes to manage users.
+
+        :param user_schema: Pydantic schema of a public user.
+        :param user_update_schema: Pydantic schema for updating a user.
+        :param event_schema: Pydantic schema for event of user sign-in.
+        """
+        return get_users_router(
+            self.get_user_manager,
+            user_schema,
+            user_update_schema,
             self.authenticator,
         )

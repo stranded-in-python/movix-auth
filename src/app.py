@@ -20,10 +20,17 @@ app.include_router(
     container.api_users.get_auth_router(container.auth_backend), tags=["auth"]
 )
 app.include_router(
-    container.api_users.get_users_router(
+    container.api_users.get_users_me_router(
         schemas.UserRead,
         schemas.UserUpdate,
         schemas.EventRead,
+    ),
+    tags=["users"],
+)
+app.include_router(
+    container.api_users.get_users_router(
+        schemas.UserRead,
+        schemas.UserUpdate,
     ),
     tags=["users"],
 )

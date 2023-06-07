@@ -83,7 +83,7 @@ class BaseAccessRightManager(
 
         return access_right
 
-    async def check_role_acccess_right(self, role_access_right: models_protocol.RoleAccessRightUpdateProtocol[UUID]) -> bool:
+    async def check_role_access_right(self, role_access_right: models_protocol.RoleAccessRightUpdateProtocol[UUID]) -> bool:
         entry = await self.role_access_rights_db.get(
             role_access_right.role_id, role_access_right.access_right_id
         )

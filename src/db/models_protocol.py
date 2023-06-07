@@ -51,6 +51,7 @@ class UserProtocol(Protocol[ID, EmailStr]):
     hashed_password: str
     is_active: bool
     is_superuser: bool
+    is_admin: bool
 
 
 UP = TypeVar("UP", bound=UserProtocol[UUID, pydantic.EmailStr])

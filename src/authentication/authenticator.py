@@ -49,19 +49,19 @@ class Authenticator(Generic[models.UP, models.SIHE]):
     backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]]
 
     def __init__(
-        self,
-        backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]],
-        get_user_manager: UserManagerDependency[models.UP, models.SIHE],
+            self,
+            backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]],
+            get_user_manager: UserManagerDependency[models.UP, models.SIHE],
     ):
         self.backends = backends
         self.get_user_manager = get_user_manager
 
     def current_user_token(
-        self,
-        optional: bool = False,
-        active: bool = False,
-        superuser: bool = False,
-        get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None,
+            self,
+            optional: bool = False,
+            active: bool = False,
+            superuser: bool = False,
+            get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None,
     ):
         """
         Return a dependency callable to retrieve currently authenticated user and token.
@@ -72,8 +72,6 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         Otherwise, an exception is raised. Defaults to `False`.
         :param active: If `True`, throw `401 Unauthorized` if
         the authenticated user is inactive. Defaults to `False`.
-        :param verified: If `True`, throw `401 Unauthorized` if
-        the authenticated user is not verified. Defaults to `False`.
         :param superuser: If `True`, throw `403 Forbidden` if
         the authenticated user is not a superuser. Defaults to `False`.
         :param get_enabled_backends: Optional dependency callable returning
@@ -88,9 +86,9 @@ class Authenticator(Generic[models.UP, models.SIHE]):
 
         @with_signature(signature)
         async def current_user_token_dependency(
-            *args: Any,
-            **kwargs: Any
-        ) -> Tuple[Optional[models.UP], Optional[str]] :
+                *args: Any,
+                **kwargs: Any
+        ) -> Tuple[Optional[models.UP], Optional[str]]:
             return await self._authenticate(
                 *args,
                 optional=optional,
@@ -102,11 +100,12 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         return current_user_token_dependency
 
     def current_user(
-        self,
-        optional: bool = False,
-        active: bool = False,
-        superuser: bool = False,
-        get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None,
+            self,
+            optional: bool = False,
+            active: bool = False,
+            superuser: bool = False,
+            admin: bool = False,
+            get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None,
     ):
         """
         Return a dependency callable to retrieve currently authenticated user.
@@ -117,8 +116,6 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         Otherwise, an exception is raised. Defaults to `False`.
         :param active: If `True`, throw `401 Unauthorized` if
         the authenticated user is inactive. Defaults to `False`.
-        :param verified: If `True`, throw `401 Unauthorized` if
-        the authenticated user is not verified. Defaults to `False`.
         :param superuser: If `True`, throw `403 Forbidden` if
         the authenticated user is not a superuser. Defaults to `False`.
         :param get_enabled_backends: Optional dependency callable returning
@@ -134,20 +131,21 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         @with_signature(signature)
         async def current_user_dependency(*args: Any, **kwargs: Any):
             user, _ = await self._authenticate(
-                *args, optional=optional, active=active, superuser=superuser, **kwargs
+                *args, optional=optional, active=active, superuser=superuser, admin=admin, **kwargs
             )
             return user
 
         return current_user_dependency
 
     async def _authenticate(
-        self,
-        *args: tuple[Any, ...],
-        user_manager: BaseUserManager[models.UP, models.SIHE],
-        optional: bool = False,
-        active: bool = False,
-        superuser: bool = False,
-        **kwargs: Any,
+            self,
+            *args: tuple[Any, ...],
+            user_manager: BaseUserManager[models.UP, models.SIHE],
+            optional: bool = False,
+            active: bool = False,
+            superuser: bool = False,
+            admin: bool = False,
+            **kwargs: Any,
     ) -> Tuple[Optional[models.UP], Optional[str]]:
         user: Optional[models.UP] = None
         token: Optional[str] = None
@@ -168,17 +166,21 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         status_code = status.HTTP_401_UNAUTHORIZED
         if user:
             status_code = status.HTTP_403_FORBIDDEN
+
             if active and not user.is_active:
                 status_code = status.HTTP_401_UNAUTHORIZED
                 user = None
             elif superuser and not user.is_superuser:
                 user = None
+            elif admin and not (user.is_admin or user.is_superuser):
+                user = None
+
         if not user and not optional:
             raise HTTPException(status_code=status_code)
         return user, token
 
     def _get_dependency_signature(
-        self, get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None
+            self, get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None
     ) -> Signature:
         """
         Generate a dynamic signature for the current_user dependency.

@@ -29,7 +29,7 @@ class CreateUpdateDictModel(BaseModel):
 class CreateUpdateUserDictModel(CreateUpdateDictModel):
     def create_update_dict(self):
         return self.dict(
-            exclude_unset=True, exclude={"id", "is_superuser", "is_active"}
+            exclude_unset=True, exclude={"id", "is_superuser", "is_admin", "is_active"}
         )
 
 
@@ -44,6 +44,7 @@ class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
     last_name: str
     is_active: bool = True
     is_superuser: bool = False
+    is_admin: bool = False
 
     class Config(ORMModeMixin):
         ...
@@ -57,6 +58,7 @@ class BaseUserCreate(Generic[EmailString], CreateUpdateUserDictModel):
     password: str
     is_active: bool = True
     is_superuser: bool = False
+    is_admin: bool = False
 
 
 class BaseUserUpdate(Generic[EmailString], CreateUpdateUserDictModel):
@@ -66,6 +68,7 @@ class BaseUserUpdate(Generic[EmailString], CreateUpdateUserDictModel):
     last_name: str | None
     is_active: bool = True
     is_superuser: bool = False
+    is_admin: bool = False
 
 
 class BaseSignInHistoryEvent(Generic[EventID, UserID], CreateUpdateDictModel):
