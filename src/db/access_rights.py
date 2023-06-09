@@ -53,17 +53,16 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
 
         results = await self.session.execute(statement)
 
-        return list(models.AccessRight.from_orm(result[0]) for result in results.fetchall())
+        return list(
+            models.AccessRight.from_orm(result[0]) for result in results.fetchall()
+        )
 
     @cache_decorator()
-    async def get(self, access_right_id: uuid.UUID) -> None | models.AccessRight:
-        statement = select(self.access_right_table).where(
-            self.access_right_table.id == access_right_id
-        )
-        ar = await self._get_access_right(statement)
+    async def get(self, access_right_id: uuid.UUID) -> models.AccessRight | None:
+        model = self._get_access_right_by_id(access_right_id)
 
-        if ar:
-            return models.AccessRight.from_orm(ar)
+        if model:
+            return models.AccessRight.from_orm(model)
         return None
 
     async def create(self, create_dict: Mapping[str, Any]) -> models.AccessRight:
@@ -75,29 +74,39 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
     async def update(
         self, access_right: models.AccessRight, update_dict: Mapping[str, Any]
     ) -> models.AccessRight:
-        ar_model = self.access_right_table(**dict(access_right))
+        model = self._get_access_right_by_id(access_right.id)
 
         for key, value in update_dict.items():
-            setattr(ar_model, key, value)
-        self.session.add(ar_model)
+            setattr(model, key, value)
+        self.session.add(model)
         await self.session.commit()
-        await self.session.refresh(ar_model)
+        await self.session.refresh(model)
 
-        return models.AccessRight.from_orm(ar_model)
+        return models.AccessRight.from_orm(model)
 
     async def delete(self, access_right_id: uuid.UUID) -> None:
-        statement = select(self.access_right_table).where(
-            self.access_right_table.id == access_right_id
-        )
-        access_right_to_delete = await self._get_access_right(statement)
-        await self.session.delete(access_right_to_delete)
+        model = self._get_access_right_by_id(access_right_id)
+
+        await self.session.delete(model)
         await self.session.commit()
 
-    async def _get_access_right(self, statement: Select[Tuple[SAAccessRight]]) -> None | SAAccessRight:
+    async def _get_access_right(
+        self, statement: Select[Tuple[SAAccessRight]]
+    ) -> SAAccessRight | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
-    async def _get_access_rights(self, statement: Select[Tuple[SAAccessRight]]) -> Sequence[Row[Tuple[SAAccessRight]]]:
+    async def _get_access_right_by_id(
+        self, access_right_id: uuid.UUID
+    ) -> SAAccessRight | None:
+        statement = select(self.access_right_table).where(
+            self.access_right_table.id == access_right_id
+        )
+        return await self._get_access_right(statement)
+
+    async def _get_access_rights(
+        self, statement: Select[Tuple[SAAccessRight]]
+    ) -> Sequence[Row[Tuple[SAAccessRight]]]:
         results = await self.session.execute(statement)
         if not results:
             return results
@@ -175,9 +184,7 @@ class SARoleAccessRightDB(
         return role_access_right
 
     async def delete(self, role_access_right_id: uuid.UUID) -> None:
-        statement = select(
-            self.role_access_right_table
-        ).where(
+        statement = select(self.role_access_right_table).where(
             self.role_access_right_table.id == role_access_right_id
         )
         role_access_right = await self._get_role_access_right(statement)
