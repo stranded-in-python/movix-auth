@@ -36,10 +36,9 @@ def get_url():
     password = os.getenv("PGPASSWORD", "qweasd123")
     host = os.getenv("PGHOST", "localhost")
     port = os.getenv("PGPORT", "5434")
-    db = os.getenv("PGDATABASE", "yamp_movies_db")
+    db = os.getenv("PGDB", "yamp_movies_db")
 
     return f"{database_adapter}:" f"//{user}:{password}" f"@{host}:{port}/{db}"
-    # return f"{settings.database_url}"
 
 
 def include_object(object, name, type_, reflected, compare_to):

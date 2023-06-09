@@ -314,7 +314,7 @@ class UserManager(
     models_protocol.UUIDIDMixin, BaseUserManager[models.UserRead, models.EventRead]
 ):
     reset_password_token_secret = settings.reset_password_token_secret
-    verification_token_secret = settings.verification_token_secret
+    verification_token_secret = settings.verification_password_token_secret
 
     async def get_sign_in_history(
         self, user: models.UserRead, pagination_params: PaginateQueryParams

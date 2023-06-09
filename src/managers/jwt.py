@@ -6,7 +6,9 @@ bearer_transport = BearerTransport(token_url="auth/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy[models.UserRead, models.EventRead]:
-    return JWTStrategy(secret=settings.verification_token_secret, lifetime_seconds=3599)
+    return JWTStrategy(
+        secret=settings.verification_password_token_secret, lifetime_seconds=3599
+    )
 
 
 auth_backend = AuthenticationBackend[models.UserRead, models.EventRead](
