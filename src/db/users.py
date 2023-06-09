@@ -3,16 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Iterable, Sequence, Type, Tuple
 
-from sqlalchemy import (
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Integer,
-    Row,
-    String,
-    func,
-    select,
-)
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Row, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import Select
@@ -102,56 +93,63 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
 
     @cache_decorator()
     async def get(self, user_id: uuid.UUID) -> models.UserRead | None:
-        statement = select(self.user_table).where(self.user_table.id == user_id)
-        usr_model = await self._get_user(statement)
-        if not usr_model:
-            return None
-        return models.UserRead.from_orm(usr_model)
+        user_model = await self._get_user_by_id(user_id)
+
+        if user_model:
+            return models.UserRead.from_orm(user_model)
+        return None
 
     @cache_decorator()
     async def get_by_username(self, username: str) -> models.UserRead | None:
         statement = select(self.user_table).where(
             func.lower(self.user_table.username) == func.lower(username)
         )
-        usr_model = await self._get_user(statement)
-        if not usr_model:
+        user_model = await self._get_user(statement)
+
+        if not user_model:
             return None
-        return models.UserRead.from_orm(usr_model)
+        return models.UserRead.from_orm(user_model)
 
     @cache_decorator()
     async def get_by_email(self, email: str) -> models.UserRead | None:
         statement = select(self.user_table).where(
             func.lower(self.user_table.email) == func.lower(email)
         )
-        usr_model = await self._get_user(statement)
-        if not usr_model:
+        user_model = await self._get_user(statement)
+        if not user_model:
             return None
-        return models.UserRead.from_orm(usr_model)
+        return models.UserRead.from_orm(user_model)
 
     async def create(self, create_dict: dict[str, Any]) -> models.UserRead:
-        user = self.user_table(**create_dict)
-        self.session.add(user)
+        user_model = self.user_table(**create_dict)
+        self.session.add(user_model)
         await self.session.commit()
-        return models.UserRead.from_orm(user)
+        return models.UserRead.from_orm(user_model)
 
-    async def update(self, user: models.UserRead, update_dict: dict[str, Any]) -> models.UserRead:
-        user_model = self.user_table(**dict(user))
+    async def update(
+        self, user: models.UserRead, update_dict: dict[str, Any]
+    ) -> models.UserRead:
+        user_model = await self._get_user_by_id(user.id)
 
         for key, value in update_dict.items():
             setattr(user_model, key, value)
         self.session.add(user_model)
         await self.session.commit()
         await self.session.refresh(user_model)
+
         return models.UserRead.from_orm(user_model)
 
     async def delete(self, user: models.UserRead) -> None:
-        user_model = self.user_table(**dict(user))
-        await self.session.delete(user_model)
+        await self.session.delete(user)
         await self.session.commit()
 
     async def _get_user(self, statement: Select[Tuple[SAUser]]) -> SAUser | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+
+    async def _get_user_by_id(self, user_id: uuid.UUID) -> SAUser | None:
+        statement = select(self.user_table).where(self.user_table.id == user_id)
+        return await self._get_user(statement)
 
     async def record_in_sighin_history(
         self, user_id: uuid.UUID, event: models.EventRead
