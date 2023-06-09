@@ -103,8 +103,8 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
-    async def _get_role_by_id(self, user_id: uuid.UUID) -> SARole | None:
-        statement = select(self.role_table).where(self.role_table.id == user_id)
+    async def _get_role_by_id(self, role_id: uuid.UUID) -> SARole | None:
+        statement = select(self.role_table).where(self.role_table.id == role_id)
         return await self._get_role(statement)
 
     def __getstate__(self):
