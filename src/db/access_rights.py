@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
 
-from core.pagination import PaginateQueryParams
 from cache.cache import cache_decorator
+from core.pagination import PaginateQueryParams
 
 from . import base, generics
 from .schemas import models

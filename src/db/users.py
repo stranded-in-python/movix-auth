@@ -1,7 +1,7 @@
 """FastAPI Users database adapter for SQLAlchemy."""
 import uuid
 from datetime import datetime
-from typing import Any, Iterable, Sequence, Type, Tuple
+from typing import Any, Iterable, Sequence, Tuple, Type
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Row, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +10,6 @@ from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
 from core.pagination import PaginateQueryParams
-
 from db.base import BaseUserDatabase, SQLAlchemyBase
 from db.generics import GUID
 from db.schemas import models

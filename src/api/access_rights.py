@@ -15,7 +15,7 @@ class APIAccessRight(
         models_protocol.RARP,
         models_protocol.RP,
         models_protocol.UP,
-        models_protocol.SIHE
+        models_protocol.SIHE,
     ]
 ):
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
@@ -26,15 +26,14 @@ class APIAccessRight(
             models_protocol.UP, models_protocol.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP,
+            models_protocol.UP, models_protocol.RP, models_protocol.URP,
         ],
         get_access_rights_manager: AccessRightManagerDependency[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ],
-        auth_backends: Sequence[AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]],
+        auth_backends: Sequence[
+            AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
+        ],
     ):
         self.get_user_manager = get_user_manager
         self.get_role_manager = get_role_manager

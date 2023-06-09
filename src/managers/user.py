@@ -6,9 +6,9 @@ import jwt
 from fastapi import Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
-from api import schemas
 import core.exceptions as exceptions
 import core.password.password as pw
+from api import schemas
 from core.config import settings
 from core.dependency_types import DependencyCallable
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt  # type: ignore
@@ -71,7 +71,9 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
             raise exceptions.UserAlreadyExists()
 
         user_dict = (
-            user_create.create_update_dict() if safe else user_create.create_update_dict_superuser()
+            user_create.create_update_dict()
+            if safe
+            else user_create.create_update_dict_superuser()
         )
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
@@ -181,7 +183,9 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
         await self.on_after_update(updated_user, updated_user_data, request)
         return updated_user
 
-    async def delete(self, user: models_protocol.UP, request: Request | None = None) -> None:
+    async def delete(
+        self, user: models_protocol.UP, request: Request | None = None
+    ) -> None:
         await self.on_before_delete(user, request)
         await self.user_db.delete(user)
         await self.on_after_delete(user, request)
@@ -276,7 +280,9 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
     ) -> None:
         ...
 
-    async def _update(self, user: models_protocol.UP, update_dict: dict[str, Any]) -> models_protocol.UP:
+    async def _update(
+        self, user: models_protocol.UP, update_dict: dict[str, Any]
+    ) -> models_protocol.UP:
         validated_update_dict = {}
 
         for field, value in update_dict.items():
@@ -305,11 +311,7 @@ UserManagerDependency = DependencyCallable[
 
 
 class UserManager(
-    models_protocol.UUIDIDMixin,
-    BaseUserManager[
-        models.UserRead, models.EventRead
-    ],
-
+    models_protocol.UUIDIDMixin, BaseUserManager[models.UserRead, models.EventRead]
 ):
     reset_password_token_secret = settings.reset_password_token_secret
     verification_token_secret = settings.verification_token_secret

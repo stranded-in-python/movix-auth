@@ -2,20 +2,15 @@ from typing import Generic, Sequence, Type
 
 from fastapi import APIRouter
 
+import api.schemas as schemas
 from api.v1.roles import get_roles_router
 from authentication import AuthenticationBackend, Authenticator
-import api.schemas as schemas
-
 from db import models_protocol
 from managers.role import RoleManagerDependency
 from managers.user import UserManagerDependency
 
 
-class APIRoles(
-    Generic[
-        models_protocol.RP, models_protocol.UP, models_protocol.SIHE
-    ]
-):
+class APIRoles(Generic[models_protocol.RP, models_protocol.UP, models_protocol.SIHE]):
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
 
     def __init__(
@@ -24,11 +19,11 @@ class APIRoles(
             models_protocol.UP, models_protocol.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP,
+            models_protocol.UP, models_protocol.RP, models_protocol.URP,
         ],
-        auth_backends: Sequence[AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]],
+        auth_backends: Sequence[
+            AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
+        ],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
         self.get_user_manager = get_user_manager

@@ -4,14 +4,13 @@ from typing import Generic, Optional, TypeVar
 import redis.asyncio
 
 import core.exceptions as exceptions
-from authentication.strategy.base import Strategy
 import db.models_protocol as models
+from authentication.strategy.base import Strategy
 from managers.user import BaseUserManager
 
 
 class RedisStrategy(
-    Strategy[models.UP, models.SIHE],
-    Generic[models.UP, models.SIHE, TypeVar("Redis")],
+    Strategy[models.UP, models.SIHE], Generic[models.UP, models.SIHE, TypeVar("Redis")]
 ):
     def __init__(
         self,

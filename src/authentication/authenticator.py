@@ -31,7 +31,9 @@ class DuplicateBackendNamesError(Exception):
     pass
 
 
-EnabledBackendsDependency = DependencyCallable[Sequence[AuthenticationBackend[models.UP, models.SIHE]]]
+EnabledBackendsDependency = DependencyCallable[
+    Sequence[AuthenticationBackend[models.UP, models.SIHE]]
+]
 
 
 class Authenticator(Generic[models.UP, models.SIHE]):
@@ -49,19 +51,21 @@ class Authenticator(Generic[models.UP, models.SIHE]):
     backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]]
 
     def __init__(
-            self,
-            backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]],
-            get_user_manager: UserManagerDependency[models.UP, models.SIHE],
+        self,
+        backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]],
+        get_user_manager: UserManagerDependency[models.UP, models.SIHE],
     ):
         self.backends = backends
         self.get_user_manager = get_user_manager
 
     def current_user_token(
-            self,
-            optional: bool = False,
-            active: bool = False,
-            superuser: bool = False,
-            get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None,
+        self,
+        optional: bool = False,
+        active: bool = False,
+        superuser: bool = False,
+        get_enabled_backends: Optional[
+            EnabledBackendsDependency[models.UP, models.SIHE]
+        ] = None,
     ):
         """
         Return a dependency callable to retrieve currently authenticated user and token.
@@ -86,26 +90,23 @@ class Authenticator(Generic[models.UP, models.SIHE]):
 
         @with_signature(signature)
         async def current_user_token_dependency(
-                *args: Any,
-                **kwargs: Any
+            *args: Any, **kwargs: Any
         ) -> Tuple[Optional[models.UP], Optional[str]]:
             return await self._authenticate(
-                *args,
-                optional=optional,
-                active=active,
-                superuser=superuser,
-                **kwargs,
+                *args, optional=optional, active=active, superuser=superuser, **kwargs
             )
 
         return current_user_token_dependency
 
     def current_user(
-            self,
-            optional: bool = False,
-            active: bool = False,
-            superuser: bool = False,
-            admin: bool = False,
-            get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None,
+        self,
+        optional: bool = False,
+        active: bool = False,
+        superuser: bool = False,
+        admin: bool = False,
+        get_enabled_backends: Optional[
+            EnabledBackendsDependency[models.UP, models.SIHE]
+        ] = None,
     ):
         """
         Return a dependency callable to retrieve currently authenticated user.
@@ -131,33 +132,38 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         @with_signature(signature)
         async def current_user_dependency(*args: Any, **kwargs: Any):
             user, _ = await self._authenticate(
-                *args, optional=optional, active=active, superuser=superuser, admin=admin, **kwargs
+                *args,
+                optional=optional,
+                active=active,
+                superuser=superuser,
+                admin=admin,
+                **kwargs,
             )
             return user
 
         return current_user_dependency
 
     async def _authenticate(
-            self,
-            *args: tuple[Any, ...],
-            user_manager: BaseUserManager[models.UP, models.SIHE],
-            optional: bool = False,
-            active: bool = False,
-            superuser: bool = False,
-            admin: bool = False,
-            **kwargs: Any,
+        self,
+        *args: tuple[Any, ...],
+        user_manager: BaseUserManager[models.UP, models.SIHE],
+        optional: bool = False,
+        active: bool = False,
+        superuser: bool = False,
+        admin: bool = False,
+        **kwargs: Any,
     ) -> Tuple[Optional[models.UP], Optional[str]]:
         user: Optional[models.UP] = None
         token: Optional[str] = None
-        enabled_backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]] = kwargs.get(
-            "enabled_backends", self.backends
-        )
+        enabled_backends: Sequence[
+            AuthenticationBackend[models.UP, models.SIHE]
+        ] = kwargs.get("enabled_backends", self.backends)
         for backend in self.backends:
             if backend in enabled_backends:
                 token = kwargs[name_to_variable_name(backend.name)]
-                strategy: Strategy[
-                    models.UP, models.SIHE
-                ] = kwargs[name_to_strategy_variable_name(backend.name)]
+                strategy: Strategy[models.UP, models.SIHE] = kwargs[
+                    name_to_strategy_variable_name(backend.name)
+                ]
                 if token is not None:
                     user = await strategy.read_token(token, user_manager)
                     if user:
@@ -180,7 +186,10 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         return user, token
 
     def _get_dependency_signature(
-            self, get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.SIHE]] = None
+        self,
+        get_enabled_backends: Optional[
+            EnabledBackendsDependency[models.UP, models.SIHE]
+        ] = None,
     ) -> Signature:
         """
         Generate a dynamic signature for the current_user dependency.
@@ -204,7 +213,9 @@ class Authenticator(Generic[models.UP, models.SIHE]):
                     Parameter(
                         name=name_to_variable_name(backend.name),
                         kind=Parameter.POSITIONAL_OR_KEYWORD,
-                        default=Depends(backend.transport.get_scheme),  # TODO Проверить работу метода
+                        default=Depends(
+                            backend.transport.get_scheme
+                        ),  # TODO Проверить работу метода
                     ),
                     Parameter(
                         name=name_to_strategy_variable_name(backend.name),

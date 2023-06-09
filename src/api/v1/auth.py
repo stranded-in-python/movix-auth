@@ -11,12 +11,8 @@ from openapi import OpenAPIResponseType
 
 
 def get_auth_router(
-    backend: AuthenticationBackend[
-        models_protocol.UP, models_protocol.SIHE
-    ],
-    get_user_manager: UserManagerDependency[
-        models_protocol.UP, models_protocol.SIHE
-    ],
+    backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
     requires_verification: bool = False,
 ) -> APIRouter:
@@ -24,9 +20,7 @@ def get_auth_router(
     router = APIRouter()
     router.prefix = "/api/v1"
 
-    get_current_user_token = authenticator.current_user_token(
-        active=True
-    )
+    get_current_user_token = authenticator.current_user_token(active=True)
 
     login_responses: OpenAPIResponseType = {
         status.HTTP_400_BAD_REQUEST: {
@@ -53,8 +47,12 @@ def get_auth_router(
     async def login(  # pyright: ignore
         request: Request,
         credentials: OAuth2PasswordRequestForm = Depends(),
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
-        strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(backend.get_strategy),
+        user_manager: BaseUserManager[
+            models_protocol.UP, models_protocol.SIHE
+        ] = Depends(get_user_manager),
+        strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
+            backend.get_strategy
+        ),
     ):
         user = await user_manager.authenticate(credentials)
 
@@ -81,7 +79,9 @@ def get_auth_router(
     )
     async def logout(  # pyright: ignore
         user_token: Tuple[models_protocol.UP, str] = Depends(get_current_user_token),
-        strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(backend.get_strategy),
+        strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
+            backend.get_strategy
+        ),
     ):
         user, token = user_token
         return await backend.logout(strategy, user, token)

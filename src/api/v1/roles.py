@@ -14,13 +14,9 @@ from managers.user import BaseUserManager, UserManagerDependency
 
 
 def get_roles_router(
-    get_user_manager: UserManagerDependency[
-        models_protocol.UP, models_protocol.SIHE
-    ],
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
     get_role_manager: RoleManagerDependency[
-        models_protocol.UP,
-        models_protocol.RP,
-        models_protocol.URP
+        models_protocol.UP, models_protocol.RP, models_protocol.URP
     ],
     role_schema: Type[schemas.R],
     role_create_schema: Type[schemas.RC],
@@ -48,9 +44,7 @@ def get_roles_router(
         page_params: PaginateQueryParams = Depends(PaginateQueryParams),
         filter_param: str | None = None,
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> list[role_schema]:
         # TODO Проверить права доступа у пользователя
@@ -71,9 +65,7 @@ def get_roles_router(
         request: Request,
         role_create: role_create_schema,
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> role_schema:
         # TODO Проверить права доступа у пользователя
@@ -101,9 +93,7 @@ def get_roles_router(
         request: Request,
         role_id: UUID,
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> role_schema:
         # TODO Проверить права доступа у пользователя
@@ -130,9 +120,7 @@ def get_roles_router(
         request: Request,
         role_update: role_update_schema,
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> role_schema:
         try:
@@ -145,8 +133,7 @@ def get_roles_router(
 
         except exceptions.RoleNotExists:
             raise HTTPException(
-                status.HTTP_404_NOT_FOUND,
-                detail=ErrorCode.ROLE_IS_NOT_EXISTS,
+                status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
 
         except exceptions.RoleAlreadyExists:
@@ -169,9 +156,7 @@ def get_roles_router(
         request: Request,
         role_id: UUID,
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> role_schema:
         try:
@@ -201,11 +186,11 @@ def get_roles_router(
     )
     async def check_user_role(  # pyright: ignore
         user_role: user_role_update_schema,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models_protocol.UP, models_protocol.SIHE
+        ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> None:
         try:
@@ -240,11 +225,11 @@ def get_roles_router(
     )
     async def assign_role(  # pyright: ignore
         user_role: user_role_update_schema,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models_protocol.UP, models_protocol.SIHE
+        ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> None:
         try:
@@ -283,11 +268,11 @@ def get_roles_router(
     )
     async def remove_user_role(  # pyright: ignore
         user_role: user_role_schema,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models_protocol.UP, models_protocol.SIHE
+        ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ):
         try:
@@ -319,11 +304,11 @@ def get_roles_router(
     )
     async def user_roles(  # pyright: ignore
         user_id: UUID,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models_protocol.UP, models_protocol.SIHE
+        ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> list[user_role_schema]:
         try:

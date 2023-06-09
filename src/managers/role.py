@@ -44,9 +44,7 @@ class BaseRoleManager(
     # region User dictionary
 
     async def create(
-        self,
-        role_create: schemas.BaseRoleCreate,
-        request: Request | None = None
+        self, role_create: schemas.BaseRoleCreate, request: Request | None = None
     ) -> models_protocol.RP:
         role = await self.role_db.get_by_name(role_create.name)
         if role:
@@ -70,7 +68,7 @@ class BaseRoleManager(
         self,
         role_update: schemas.BaseRoleUpdate[UUID],
         role: models_protocol.RP,
-        request: Request | None = None
+        request: Request | None = None,
     ) -> models_protocol.RP:
         role_dict = role_update.create_update_dict()
 
@@ -101,13 +99,17 @@ class BaseRoleManager(
 
     # region User roles registry
 
-    async def check_user_role(self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]) -> bool:
+    async def check_user_role(
+        self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]
+    ) -> bool:
         entry = await self.user_role_db.get_user_role(
             user_role.user_id, user_role.role_id
         )
         return True if entry else False
 
-    async def assign_user_role(self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]) -> models_protocol.URP:
+    async def assign_user_role(
+        self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]
+    ) -> models_protocol.URP:
         entry = await self.user_role_db.assign_user_role(
             user_role.user_id, user_role.role_id
         )
@@ -157,11 +159,7 @@ RoleManagerDependency = DependencyCallable[
 
 class RoleManager(
     models_protocol.UUIDIDMixin,
-    BaseRoleManager[
-        models.UserRead,
-        models.RoleRead,
-        models.UserRole,
-    ],
+    BaseRoleManager[models.UserRead, models.RoleRead, models.UserRole,],
 ):
     pass
 

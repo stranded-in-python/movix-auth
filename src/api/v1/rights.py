@@ -15,17 +15,12 @@ from managers.user import UserManagerDependency
 
 
 def get_access_rights_router(
-    get_user_manager: UserManagerDependency[
-        models_protocol.UP, models_protocol.SIHE
-    ],
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
     get_role_manager: RoleManagerDependency[
-        models_protocol.UP,
-        models_protocol.RP,
-        models_protocol.URP
+        models_protocol.UP, models_protocol.RP, models_protocol.URP
     ],
     get_access_right_manager: AccessRightManagerDependency[
-        models_protocol.ARP,
-        models_protocol.RARP,
+        models_protocol.ARP, models_protocol.RARP,
     ],
     access_right_schema: Type[schemas.AR],
     access_right_create_schema: Type[schemas.ARC],
@@ -53,13 +48,10 @@ def get_access_rights_router(
         page_params: PaginateQueryParams = Depends(PaginateQueryParams),
         filter_param: str | None = None,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
     ) -> list[access_right_schema]:
-        rights = await access_right_manager.search(
-            page_params, filter_param
-        )
+        rights = await access_right_manager.search(page_params, filter_param)
         return list(access_right_schema.from_orm(right) for right in rights)
 
     @router.get(
@@ -75,8 +67,7 @@ def get_access_rights_router(
         request: Request,
         access_right_id: UUID,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
@@ -102,8 +93,7 @@ def get_access_rights_router(
         request: Request,
         access_right_create: access_right_create_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
@@ -131,8 +121,7 @@ def get_access_rights_router(
         request: Request,
         access_right_update: access_right_update_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
@@ -168,8 +157,7 @@ def get_access_rights_router(
         request: Request,
         access_right_id: UUID,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
@@ -202,8 +190,7 @@ def get_access_rights_router(
     async def check_access_right(  # pyright: ignore
         role_access_right: role_access_right_update_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
     ) -> None:
         try:
@@ -229,13 +216,10 @@ def get_access_rights_router(
     async def assign_access_right(  # pyright: ignore
         role_access_right: role_access_right_update_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> None:
         try:
@@ -248,9 +232,7 @@ def get_access_rights_router(
             if await access_right_manager.check_role_access_right(role_access_right):
                 raise exceptions.AccessRightAlreadyAssign()
 
-            await access_right_manager.assign_role_access_right(
-                role_access_right
-            )
+            await access_right_manager.assign_role_access_right(role_access_right)
 
         except exceptions.RoleNotExists:
             raise HTTPException(
@@ -278,13 +260,10 @@ def get_access_rights_router(
     async def remove_role_access(  # pyright: ignore
         role_access_right: role_access_right_update_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> None:
         try:
@@ -317,13 +296,10 @@ def get_access_rights_router(
     async def get_role_rights(  # pyright: ignore
         role_id: UUID,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP,
-            models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP,
         ] = Depends(get_access_right_manager),
         role_manager: BaseRoleManager[
-            models_protocol.UP,
-            models_protocol.RP,
-            models_protocol.URP
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> list[schemas.AR]:
         try:

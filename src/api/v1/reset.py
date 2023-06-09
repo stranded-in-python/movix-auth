@@ -3,9 +3,9 @@ from pydantic import EmailStr
 
 import core.exceptions as exceptions
 from api.v1.common import ErrorCode, ErrorModel
+from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
-from db import models_protocol
 
 RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
@@ -33,9 +33,9 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
 }
 
 
-def get_reset_password_router(get_user_manager: UserManagerDependency[
-        models_protocol.UP, models_protocol.SIHE
-]) -> APIRouter:
+def get_reset_password_router(
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE]
+) -> APIRouter:
     """Generate a router with the reset pw routes."""
     router = APIRouter()
 
@@ -47,7 +47,9 @@ def get_reset_password_router(get_user_manager: UserManagerDependency[
     async def forgot_password(  # pyright: ignore
         request: Request,
         email: EmailStr = Body(..., embed=True),
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models_protocol.UP, models_protocol.SIHE
+        ] = Depends(get_user_manager),
     ):
         try:
             user = await user_manager.get_by_email(email)
@@ -70,7 +72,9 @@ def get_reset_password_router(get_user_manager: UserManagerDependency[
         request: Request,
         token: str = Body(...),
         password: str = Body(...),
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models_protocol.UP, models_protocol.SIHE
+        ] = Depends(get_user_manager),
     ):
         try:
             await user_manager.reset_password(token, password, request)

@@ -11,8 +11,7 @@ from .base import Strategy
 
 
 class DatabaseStrategy(
-    Strategy[models.UP, models.SIHE],
-    Generic[models.UP, models.SIHE, models.AP],
+    Strategy[models.UP, models.SIHE], Generic[models.UP, models.SIHE, models.AP]
 ):
     def __init__(
         self,

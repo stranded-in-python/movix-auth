@@ -153,9 +153,7 @@ RETURN_TYPE = t.TypeVar("RETURN_TYPE")
 
 UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID, SIHE]]
 BaseRoleDatabaseDependency = DependencyCallable[BaseRoleDatabase[RP, ID]]
-BaseUserRoleRoleDatabaseDependency = DependencyCallable[
-    BaseUserRoleDatabase[URP, ID]
-]
+BaseUserRoleRoleDatabaseDependency = DependencyCallable[BaseUserRoleDatabase[URP, ID]]
 BaseAccessRightDatabaseDependency = DependencyCallable[BaseAccessRightDatabase[ARP, ID]]
 BaseRoleAccessRightDatabaseDependency = DependencyCallable[
     BaseRoleAccessRightDatabase[RARP, ID]

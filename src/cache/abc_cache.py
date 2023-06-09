@@ -9,8 +9,6 @@ class CacheStorageABC(ABC):
 
     @abstractmethod
     async def set(
-        self,
-        key: str,
-        value: bytes | bytearray | memoryview | None
+        self, key: str, value: bytes | bytearray | memoryview | None
     ) -> Coroutine[Any, Any, bool | None]:
         ...

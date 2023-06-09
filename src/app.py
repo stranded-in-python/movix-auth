@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
-from api import container
-from api import schemas
+from api import container, schemas
 from core.config import settings
 
 app = FastAPI(
@@ -21,17 +20,12 @@ app.include_router(
 )
 app.include_router(
     container.api_users.get_users_me_router(
-        schemas.UserRead,
-        schemas.UserUpdate,
-        schemas.EventRead,
+        schemas.UserRead, schemas.UserUpdate, schemas.EventRead
     ),
     tags=["users"],
 )
 app.include_router(
-    container.api_users.get_users_router(
-        schemas.UserRead,
-        schemas.UserUpdate,
-    ),
+    container.api_users.get_users_router(schemas.UserRead, schemas.UserUpdate),
     tags=["users"],
 )
 app.include_router(
