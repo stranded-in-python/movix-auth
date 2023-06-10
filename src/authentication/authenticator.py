@@ -1,6 +1,6 @@
 import re
 from inspect import Parameter, Signature
-from typing import Any, Generic, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Generic, List, Optional, Sequence, Tuple, cast
 
 from fastapi import Depends, HTTPException, status
 from makefun import with_signature  # type: ignore
@@ -213,9 +213,7 @@ class Authenticator(Generic[models.UP, models.SIHE]):
                     Parameter(
                         name=name_to_variable_name(backend.name),
                         kind=Parameter.POSITIONAL_OR_KEYWORD,
-                        default=Depends(
-                            backend.transport.get_scheme
-                        ),  # TODO Проверить работу метода
+                        default=Depends(cast(Callable, backend.transport.get_scheme())),
                     ),
                     Parameter(
                         name=name_to_strategy_variable_name(backend.name),
