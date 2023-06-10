@@ -2,17 +2,17 @@ from typing import Generic, Sequence, Type
 
 from fastapi import APIRouter
 
+from api import schemas
 from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
-from api.v1.user import get_users_router
+from api.v1.user import get_users_me_router, get_users_router
 from authentication import AuthenticationBackend, Authenticator
-from db import models
-from db.schemas import generics
+from db import models_protocol
 from managers.user import UserManagerDependency
 
 
-class APIUsers(Generic[generics.U, generics.UC, generics.UU, generics.SIHE]):
+class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
     """
     Main object that ties together the component for users authentication.
 
@@ -24,21 +24,23 @@ class APIUsers(Generic[generics.U, generics.UC, generics.UU, generics.SIHE]):
     with a specific set of parameters.
     """
 
-    authenticator: Authenticator
+    authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
 
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            generics.U, generics.UC, generics.UU, generics.SIHE
+            models_protocol.UP, models_protocol.SIHE
         ],
-        auth_backends: Sequence[AuthenticationBackend],
+        auth_backends: Sequence[
+            AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
+        ],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
         self.get_user_manager = get_user_manager
         self.current_user = self.authenticator.current_user
 
     def get_register_router(
-        self, user_schema: Type[generics.U], user_create_schema: Type[generics.UC]
+        self, user_schema: Type[schemas.U], user_create_schema: Type[schemas.UC]
     ) -> APIRouter:
         """
         Return a router with a register route.
@@ -55,7 +57,9 @@ class APIUsers(Generic[generics.U, generics.UC, generics.UU, generics.SIHE]):
         return get_reset_password_router(self.get_user_manager)
 
     def get_auth_router(
-        self, backend: AuthenticationBackend, requires_verification: bool = False
+        self,
+        backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
+        requires_verification: bool = False,
     ) -> APIRouter:
         """
         Return an auth router for a given authentication backend.
@@ -68,11 +72,31 @@ class APIUsers(Generic[generics.U, generics.UC, generics.UU, generics.SIHE]):
             backend, self.get_user_manager, self.authenticator, requires_verification
         )
 
+    def get_users_me_router(
+        self,
+        user_schema: Type[schemas.UserRead],
+        user_update_schema: Type[schemas.UserUpdate],
+        event_schema: Type[schemas.EventRead],
+    ) -> APIRouter:
+        """
+        Return a router with routes to manage users.
+
+        :param user_schema: Pydantic schema of a public user.
+        :param user_update_schema: Pydantic schema for updating a user.
+        :param event_schema: Pydantic schema for event of user sign-in.
+        """
+        return get_users_me_router(
+            self.get_user_manager,
+            user_schema,
+            user_update_schema,
+            event_schema,
+            self.authenticator,
+        )
+
     def get_users_router(
         self,
-        user_schema: Type[generics.U],
-        user_update_schema: Type[generics.UU],
-        event_schema: Type[generics.SIHE],
+        user_schema: Type[schemas.UserRead],
+        user_update_schema: Type[schemas.UserUpdate],
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
@@ -82,9 +106,5 @@ class APIUsers(Generic[generics.U, generics.UC, generics.UU, generics.SIHE]):
         :param event_schema: Pydantic schema for event of user sign-in.
         """
         return get_users_router(
-            self.get_user_manager,
-            user_schema,
-            user_update_schema,
-            event_schema,
-            self.authenticator,
+            self.get_user_manager, user_schema, user_update_schema, self.authenticator
         )

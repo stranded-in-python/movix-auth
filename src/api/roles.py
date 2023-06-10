@@ -2,35 +2,28 @@ from typing import Generic, Sequence, Type
 
 from fastapi import APIRouter
 
+import api.schemas as schemas
 from api.v1.roles import get_roles_router
 from authentication import AuthenticationBackend, Authenticator
-from db.schemas import generics
+from db import models_protocol
 from managers.role import RoleManagerDependency
 from managers.user import UserManagerDependency
 
 
-class APIRoles(
-    Generic[
-        generics.U,
-        generics.UC,
-        generics.UU,
-        generics.SIHE,
-        generics.R,
-        generics.UR,
-        generics.URU,
-    ]
-):
-    authenticator: Authenticator
+class APIRoles(Generic[models_protocol.RP, models_protocol.UP, models_protocol.SIHE]):
+    authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
 
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            generics.U, generics.UC, generics.UU, generics.SIHE
+            models_protocol.UP, models_protocol.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            generics.R, generics.UR, generics.RC, generics.RU, generics.URU
+            models_protocol.UP, models_protocol.RP, models_protocol.URP,
         ],
-        auth_backends: Sequence[AuthenticationBackend],
+        auth_backends: Sequence[
+            AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
+        ],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
         self.get_user_manager = get_user_manager
@@ -39,11 +32,11 @@ class APIRoles(
 
     def get_roles_router(
         self,
-        role_schema: Type[generics.R],
-        role_create_schema: Type[generics.RC],
-        role_update_schema: Type[generics.RU],
-        user_role_schema: Type[generics.UR],
-        user_role_update_schema: Type[generics.URU],
+        role_schema: Type[schemas.R],
+        role_create_schema: Type[schemas.RC],
+        role_update_schema: Type[schemas.RU],
+        user_role_schema: Type[schemas.UR],
+        user_role_update_schema: Type[schemas.URU],
     ) -> APIRouter:
         """
         Return a router with routes to manage roles.

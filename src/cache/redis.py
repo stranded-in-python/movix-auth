@@ -28,7 +28,7 @@ class RedisManager(DBManager):
         return self._client
 
     async def on_startup(self):
-        await self._client.ping()
+        self._client.ping()
 
 
 def get_manager() -> RedisManager:

@@ -3,26 +3,26 @@ from uuid import UUID
 
 from fastapi import Depends, Request
 
+from api import schemas
 from core import exceptions
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db import getters, models
+from db import getters, models_protocol
 from db.base import BaseRoleDatabase, BaseUserRoleDatabase
-from db.models import UUIDIDMixin
 from db.roles import SARoleDB, SAUserRoleDB
-from db.schemas import generics, schemas
+from db.schemas import models
 
 
 class BaseRoleManager(
-    Generic[models.RP, models.URP, generics.RC, generics.RU, models.URUP]
+    Generic[models_protocol.UP, models_protocol.RP, models_protocol.URP]
 ):
-    role_db: BaseRoleDatabase[models.RP, UUID]
-    user_role_db: BaseUserRoleDatabase[models.URP, models.URUP, UUID]
+    role_db: BaseRoleDatabase[models_protocol.RP, UUID]
+    user_role_db: BaseUserRoleDatabase[models_protocol.URP, UUID]
 
     def __init__(
         self,
-        role_db: BaseRoleDatabase[models.RP, UUID],
-        user_role_db: BaseUserRoleDatabase[models.URP, models.URUP, UUID],
+        role_db: BaseRoleDatabase[models_protocol.RP, UUID],
+        user_role_db: BaseUserRoleDatabase[models_protocol.URP, UUID],
     ):
         self.role_db = role_db
         self.user_role_db = user_role_db
@@ -44,8 +44,8 @@ class BaseRoleManager(
     # region User dictionary
 
     async def create(
-        self, role_create: generics.RC, request: Request | None = None
-    ) -> models.RP:
+        self, role_create: schemas.BaseRoleCreate, request: Request | None = None
+    ) -> models_protocol.RP:
         role = await self.role_db.get_by_name(role_create.name)
         if role:
             raise exceptions.RoleAlreadyExists
@@ -57,7 +57,7 @@ class BaseRoleManager(
         await self.on_after_create(created_role, request)
         return created_role
 
-    async def get(self, role_id: UUID) -> models.RP:
+    async def get(self, role_id: UUID) -> models_protocol.RP:
         role = await self.role_db.get_by_id(role_id)
 
         if role is None:
@@ -65,8 +65,11 @@ class BaseRoleManager(
         return role
 
     async def update(
-        self, role_update: generics.RU, role: models.RP, request: Request | None = None
-    ) -> models.RP:
+        self,
+        role_update: schemas.BaseRoleUpdate[UUID],
+        role: models_protocol.RP,
+        request: Request | None = None,
+    ) -> models_protocol.RP:
         role_dict = role_update.create_update_dict()
 
         updated_role = await self.role_db.update(role, role_dict)
@@ -75,8 +78,8 @@ class BaseRoleManager(
         return updated_role
 
     async def delete(
-        self, role: models.RP, request: Request | None = None
-    ) -> models.RP:
+        self, role: models_protocol.RP, request: Request | None = None
+    ) -> models_protocol.RP:
         await self.on_before_delete(role, request)
 
         await self.role_db.delete(role.id)
@@ -87,7 +90,7 @@ class BaseRoleManager(
 
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> Iterable[models.RP]:
+    ) -> Iterable[models_protocol.RP]:
         roles = await self.role_db.search(pagination_params, filter_param)
 
         return roles
@@ -96,13 +99,17 @@ class BaseRoleManager(
 
     # region User roles registry
 
-    async def check_user_role(self, user_role: models.URUP) -> bool:
+    async def check_user_role(
+        self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]
+    ) -> bool:
         entry = await self.user_role_db.get_user_role(
             user_role.user_id, user_role.role_id
         )
         return True if entry else False
 
-    async def assign_user_role(self, user_role: models.URUP) -> models.URP:
+    async def assign_user_role(
+        self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]
+    ) -> models_protocol.URP:
         entry = await self.user_role_db.assign_user_role(
             user_role.user_id, user_role.role_id
         )
@@ -110,10 +117,10 @@ class BaseRoleManager(
         # entry = await self.user_role_db.assign_user_role(entry_dict)
         return entry
 
-    async def remove_user_role(self, user_role: models.URUP):
-        await self.user_role_db.remove_user_role(user_role)
+    async def remove_user_role(self, user_role_id: UUID):
+        await self.user_role_db.remove_user_role(user_role_id)
 
-    async def get_user_roles(self, user_id) -> Iterable[models.URP]:
+    async def get_user_roles(self, user_id: UUID) -> Iterable[models_protocol.URP]:
         ids = await self.user_role_db.get_user_roles(user_id)
 
         return ids
@@ -123,22 +130,22 @@ class BaseRoleManager(
     # region Handlers
 
     async def on_after_create(
-        self, role: models.RP, request: Request | None = None
+        self, role: models_protocol.RP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_update(
-        self, role: models.RP, request: Request | None = None
+        self, role: models_protocol.RP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_before_delete(
-        self, role: models.RP, request: Request | None = None
+        self, role: models_protocol.RP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_delete(
-        self, role: models.RP, request: Request | None = None
+        self, role: models_protocol.RP, request: Request | None = None
     ) -> None:
         ...
 
@@ -146,19 +153,13 @@ class BaseRoleManager(
 
 
 RoleManagerDependency = DependencyCallable[
-    BaseRoleManager[models.RP, models.URP, generics.RC, generics.RU, models.URUP]
+    BaseRoleManager[models_protocol.UP, models_protocol.RP, models_protocol.URP]
 ]
 
 
 class RoleManager(
-    UUIDIDMixin,
-    BaseRoleManager[
-        schemas.RoleRead,
-        schemas.UserRoleRead,
-        schemas.RoleCreate,
-        schemas.RoleUpdate,
-        schemas.UserRoleUpdate,
-    ],
+    models_protocol.UUIDIDMixin,
+    BaseRoleManager[models.UserRead, models.RoleRead, models.UserRole,],
 ):
     pass
 

@@ -1,7 +1,6 @@
 from typing import Generic, Protocol
 
-from db import models
-from db.schemas import generics
+from db import models_protocol
 from managers.user import BaseUserManager
 
 
@@ -9,16 +8,16 @@ class StrategyDestroyNotSupportedError(Exception):
     pass
 
 
-class Strategy(Protocol, Generic[models.UP, generics.UC, generics.UU, models.SIHE]):
+class Strategy(Protocol[models_protocol.UP, models_protocol.SIHE]):
     async def read_token(
         self,
         token: str | None,
-        user_manager: BaseUserManager[models.UP, generics.UC, generics.UU, models.SIHE],
-    ) -> models.UP | None:
+        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE],
+    ) -> models_protocol.UP | None:
         ...
 
-    async def write_token(self, user: models.UP) -> str:
+    async def write_token(self, user: models_protocol.UP) -> str:
         ...
 
-    async def destroy_token(self, token: str, user: models.UP) -> None:
+    async def destroy_token(self, token: str, user: models_protocol.UP) -> None:
         ...

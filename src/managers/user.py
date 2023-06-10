@@ -8,20 +8,21 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 import core.exceptions as exceptions
 import core.password.password as pw
+from api import schemas
 from core.config import settings
 from core.dependency_types import DependencyCallable
-from core.jwt_utils import SecretType, decode_jwt, generate_jwt
+from core.jwt_utils import SecretType, decode_jwt, generate_jwt  # type: ignore
 from core.pagination import PaginateQueryParams
-from db import getters, models
+from db import getters, models_protocol
 from db.base import BaseUserDatabase
-from db.schemas import generics, schemas
+from db.schemas import models
 from db.users import SAUserDB
 
 RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
 
-class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE]):
+class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
     reset_password_token_secret: SecretType
     reset_password_token_lifetime_seconds: int = 3600
     reset_password_token_audience: str = RESET_PASSWORD_TOKEN_AUDIENCE
@@ -30,12 +31,12 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
     verification_token_lifetime_seconds: int = 3600
     verification_token_audience: str = VERIFY_USER_TOKEN_AUDIENCE
 
-    user_db: BaseUserDatabase[models.UP, uuid.UUID, models.SIHE]
+    user_db: BaseUserDatabase[models_protocol.UP, uuid.UUID, models_protocol.SIHE]
     password_helper: pw.PasswordHelperProtocol
 
     def __init__(
         self,
-        user_db: BaseUserDatabase[models.UP, uuid.UUID, models.SIHE],
+        user_db: BaseUserDatabase[models_protocol.UP, uuid.UUID, models_protocol.SIHE],
         password_helper: pw.PasswordHelperProtocol | None = None,
     ):
         self.user_db = user_db
@@ -56,19 +57,23 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
 
     async def create(
         self,
-        user_create: generics.UC,
+        user_create: schemas.UserCreate,
         safe: bool = False,
         request: Request | None = None,
-    ) -> models.UP:
+    ) -> models_protocol.UP:
         await self.validate_password(user_create.password, user_create)
 
-        existing_user = await self.user_db.get_by_username(user_create.email)
-        if existing_user is not None:
+        existing_user = await self.user_db.get_by_email(user_create.email)
+        if existing_user:
             raise exceptions.UserAlreadyExists()
-        uc: generics.UC = generics.UC(**user_create.__dict__)
+        existing_user = await self.user_db.get_by_username(user_create.username)
+        if existing_user:
+            raise exceptions.UserAlreadyExists()
 
         user_dict = (
-            uc.create_update_dict() if safe else uc.create_update_dict_superuser()
+            user_create.create_update_dict()
+            if safe
+            else user_create.create_update_dict_superuser()
         )
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
@@ -79,7 +84,7 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
 
         return created_user
 
-    async def get(self, user_id: uuid.UUID) -> models.UP:
+    async def get(self, user_id: uuid.UUID) -> models_protocol.UP:
         user = await self.user_db.get(user_id)
 
         if user is None:
@@ -87,7 +92,7 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
 
         return user
 
-    async def get_by_username(self, username: str) -> models.UP:
+    async def get_by_username(self, username: str) -> models_protocol.UP:
         user = await self.user_db.get_by_username(username)
 
         if user is None:
@@ -95,7 +100,7 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
 
         return user
 
-    async def get_by_email(self, email: str) -> models.UP:
+    async def get_by_email(self, email: str) -> models_protocol.UP:
         user = await self.user_db.get_by_email(email)
 
         if user is None:
@@ -104,7 +109,7 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
         return user
 
     async def forgot_password(
-        self, user: models.UP, request: Request | None = None
+        self, user: models_protocol.UP, request: Request | None = None
     ) -> None:
         if not user.is_active:
             raise exceptions.UserInactive()
@@ -123,7 +128,7 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
 
     async def reset_password(
         self, token: str, password: str, request: Request | None = None
-    ) -> models.UP:
+    ) -> models_protocol.UP:
         try:
             data = decode_jwt(
                 token,
@@ -163,11 +168,11 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
 
     async def update(
         self,
-        user_update: generics.UU,
-        user: models.UP,
+        user_update: schemas.UserUpdate,
+        user: models_protocol.UP,
         safe: bool = False,
         request: Request | None = None,
-    ) -> models.UP:
+    ) -> models_protocol.UP:
         if safe:
             updated_user_data = user_update.create_update_dict()
         else:
@@ -178,24 +183,26 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
         await self.on_after_update(updated_user, updated_user_data, request)
         return updated_user
 
-    async def delete(self, user: models.UP, request: Request | None = None) -> None:
+    async def delete(
+        self, user: models_protocol.UP, request: Request | None = None
+    ) -> None:
         await self.on_before_delete(user, request)
         await self.user_db.delete(user)
         await self.on_after_delete(user, request)
 
     async def get_sign_in_history(
-        self, user: generics.UC | models.UP, pagination_params: PaginateQueryParams
-    ) -> Iterable[models.SIHE]:
+        self, user: models_protocol.UP, pagination_params: PaginateQueryParams
+    ) -> Iterable[models_protocol.SIHE]:
         raise NotImplementedError()
 
     async def validate_password(
-        self, password: str, user: generics.UC | models.UP
+        self, password: str, user: schemas.UserCreate | models_protocol.UP
     ) -> None:
         return
 
     async def authenticate(
         self, credentials: OAuth2PasswordRequestForm
-    ) -> models.UP | None:
+    ) -> models_protocol.UP | None:
         """
         Authenticate and return a user following an email and a password.
 
@@ -217,63 +224,65 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
         if not verified:
             return None
         # Update password hash to a more robust one if needed
-        if updated_password_hash is not None:
+        if updated_password_hash:
             await self.user_db.update(user, {"hashed_password": updated_password_hash})
 
         return user
 
     async def on_after_register(
-        self, user: models.UP, request: Request | None = None
+        self, user: models_protocol.UP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_update(
         self,
-        user: models.UP,
+        user: models_protocol.UP,
         update_dict: dict[str, Any],
         request: Request | None = None,
     ) -> None:
         ...
 
     async def on_after_request_verify(
-        self, user: models.UP, token: str, request: Request | None = None
+        self, user: models_protocol.UP, token: str, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_verify(
-        self, user: models.UP, request: Request | None = None
+        self, user: models_protocol.UP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_forgot_password(
-        self, user: models.UP, token: str, request: Request | None = None
+        self, user: models_protocol.UP, token: str, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_reset_password(
-        self, user: models.UP, request: Request | None = None
+        self, user: models_protocol.UP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_login(
         self,
-        user: models.UP,
+        user: models_protocol.UP,
         request: Request | None = None,
         response: Response | None = None,
     ) -> None:
         ...
 
     async def on_before_delete(
-        self, user: models.UP, request: Request | None = None
+        self, user: models_protocol.UP, request: Request | None = None
     ) -> None:
         ...
 
     async def on_after_delete(
-        self, user: models.UP, request: Request | None = None
+        self, user: models_protocol.UP, request: Request | None = None
     ) -> None:
         ...
 
-    async def _update(self, user: models.UP, update_dict: dict[str, Any]) -> models.UP:
+    async def _update(
+        self, user: models_protocol.UP, update_dict: dict[str, Any]
+    ) -> models_protocol.UP:
         validated_update_dict = {}
 
         for field, value in update_dict.items():
@@ -297,32 +306,25 @@ class BaseUserManager(Generic[models.UP, generics.UC, generics.UU, models.SIHE])
 
 
 UserManagerDependency = DependencyCallable[
-    BaseUserManager[generics.U, generics.UC, generics.UU, generics.SIHE]
-]
-UserMgrType = BaseUserManager[generics.U, generics.UC, generics.UU, generics.SIHE]
-UserMgrDependencyType = UserManagerDependency[
-    generics.U, generics.UC, generics.UU, generics.SIHE
+    BaseUserManager[models_protocol.UP, models_protocol.SIHE]
 ]
 
 
 class UserManager(
-    models.UUIDIDMixin,
-    BaseUserManager[
-        schemas.UserRead, schemas.UserCreate, schemas.UserUpdate, schemas.EventRead
-    ],
+    models_protocol.UUIDIDMixin, BaseUserManager[models.UserRead, models.EventRead]
 ):
     reset_password_token_secret = settings.reset_password_token_secret
-    verification_token_secret = settings.verification_token_secret
+    verification_token_secret = settings.verification_password_token_secret
 
     async def get_sign_in_history(
-        self, user: schemas.UserRead, pagination_params: PaginateQueryParams
-    ) -> Iterable[models.SignInHistoryEvent]:
+        self, user: models.UserRead, pagination_params: PaginateQueryParams
+    ) -> Iterable[models.EventRead]:
         return await self.user_db.get_sign_in_history(user.id, pagination_params)
 
-    async def _record_in_sighin_history(self, user: schemas.UserRead, request: Request):
+    async def _record_in_sighin_history(self, user: models.UserRead, request: Request):
         if request.client is None:
             return
-        event = schemas.EventRead(
+        event = models.EventRead(
             id=uuid.uuid4(),
             user_id=user.id,
             timestamp=datetime.now(),
@@ -332,7 +334,7 @@ class UserManager(
 
     async def on_after_login(
         self,
-        user: schemas.UserRead,
+        user: models.UserRead,
         request: Request | None = None,
         response: Response | None = None,
     ) -> None:
@@ -341,17 +343,17 @@ class UserManager(
         await self._record_in_sighin_history(user, request)
 
     async def on_after_register(
-        self, user: schemas.UserRead, request: Request | None = None
+        self, user: models.UserRead, request: Request | None = None
     ):
         print(f"User {user.id} has registered.")
 
     async def on_after_forgot_password(
-        self, user: schemas.UserRead, token: str, request: Request | None = None
+        self, user: models.UserRead, token: str, request: Request | None = None
     ):
         print(f"User {user.id} has forgot their password. Reset token: {token}")
 
     async def on_after_request_verify(
-        self, user: schemas.UserRead, token: str, request: Request | None = None
+        self, user: models.UserRead, token: str, request: Request | None = None
     ):
         print(f"Verification requested for user {user.id}. Verification token: {token}")
 

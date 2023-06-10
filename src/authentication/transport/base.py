@@ -28,3 +28,6 @@ class Transport(Protocol):
     def get_openapi_logout_responses_success() -> OpenAPIResponseType:
         """Return a dictionary to use for the openapi responses route parameter."""
         ...  # pragma: no cover
+
+    def get_scheme(self):
+        return self.scheme

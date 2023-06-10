@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any, Coroutine
 
 
 class CacheStorageABC(ABC):
@@ -7,5 +8,7 @@ class CacheStorageABC(ABC):
         ...
 
     @abstractmethod
-    async def set(self, key: str, value: bytes | bytearray | memoryview | None):
+    async def set(
+        self, key: str, value: bytes | bytearray | memoryview | None
+    ) -> Coroutine[Any, Any, bool | None]:
         ...

@@ -1,57 +1,39 @@
 from typing import Generic, Sequence, Type
 
-import db.models as models
+import api.schemas as schemas
+import db.models_protocol as models_protocol
 from api.v1.rights import APIRouter, get_access_rights_router
 from authentication import AuthenticationBackend, Authenticator
-from db.schemas import generics
 from managers.rights import AccessRightManagerDependency
 from managers.role import RoleManagerDependency
 from managers.user import UserManagerDependency
 
-RoleMgrDependencyType = RoleManagerDependency[
-    generics.R, generics.UR, generics.RC, generics.RU, generics.URU
-]
-AccessRightMgrDependencyType = AccessRightManagerDependency[
-    generics.AR, generics.ARC, generics.ARU, generics.RAR, generics.RARU, generics.ID
-]
-
 
 class APIAccessRight(
     Generic[
-        generics.U,
-        generics.UC,
-        generics.SIHE,
-        generics.UU,
-        generics.R,
-        generics.UR,
-        generics.URU,
-        generics.AR,
-        generics.ARC,
-        generics.ARU,
-        generics.RAR,
-        generics.RARU,
-        generics.ID,
+        models_protocol.ARP,
+        models_protocol.RARP,
+        models_protocol.RP,
+        models_protocol.UP,
+        models_protocol.SIHE,
     ]
 ):
-    authenticator: Authenticator
+    authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
 
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            generics.U, generics.UC, generics.UU, generics.SIHE
+            models_protocol.UP, models_protocol.SIHE
         ],
         get_role_manager: RoleManagerDependency[
-            generics.R, generics.UR, generics.RC, generics.RU, generics.URU
+            models_protocol.UP, models_protocol.RP, models_protocol.URP,
         ],
         get_access_rights_manager: AccessRightManagerDependency[
-            generics.AR,
-            generics.ARC,
-            generics.ARU,
-            generics.RAR,
-            generics.RARU,
-            generics.ID,
+            models_protocol.ARP, models_protocol.RARP,
         ],
-        auth_backends: Sequence[AuthenticationBackend],
+        auth_backends: Sequence[
+            AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
+        ],
     ):
         self.get_user_manager = get_user_manager
         self.get_role_manager = get_role_manager
@@ -61,12 +43,11 @@ class APIAccessRight(
 
     def get_access_rights_router(
         self,
-        access_right_schema: Type[generics.AR],
-        access_right_create_schema: Type[generics.ARC],
-        access_right_update_schema: Type[generics.ARU],
-        role_access_right_schema: Type[generics.RAR],
-        role_access_right_update_schema: Type[generics.RARU],
-        id_schema: Type[generics.ID],
+        access_right_schema: Type[schemas.AR],
+        access_right_create_schema: Type[schemas.ARC],
+        access_right_update_schema: Type[schemas.ARU],
+        role_access_right_schema: Type[schemas.RAR],
+        role_access_right_update_schema: Type[schemas.RARU],
     ) -> APIRouter:
         return get_access_rights_router(
             self.get_user_manager,
@@ -77,6 +58,5 @@ class APIAccessRight(
             access_right_update_schema,
             role_access_right_schema,
             role_access_right_update_schema,
-            id_schema,
             self.authenticator,
         )

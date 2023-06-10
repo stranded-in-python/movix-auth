@@ -14,6 +14,10 @@ EmailString = TypeVar('EmailString', bound=EmailStr)
 ID = TypeVar('ID', bound=uuid.UUID)
 
 
+class ORMModeMixin:
+    orm_mode = True
+
+
 class CreateUpdateDictModel(BaseModel):
     def create_update_dict(self):
         return self.dict(exclude_unset=True, exclude={"id"})
@@ -25,7 +29,7 @@ class CreateUpdateDictModel(BaseModel):
 class CreateUpdateUserDictModel(CreateUpdateDictModel):
     def create_update_dict(self):
         return self.dict(
-            exclude_unset=True, exclude={"id", "is_superuser", "is_active"}
+            exclude_unset=True, exclude={"id", "is_superuser", "is_admin", "is_active"}
         )
 
 
@@ -35,11 +39,15 @@ class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
     id: UserID
     username: str
     email: EmailString
+    hashed_password: str
     first_name: str
     last_name: str
-    hashed_password: str
     is_active: bool = True
     is_superuser: bool = False
+    is_admin: bool = False
+
+    class Config(ORMModeMixin):
+        ...
 
 
 class BaseUserCreate(Generic[EmailString], CreateUpdateUserDictModel):
@@ -50,20 +58,17 @@ class BaseUserCreate(Generic[EmailString], CreateUpdateUserDictModel):
     password: str
     is_active: bool = True
     is_superuser: bool = False
+    is_admin: bool = False
 
 
 class BaseUserUpdate(Generic[EmailString], CreateUpdateUserDictModel):
     password: str | None
     email: EmailStr | None
-    first_name: str
-    last_name: str
+    first_name: str | None
+    last_name: str | None
     is_active: bool = True
     is_superuser: bool = False
-
-
-U = TypeVar("U", bound=BaseUser)
-UC = TypeVar("UC", bound=BaseUserCreate)
-UU = TypeVar("UU", bound=BaseUserUpdate)
+    is_admin: bool = False
 
 
 class BaseSignInHistoryEvent(Generic[EventID, UserID], CreateUpdateDictModel):
@@ -71,9 +76,6 @@ class BaseSignInHistoryEvent(Generic[EventID, UserID], CreateUpdateDictModel):
     user_id: UserID
     timestamp: datetime.datetime
     fingerprint: str
-
-
-SIHE = TypeVar("SIHE", bound=BaseSignInHistoryEvent)
 
 
 class BaseRole(Generic[RoleID], CreateUpdateDictModel):
@@ -92,11 +94,6 @@ class BaseRoleUpdate(Generic[RoleID], CreateUpdateDictModel):
     name: str
 
 
-R = TypeVar("R", bound=BaseRole)
-RC = TypeVar("RC", bound=BaseRoleCreate)
-RU = TypeVar("RU", bound=BaseRoleUpdate)
-
-
 class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
     id: UserRoleID
     user_id: UserID
@@ -106,10 +103,6 @@ class BaseUserRole(Generic[UserRoleID, UserID, RoleID], CreateUpdateDictModel):
 class BaseUserRoleUpdate(Generic[UserID, RoleID], CreateUpdateDictModel):
     user_id: UserID
     role_id: RoleID
-
-
-UR = TypeVar("UR", bound=BaseUserRole)
-URU = TypeVar("URU", bound=BaseUserRoleUpdate)
 
 
 class BaseAccessRight(Generic[AccessRightID], CreateUpdateDictModel):
@@ -126,11 +119,6 @@ class BaseAccessRightUpdate(Generic[AccessRightID], CreateUpdateDictModel):
     name: str
 
 
-AR = TypeVar("AR", bound=BaseAccessRight)
-ARC = TypeVar("ARC", bound=BaseAccessRightCreate)
-ARU = TypeVar("ARU", bound=BaseAccessRightUpdate)
-
-
 class BaseRoleAccessRight(Generic[AccessRightID, RoleID], CreateUpdateDictModel):
     id: AccessRightID
     access_right_id: AccessRightID
@@ -142,20 +130,8 @@ class BaseRoleAccessRightUpdate(Generic[AccessRightID, RoleID], CreateUpdateDict
     role_id: RoleID
 
 
-RAR = TypeVar("RAR", bound=BaseRoleAccessRight)
-RARU = TypeVar("RARU", bound=BaseRoleAccessRightUpdate)
-
-
-class ORMModeMixin:
-    class Config:
-        orm_mode = True
-
-
 class BaseToken(Generic[TokenID, UserID], BaseModel):
     id: TokenID
     token: str
     user_id: UserID
     created_at: datetime.datetime
-
-
-AT = TypeVar('AT', bound=BaseToken)

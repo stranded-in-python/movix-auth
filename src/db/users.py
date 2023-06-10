@@ -1,29 +1,18 @@
 """FastAPI Users database adapter for SQLAlchemy."""
 import uuid
 from datetime import datetime
-from typing import Any, Iterable, Sequence, Type
+from typing import Any, Iterable, Sequence, Tuple, Type
 
-from sqlalchemy import (
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Integer,
-    Result,
-    Row,
-    String,
-    func,
-    select,
-)
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Row, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
 from core.pagination import PaginateQueryParams
-
-from .base import BaseUserDatabase, SQLAlchemyBase
-from .generics import GUID
-from .schemas import schemas
+from db.base import BaseUserDatabase, SQLAlchemyBase
+from db.generics import GUID
+from db.schemas import models
 
 UUID_ID = uuid.UUID
 
@@ -42,7 +31,14 @@ class SAUser(SQLAlchemyBase):
     hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    signin = relationship("SQLAlchemySignInHistoryTable")
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    first_name: Mapped[str] = mapped_column(
+        String(length=32), unique=False, index=True, nullable=False
+    )
+    last_name: Mapped[str] = mapped_column(
+        String(length=32), unique=False, index=True, nullable=False
+    )
+    signin = relationship("SASignInHistory")
 
 
 class SASignInHistory(SQLAlchemyBase):
@@ -74,7 +70,7 @@ class SQLAlchemyOAuthAccountTable(SQLAlchemyBase):
     account_email: Mapped[str] = mapped_column(String(length=320), nullable=False)
 
 
-class SAUserDB(BaseUserDatabase[schemas.UserRead, uuid.UUID, schemas.EventRead]):
+class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
     """
     Database adapter for SQLAlchemy.
 
@@ -95,70 +91,77 @@ class SAUserDB(BaseUserDatabase[schemas.UserRead, uuid.UUID, schemas.EventRead])
         self.history_table = history_table
 
     @cache_decorator()
-    async def get(self, user_id: uuid.UUID) -> schemas.UserRead | None:
-        statement = select(self.user_table).where(self.user_table.id == user_id)
-        usr_model = await self._get_user(statement)
-        if not usr_model:
-            return None
-        return schemas.UserRead.from_orm(usr_model)
+    async def get(self, user_id: uuid.UUID) -> models.UserRead | None:
+        user_model = await self._get_user_by_id(user_id)
+
+        if user_model:
+            return models.UserRead.from_orm(user_model)
+        return None
 
     @cache_decorator()
-    async def get_by_username(self, username: str) -> schemas.UserRead | None:
+    async def get_by_username(self, username: str) -> models.UserRead | None:
         statement = select(self.user_table).where(
             func.lower(self.user_table.username) == func.lower(username)
         )
-        usr_model = await self._get_user(statement)
-        if not usr_model:
+        user_model = await self._get_user(statement)
+
+        if not user_model:
             return None
-        return schemas.UserRead.from_orm(usr_model)
+        return models.UserRead.from_orm(user_model)
 
     @cache_decorator()
-    async def get_by_email(self, email: str) -> schemas.UserRead | None:
+    async def get_by_email(self, email: str) -> models.UserRead | None:
         statement = select(self.user_table).where(
             func.lower(self.user_table.email) == func.lower(email)
         )
-        usr_model = await self._get_user(statement)
-        if not usr_model:
+        user_model = await self._get_user(statement)
+        if not user_model:
             return None
-        return schemas.UserRead.from_orm(usr_model)
+        return models.UserRead.from_orm(user_model)
 
-    async def create(self, create_dict: dict[str, Any]) -> schemas.UserRead:
-        user = self.user_table(**create_dict)
-        self.session.add(user)
+    async def create(self, create_dict: dict[str, Any]) -> models.UserRead:
+        user_model = self.user_table(**create_dict)
+        self.session.add(user_model)
         await self.session.commit()
-        return schemas.UserRead.from_orm(user)
+        return models.UserRead.from_orm(user_model)
 
     async def update(
-        self, user: schemas.UserRead, update_dict: dict[str, Any]
-    ) -> schemas.UserRead:
-        model = await self.get(user.id)
-        for key, value in update_dict.items():
-            setattr(model, key, value)
-            setattr(user, key, value)
-        self.session.add(model)
-        await self.session.commit()
-        return user
+        self, user: models.UserRead, update_dict: dict[str, Any]
+    ) -> models.UserRead:
+        user_model = await self._get_user_by_id(user.id)
 
-    async def delete(self, user: schemas.UserRead) -> None:
+        for key, value in update_dict.items():
+            setattr(user_model, key, value)
+        self.session.add(user_model)
+        await self.session.commit()
+        await self.session.refresh(user_model)
+
+        return models.UserRead.from_orm(user_model)
+
+    async def delete(self, user: models.UserRead) -> None:
         await self.session.delete(user)
         await self.session.commit()
 
-    async def _get_user(self, statement: Select) -> Result | None:
+    async def _get_user(self, statement: Select[Tuple[SAUser]]) -> SAUser | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
+    async def _get_user_by_id(self, user_id: uuid.UUID) -> SAUser | None:
+        statement = select(self.user_table).where(self.user_table.id == user_id)
+        return await self._get_user(statement)
+
     async def record_in_sighin_history(
-        self, user_id: uuid.UUID, event: schemas.EventRead
+        self, user_id: uuid.UUID, event: models.EventRead
     ):
-        e = self.history_table(user_id=user_id, **event.dict())
+        e = self.history_table(**event.dict())
         self.session.add(e)
         await self.session.commit()
 
     @cache_decorator()
     async def get_sign_in_history(
         self, user_id: uuid.UUID, pagination_params: PaginateQueryParams
-    ) -> Iterable[schemas.EventRead]:
-        statement: Select = (
+    ) -> Iterable[models.EventRead]:
+        statement: Select[Any] = (
             select(self.history_table)
             .where(self.history_table.user_id == user_id)
             .limit(pagination_params.page_size)
@@ -168,9 +171,9 @@ class SAUserDB(BaseUserDatabase[schemas.UserRead, uuid.UUID, schemas.EventRead])
         events = await self._get_events(statement)
         if not events:
             return []
-        return list(schemas.EventRead.from_orm(event) for event in events)
+        return list(models.EventRead.from_orm(event[0]) for event in events)
 
-    async def _get_events(self, statement: Select) -> Sequence[Row]:
+    async def _get_events(self, statement: Select[Any]) -> Sequence[Row[Any]]:
         results = await self.session.execute(statement)
 
         return results.fetchall()

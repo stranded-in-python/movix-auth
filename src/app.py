@@ -1,11 +1,8 @@
-import uuid
-
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
-from api import container
+from api import container, schemas
 from core.config import settings
-from db.schemas import schemas
 
 app = FastAPI(
     title=settings.project_name,
@@ -22,9 +19,13 @@ app.include_router(
     container.api_users.get_auth_router(container.auth_backend), tags=["auth"]
 )
 app.include_router(
-    container.api_users.get_users_router(
+    container.api_users.get_users_me_router(
         schemas.UserRead, schemas.UserUpdate, schemas.EventRead
     ),
+    tags=["users"],
+)
+app.include_router(
+    container.api_users.get_users_router(schemas.UserRead, schemas.UserUpdate),
     tags=["users"],
 )
 app.include_router(
@@ -39,12 +40,11 @@ app.include_router(
 )
 app.include_router(
     container.api_access_rights.get_access_rights_router(
-        schemas.AccessRight,
+        schemas.AccessRightRead,
         schemas.AccessRightCreate,
         schemas.AccessRightUpdate,
-        schemas.RoleAccessRight,
+        schemas.RoleAccessRightRead,
         schemas.RoleAccessRightUpdate,
-        uuid.UUID,
     ),
     tags=["access rights"],
 )
