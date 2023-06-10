@@ -16,7 +16,10 @@ app.include_router(
     tags=["register"],
 )
 app.include_router(
-    container.api_users.get_auth_router(container.auth_backend), tags=["auth"]
+    container.api_users.get_auth_router(
+        container.access_backend, refresh_backend=container.refresh_backend
+    ),
+    tags=["auth"],
 )
 app.include_router(
     container.api_users.get_users_me_router(

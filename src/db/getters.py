@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from core.config import get_database_url_async, settings
 
-from . import access_rights, base, roles, tokens, users
+from . import access_rights, base, roles, users
 
 UUID = uuid.UUID
 engine = create_async_engine(get_database_url_async())
@@ -34,14 +34,6 @@ async def get_role_db(session: AsyncSession = Depends(get_async_session)):
 
 async def get_user_role_db(session: AsyncSession = Depends(get_async_session)):
     yield roles.SAUserRoleDB(session, roles.SAUserRole)
-
-
-async def get_access_blacklist_db(session: AsyncSession = Depends(get_async_session)):
-    yield tokens.SAAccessBlacklistDB(session, tokens.SAAccessTokenBlacklist)
-
-
-async def get_refresh_blacklist_db(session: AsyncSession = Depends(get_async_session)):
-    yield tokens.SARefreshBlacklistDB(session, tokens.SAAccessTokenBlacklist)
 
 
 async def get_access_rights_db(session: AsyncSession = Depends(get_async_session)):

@@ -24,20 +24,26 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
     with a specific set of parameters.
     """
 
-    authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
+    access_authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
+    refresh_authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE]
 
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
             models_protocol.UP, models_protocol.SIHE
         ],
-        auth_backends: Sequence[
+        access_backends: Sequence[
+            AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
+        ],
+        refresh_backends: Sequence[
             AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
         ],
     ):
-        self.authenticator = Authenticator(auth_backends, get_user_manager)
+        self.access_authenticator = Authenticator(access_backends, get_user_manager)
+        self.refresh_authenticator = Authenticator(refresh_backends, get_user_manager)
         self.get_user_manager = get_user_manager
-        self.current_user = self.authenticator.current_user
+        self.current_user = self.access_authenticator.current_user
+        self.auth_current_user = self.refresh_authenticator.current_user
 
     def get_register_router(
         self, user_schema: Type[schemas.U], user_create_schema: Type[schemas.UC]
@@ -58,7 +64,10 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     def get_auth_router(
         self,
-        backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
+        access_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
+        refresh_backend: AuthenticationBackend[
+            models_protocol.UP, models_protocol.SIHE
+        ],
         requires_verification: bool = False,
     ) -> APIRouter:
         """
@@ -69,7 +78,33 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         require the user to be verified or not. Defaults to False.
         """
         return get_auth_router(
-            backend, self.get_user_manager, self.authenticator, requires_verification
+            access_backend,
+            refresh_backend,
+            self.get_user_manager,
+            self.access_authenticator,
+            self.refresh_authenticator,
+            requires_verification,
+        )
+
+    def get_users_me_router(
+        self,
+        user_schema: Type[schemas.UserRead],
+        user_update_schema: Type[schemas.UserUpdate],
+        event_schema: Type[schemas.EventRead],
+    ) -> APIRouter:
+        """
+        Return a router with routes to manage users.
+
+        :param user_schema: Pydantic schema of a public user.
+        :param user_update_schema: Pydantic schema for updating a user.
+        :param event_schema: Pydantic schema for event of user sign-in.
+        """
+        return get_users_me_router(
+            self.get_user_manager,
+            user_schema,
+            user_update_schema,
+            event_schema,
+            self.access_authenticator,
         )
 
     def get_users_me_router(
@@ -106,5 +141,8 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         :param event_schema: Pydantic schema for event of user sign-in.
         """
         return get_users_router(
-            self.get_user_manager, user_schema, user_update_schema, self.authenticator
+            self.get_user_manager,
+            user_schema,
+            user_update_schema,
+            self.access_authenticator,
         )

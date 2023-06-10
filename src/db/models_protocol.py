@@ -126,7 +126,7 @@ class SignInHistoryEvent(Protocol[ID]):
 SIHE = TypeVar("SIHE", bound=SignInHistoryEvent[UUID])
 
 
-class AccessTokenProtocol(Protocol[ID]):
+class TokenProtocol(Protocol[ID]):
     """Access token protocol that ORM model should follow."""
 
     token: str
@@ -134,4 +134,4 @@ class AccessTokenProtocol(Protocol[ID]):
     created_at: datetime
 
 
-AP = TypeVar("AP", bound=AccessTokenProtocol[UUID])
+TP = TypeVar("TP", bound=TokenProtocol[UUID])
