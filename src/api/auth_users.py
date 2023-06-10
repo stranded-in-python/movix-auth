@@ -107,27 +107,6 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             self.access_authenticator,
         )
 
-    def get_users_me_router(
-        self,
-        user_schema: Type[schemas.UserRead],
-        user_update_schema: Type[schemas.UserUpdate],
-        event_schema: Type[schemas.EventRead],
-    ) -> APIRouter:
-        """
-        Return a router with routes to manage users.
-
-        :param user_schema: Pydantic schema of a public user.
-        :param user_update_schema: Pydantic schema for updating a user.
-        :param event_schema: Pydantic schema for event of user sign-in.
-        """
-        return get_users_me_router(
-            self.get_user_manager,
-            user_schema,
-            user_update_schema,
-            event_schema,
-            self.authenticator,
-        )
-
     def get_users_router(
         self,
         user_schema: Type[schemas.UserRead],
