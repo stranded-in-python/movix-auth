@@ -158,7 +158,6 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         enabled_backends: Sequence[
             AuthenticationBackend[models.UP, models.SIHE]
         ] = kwargs.get("enabled_backends", self.backends)
-        breakpoint()
         for backend in self.backends:
             if backend in enabled_backends:
                 token = kwargs[name_to_variable_name(backend.name)]

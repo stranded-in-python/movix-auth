@@ -68,3 +68,7 @@ class RoleHaveNotAccessRight(AppException):
 
 class AccessRightAlreadyAssign(AppException):
     pass
+
+
+class TokenInBlacklist(AppException):
+    pass

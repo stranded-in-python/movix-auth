@@ -1,23 +1,21 @@
 from datetime import datetime
 from typing import Protocol  # pragma: no cover
-from typing import Any, Dict, Generic, Optional
-
-from db import models_protocol as models
+from typing import Optional
 
 
-class TokenBlacklistManager(Protocol[models.AP]):
+class TokenBlacklistManager(Protocol):
     """Protocol for retrieving, creating and updating access tokens from a database."""
 
-    async def get_by_token(
-        self, token: str, max_age: Optional[datetime] = None
-    ) -> Optional[models.AP]:
-        """Get a single access token by token."""
+    async def check_token(
+        self, encoded_token: str | None, max_age: Optional[datetime] = None
+    ) -> bool:
+        """Check token in blacklist"""
         ...  # pragma: no cover
 
-    async def enlist(self, create_dict: Dict[str, Any]) -> models.AP:
-        """Create an access token."""
+    async def enlist(self, encoded_token: str):
+        """Enlist a token."""
         ...  # pragma: no cover
 
-    async def forget(self, access_token: models.AP) -> None:
-        """Delete an access token."""
+    async def forget(self, encoded_token: str):
+        """Forget a token."""
         ...  # pragma: no cover
