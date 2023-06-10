@@ -27,7 +27,6 @@ services:
     env_file:
       - ./.envs/.local/.postgres
       - ./.envs/.local/.auth
-      - ./.envs/.local/.superuser
     depends_on:
       - postgres
       - redis
