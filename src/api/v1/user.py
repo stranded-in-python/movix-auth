@@ -113,7 +113,7 @@ def get_users_me_router(
             )
 
     @router.get(
-        "",
+        "/sign-in-history",
         response_model=list[schemas.BaseSignInHistoryEvent],
         summary="Get sign-in history",
         description="Get user's account sign-in history",
