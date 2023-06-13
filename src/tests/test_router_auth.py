@@ -7,7 +7,7 @@ from fastapi import FastAPI, status
 from api.auth_users import get_auth_router
 from api.v1.common import ErrorCode
 from authentication import Authenticator
-from tests.conftest import UserModel, get_mock_authentication
+from tests.conftest import UserModel, get_mock_authentication, get_user_manager
 
 
 @pytest.fixture
@@ -111,26 +111,27 @@ class TestLogin:
         assert user_manager.on_after_login.called is False
 
     @pytest.mark.parametrize(
-        "email", ["king.arthur@camelot.bt", "King.Arthur@camelot.bt"]
+        "username, status_code",
+        [["king.arthur", status.HTTP_200_OK], ["foo", status.HTTP_400_BAD_REQUEST]],
     )
-    async def test_valid_credentials_unverified(
+    async def test_valid_credentials(
         self,
         path,
-        email,
+        username,
+        status_code,
         test_app_client: Tuple[httpx.AsyncClient, bool],
         user_manager,
         user: UserModel,
     ):
-        client, requires_verification = test_app_client
-        data = {"username": email, "password": "guinevere"}
+        client, _ = test_app_client
+        data = {"username": username, "password": "guinevere"}
         response = await client.post(path, data=data)
-        if requires_verification:
-            assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status_code
+        if status_code == status.HTTP_400_BAD_REQUEST:
             data = cast(Dict[str, Any], response.json())
-            assert data["detail"] == ErrorCode.LOGIN_USER_NOT_VERIFIED
+            assert data["detail"] == ErrorCode.LOGIN_BAD_CREDENTIALS
             assert user_manager.on_after_login.called is False
         else:
-            assert response.status_code == status.HTTP_200_OK
             assert response.json() == {
                 "access_token": str(user.id),
                 "token_type": "bearer",
