@@ -35,7 +35,7 @@ class TestForgotPassword:
     async def test_empty_body(
         self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
-        response = await test_app_client.post("/forgot-password", json={})
+        response = await test_app_client.post("/api/v1/forgot-password", json={})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert user_manager.forgot_password.called is False
 
@@ -44,7 +44,7 @@ class TestForgotPassword:
     ):
         user_manager.get_by_email.side_effect = UserNotExists()
         json = {"email": "lancelot@camelot.bt"}
-        response = await test_app_client.post("/forgot-password", json=json)
+        response = await test_app_client.post("/api/v1/forgot-password", json=json)
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert user_manager.forgot_password.called is False
 
@@ -53,7 +53,7 @@ class TestForgotPassword:
     ):
         user_manager.forgot_password.side_effect = UserInactive()
         json = {"email": "percival@camelot.bt"}
-        response = await test_app_client.post("/forgot-password", json=json)
+        response = await test_app_client.post("/api/v1/forgot-password", json=json)
         assert response.status_code == status.HTTP_202_ACCEPTED
 
     async def test_existing_user(
@@ -64,7 +64,7 @@ class TestForgotPassword:
     ):
         async_method_mocker(user_manager, "forgot_password", return_value=None)
         json = {"email": "king.arthur@camelot.bt"}
-        response = await test_app_client.post("/forgot-password", json=json)
+        response = await test_app_client.post("/api/v1/forgot-password", json=json)
         assert response.status_code == status.HTTP_202_ACCEPTED
 
 
@@ -74,7 +74,7 @@ class TestResetPassword:
     async def test_empty_body(
         self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
-        response = await test_app_client.post("/reset-password", json={})
+        response = await test_app_client.post("/api/v1/reset-password", json={})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert user_manager.reset_password.called is False
 
@@ -82,7 +82,7 @@ class TestResetPassword:
         self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
         json = {"password": "guinevere"}
-        response = await test_app_client.post("/reset-password", json=json)
+        response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert user_manager.reset_password.called is False
 
@@ -90,7 +90,7 @@ class TestResetPassword:
         self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
         json = {"token": "foo"}
-        response = await test_app_client.post("/reset-password", json=json)
+        response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert user_manager.reset_password.called is False
 
@@ -99,7 +99,7 @@ class TestResetPassword:
     ):
         user_manager.reset_password.side_effect = InvalidResetPasswordToken()
         json = {"token": "foo", "password": "guinevere"}
-        response = await test_app_client.post("/reset-password", json=json)
+        response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = cast(Dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.RESET_PASSWORD_BAD_TOKEN
@@ -109,7 +109,7 @@ class TestResetPassword:
     ):
         user_manager.reset_password.side_effect = UserInactive()
         json = {"token": "foo", "password": "guinevere"}
-        response = await test_app_client.post("/reset-password", json=json)
+        response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = cast(Dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.RESET_PASSWORD_BAD_TOKEN
@@ -121,7 +121,7 @@ class TestResetPassword:
             reason="Invalid"
         )
         json = {"token": "foo", "password": "guinevere"}
-        response = await test_app_client.post("/reset-password", json=json)
+        response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = cast(Dict[str, Any], response.json())
         assert data["detail"] == {
@@ -137,7 +137,7 @@ class TestResetPassword:
     ):
         async_method_mocker(user_manager, "reset_password", return_value=None)
         json = {"token": "foo", "password": "guinevere"}
-        response = await test_app_client.post("/reset-password", json=json)
+        response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_200_OK
 
 
@@ -145,11 +145,11 @@ class TestResetPassword:
 async def test_forgot_password_namespace(get_user_manager):
     app = FastAPI()
     app.include_router(get_reset_password_router(get_user_manager))
-    assert app.url_path_for("reset:forgot_password") == "/forgot-password"
+    assert app.url_path_for("reset:forgot_password") == "/api/v1/forgot-password"
 
 
 @pytest.mark.asyncio
 async def test_reset_password_namespace(get_user_manager):
     app = FastAPI()
     app.include_router(get_reset_password_router(get_user_manager))
-    assert app.url_path_for("reset:reset_password") == "/reset-password"
+    assert app.url_path_for("reset:reset_password") == "/api/v1/reset-password"
