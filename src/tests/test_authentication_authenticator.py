@@ -114,16 +114,16 @@ def get_backend_user(user: UserModel):
 @pytest.mark.asyncio
 def get_test_auth_client(get_user_manager, get_test_client):
     async def _get_test_auth_client(
-        backends: List[AuthenticationBackend],
+        backends: List[AuthenticationBackend[models.UP, models.SIHE]],
         get_enabled_backends: Optional[
-            DependencyCallable[Sequence[AuthenticationBackend]]
+            DependencyCallable[Sequence[AuthenticationBackend[models.UP, models.SIHE]]]
         ] = None,
     ) -> AsyncGenerator[httpx.AsyncClient, None]:
         app = FastAPI()
         authenticator = Authenticator(backends, get_user_manager)
 
         @app.get("/test-current-user", response_model=User)
-        def test_current_user(
+        def test_current_user(  # pyright: ignore
             user: UserModel = Depends(
                 authenticator.current_user(get_enabled_backends=get_enabled_backends)
             ),

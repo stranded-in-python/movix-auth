@@ -177,12 +177,12 @@ class MockUserDatabase(
         self.inactive_user: UserModel = inactive_user
         self.superuser: UserModel = superuser
 
-    async def get(self, id: IDType) -> UserModel | None:
-        if id == user.id:
+    async def get(self, user_id: IDType) -> UserModel | None:
+        if user_id == self.user.id:
             return self.user
-        if id == inactive_user.id:
+        if user_id == self.inactive_user.id:
             return self.inactive_user
-        if id == superuser.id:
+        if user_id == self.superuser.id:
             return self.superuser
         return None
 
@@ -249,8 +249,8 @@ def get_user_manager(user_manager):
 
 
 class MockTransport(BearerTransport):
-    def __init__(self, tokenUrl: str):
-        super().__init__(tokenUrl)
+    def __init__(self, token_url: str):
+        super().__init__(token_url)
 
     async def get_logout_response(self) -> Any:
         return Response()
@@ -284,7 +284,7 @@ class MockStrategy(Strategy[UserModel, SignInModel]):
 def get_mock_authentication(name: str):
     return AuthenticationBackend(
         name=name,
-        transport=MockTransport(tokenUrl="/login"),
+        transport=MockTransport(token_url="/login"),
         get_strategy=lambda: MockStrategy(),
     )
 

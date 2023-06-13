@@ -2,7 +2,7 @@ import pytest
 
 from authentication.strategy import JWTStrategy, StrategyDestroyNotSupportedError
 from authentication.strategy.jwt import SecretType, decode_jwt, generate_jwt
-from tests.conftest import IDType, SignInModel, UserModel
+from tests.conftest import SignInModel, UserModel
 
 LIFETIME = 3600
 
