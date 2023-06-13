@@ -2,8 +2,11 @@
 
 Movix-auth - это сервис аутентификации, разработанный с помощью [fast-api](https://fastapi.tiangolo.com/), и основанный на [архитектуре fast-api-users](https://fastapi-users.github.io/fastapi-users/11.0/configuration/overview/).
 
+<details>
+<summary>Схема архитектуры проекта</summary>
 ![Alt text](./architecture.svg)
 <img src="./architecture.svg">
+</details>
 
 ## Что под капотом?
 
