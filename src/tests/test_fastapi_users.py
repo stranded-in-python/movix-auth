@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, status
 from api import schemas
 from api.container import APIUsers as FastAPIUsers
 from db.schemas import models
-from tests.conftest import IDType, SignInModel, UserModel
+from tests.conftest import UserModel
 
 
 @pytest.fixture
@@ -15,12 +15,12 @@ from tests.conftest import IDType, SignInModel, UserModel
 async def test_app_client(
     secret, get_user_manager, mock_authentication, get_test_client
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
-    fastapi_users = FastAPIUsers[models.U, models.SIHE](
+    fastapi_users = FastAPIUsers[models.UserRead, models.SIHE](
         get_user_manager, [mock_authentication], [mock_authentication]
     )
 
     app = FastAPI()
-    app.include_router(fastapi_users.get_register_router(schemas.U, schemas.UC))
+    app.include_router(fastapi_users.get_register_router(schemas.UserRead, schemas.UserCreate))
     app.include_router(fastapi_users.get_reset_password_router())
     app.include_router(
         fastapi_users.get_auth_router(mock_authentication, mock_authentication)
@@ -31,20 +31,20 @@ async def test_app_client(
         return None
 
     app.include_router(
-        fastapi_users.get_users_router(schemas.U, schemas.UU), prefix="/users"
+        fastapi_users.get_users_router(schemas.UserRead, schemas.UserUpdate)
     )
 
-    @app.get("/current-user", response_model=schemas.U)
+    @app.get("/current-user", response_model=schemas.UserRead)
     def current_user(user: UserModel = Depends(fastapi_users.current_user())):
         return user
 
-    @app.get("/current-active-user", response_model=schemas.U)
+    @app.get("/current-active-user", response_model=schemas.UserRead)
     def current_active_user(
         user: UserModel = Depends(fastapi_users.current_user(active=True)),
     ):
         return user
 
-    @app.get("/current-superuser", response_model=schemas.U)
+    @app.get("/current-superuser", response_model=schemas.UserRead)
     def current_superuser(
         user: UserModel = Depends(
             fastapi_users.current_user(active=True, superuser=True)
@@ -56,7 +56,7 @@ async def test_app_client(
     def optional_current_user(
         user: Optional[UserModel] = Depends(fastapi_users.current_user(optional=True)),
     ):
-        return schemas.U.from_orm(user) if user else None
+        return schemas.UserRead.from_orm(user) if user else None
 
     @app.get("/optional-current-active-user")
     def optional_current_active_user(
@@ -64,7 +64,7 @@ async def test_app_client(
             fastapi_users.current_user(optional=True, active=True)
         )
     ):
-        return schemas.U.from_orm(user) if user else None
+        return schemas.UserRead.from_orm(user) if user else None
 
     @app.get("/optional-current-superuser")
     def optional_current_superuser(
@@ -72,7 +72,7 @@ async def test_app_client(
             fastapi_users.current_user(optional=True, active=True, superuser=True)
         )
     ):
-        return schemas.U.from_orm(user) if user else None
+        return schemas.UserRead.from_orm(user) if user else None
 
     async for client in get_test_client(app):
         yield client
@@ -83,17 +83,15 @@ async def test_app_client(
 @pytest.mark.parametrize(
     "path,method",
     [
-        ("/register", "POST"),
-        ("/request-verify-token", "POST"),
-        ("/verify", "POST"),
-        ("/forgot-password", "POST"),
-        ("/reset-password", "POST"),
-        ("/login", "POST"),
-        ("/logout", "POST"),
-        ("/register", "POST"),
-        ("/users/d35d213e-f3d8-4f08-954a-7e0d1bea286f", "GET"),
-        ("/users/d35d213e-f3d8-4f08-954a-7e0d1bea286f", "PATCH"),
-        ("/users/d35d213e-f3d8-4f08-954a-7e0d1bea286f", "DELETE"),
+        ("api/v1/register", "POST"),
+        ("api/v1/forgot-password", "POST"),
+        ("api/v1/reset-password", "POST"),
+        ("api/v1/login", "POST"),
+        ("api/v1/logout", "POST"),
+        ("api/v1/register", "POST"),
+        ("api/v1/users/d35d213e-f3d8-4f08-954a-7e0d1bea286f", "GET"),
+        ("api/v1/users/d35d213e-f3d8-4f08-954a-7e0d1bea286f", "PATCH"),
+        ("api/v1/users/d35d213e-f3d8-4f08-954a-7e0d1bea286f", "DELETE"),
     ],
 )
 async def test_route_exists(test_app_client: httpx.AsyncClient, path: str, method: str):

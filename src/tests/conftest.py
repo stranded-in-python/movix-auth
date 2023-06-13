@@ -10,7 +10,6 @@ from typing import (
     Generic,
     Optional,
     Type,
-    TypeVar,
     Union,
 )
 from unittest.mock import MagicMock
@@ -284,7 +283,7 @@ class MockStrategy(Strategy[UserModel, SignInModel]):
 def get_mock_authentication(name: str):
     return AuthenticationBackend(
         name=name,
-        transport=MockTransport(token_url="/login"),
+        transport=MockTransport(token_url="api/v1/login"),
         get_strategy=lambda: MockStrategy(),
     )
 
