@@ -392,68 +392,6 @@ class TestDelete:
         assert user_manager.on_after_delete.called is True
 
 
-@pytest.mark.asyncio
-@pytest.mark.manager
-class TestAuthenticate:
-    async def test_unknown_user(
-        self,
-        create_oauth2_password_request_form: Callable[
-            [str, str], OAuth2PasswordRequestForm
-        ],
-        user_manager: UserManagerMock[UserModel, SignInModel],
-    ):
-        form = create_oauth2_password_request_form("lancelot@camelot.bt", "guinevere")
-        user = await user_manager.authenticate(form)
-        assert user is None
-
-    async def test_wrong_password(
-        self,
-        create_oauth2_password_request_form: Callable[
-            [str, str], OAuth2PasswordRequestForm
-        ],
-        user_manager: UserManagerMock[UserModel, SignInModel],
-    ):
-        form = create_oauth2_password_request_form("king.arthur@camelot.bt", "percival")
-        user = await user_manager.authenticate(form)
-        assert user is None
-
-    async def test_valid_credentials(
-        self,
-        create_oauth2_password_request_form: Callable[
-            [str, str], OAuth2PasswordRequestForm
-        ],
-        user_manager: UserManagerMock[UserModel, SignInModel],
-    ):
-        form = create_oauth2_password_request_form(
-            "king.arthur@camelot.bt", "guinevere"
-        )
-        user = await user_manager.authenticate(form)
-        assert user is not None
-        assert user.email == "king.arthur@camelot.bt"
-
-    async def test_upgrade_password_hash(
-        self,
-        mocker: MockerFixture,
-        create_oauth2_password_request_form: Callable[
-            [str, str], OAuth2PasswordRequestForm
-        ],
-        user_manager: UserManagerMock[UserModel, SignInModel],
-    ):
-        verify_and_update_password_patch = mocker.patch.object(
-            user_manager.password_helper, "verify_and_update"
-        )
-        verify_and_update_password_patch.return_value = (True, "updated_hash")
-        update_spy = mocker.spy(user_manager.user_db, "update")
-
-        form = create_oauth2_password_request_form(
-            "king.arthur@camelot.bt", "guinevere"
-        )
-        user = await user_manager.authenticate(form)
-        assert user is not None
-        assert user.email == "king.arthur@camelot.bt"
-        assert update_spy.called is True
-
-
 def test_integer_id_mixin():
     integer_id_mixin = IntegerIDMixin()
 

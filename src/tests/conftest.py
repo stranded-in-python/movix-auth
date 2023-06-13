@@ -36,12 +36,12 @@ IDType = uuid.UUID
 
 @dataclasses.dataclass
 class UserModel:
-    username: str | None
     email: EmailStr
-    first_name: str | None
-    last_name: str | None
     hashed_password: str
     id: IDType = dataclasses.field(default_factory=uuid.uuid4)
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False
@@ -178,11 +178,11 @@ class MockUserDatabase(
 
     async def get_by_email(self, email: str) -> Optional[UserModel]:
         lower_email = email.lower()
-        if lower_email == user.email.lower():
+        if lower_email == self.user.email.lower():
             return self.user
-        if lower_email == inactive_user.email.lower():
+        if lower_email == self.inactive_user.email.lower():
             return self.inactive_user
-        if lower_email == superuser.email.lower():
+        if lower_email == self.superuser.email.lower():
             return self.superuser
         return None
 
