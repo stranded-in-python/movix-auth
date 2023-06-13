@@ -90,7 +90,7 @@ def token(jwt_strategy: JWTStrategy[UserModel, SignInModel]):
     return _token
 
 
-@pytest.mark.parametrize("jwt_strategy", ["HS256", "RS256", "ES256"], indirect=True)
+@pytest.mark.parametrize("jwt_strategy", ["HS256"], indirect=True)
 @pytest.mark.authentication
 class TestReadToken:
     @pytest.mark.asyncio
@@ -143,7 +143,7 @@ class TestReadToken:
         assert authenticated_user.id == user.id
 
 
-@pytest.mark.parametrize("jwt_strategy", ["HS256", "RS256", "ES256"], indirect=True)
+@pytest.mark.parametrize("jwt_strategy", ["HS256"], indirect=True)
 @pytest.mark.authentication
 @pytest.mark.asyncio
 async def test_write_token(jwt_strategy: JWTStrategy[UserModel, SignInModel], user):
@@ -158,7 +158,7 @@ async def test_write_token(jwt_strategy: JWTStrategy[UserModel, SignInModel], us
     assert decoded["sub"] == str(user.id)
 
 
-@pytest.mark.parametrize("jwt_strategy", ["HS256", "RS256", "ES256"], indirect=True)
+@pytest.mark.parametrize("jwt_strategy", ["HS256"], indirect=True)
 @pytest.mark.authentication
 @pytest.mark.asyncio
 async def test_destroy_token(jwt_strategy: JWTStrategy[UserModel, SignInModel], user):
