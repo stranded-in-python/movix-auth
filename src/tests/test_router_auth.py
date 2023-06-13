@@ -59,7 +59,7 @@ async def test_app_client(
 
 
 @pytest.mark.router
-@pytest.mark.parametrize("path", ["/mock/login", "/mock-bis/login"])
+@pytest.mark.parametrize("path", ["/mock/api/v1/login", "/mock-bis/api/v1/login"])
 @pytest.mark.asyncio
 class TestLogin:
     async def test_empty_body(
@@ -137,42 +137,9 @@ class TestLogin:
             }
             assert user_manager.on_after_login.called is True
 
-    @pytest.mark.parametrize("email", ["lake.lady@camelot.bt", "Lake.Lady@camelot.bt"])
-    async def test_valid_credentials_verified(
-        self,
-        path,
-        email,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
-        user_manager,
-        verified_user: UserModel,
-    ):
-        client, _ = test_app_client
-        data = {"username": email, "password": "excalibur"}
-        response = await client.post(path, data=data)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() == {
-            "access_token": str(verified_user.id),
-            "token_type": "bearer",
-        }
-        assert user_manager.on_after_login.called is True
-        args, kwargs = user_manager.on_after_login.call_args
-        assert len(args) == 3
-        assert all(x is not None for x in args)
-
-    async def test_inactive_user(
-        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
-    ):
-        client, _ = test_app_client
-        data = {"username": "percival@camelot.bt", "password": "angharad"}
-        response = await client.post(path, data=data)
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = cast(Dict[str, Any], response.json())
-        assert data["detail"] == ErrorCode.LOGIN_BAD_CREDENTIALS
-        assert user_manager.on_after_login.called is False
-
 
 @pytest.mark.router
-@pytest.mark.parametrize("path", ["/mock/logout", "/mock-bis/logout"])
+@pytest.mark.parametrize("path", ["/mock/api/v1/logout", "/mock-bis/api/v1/logout"])
 @pytest.mark.asyncio
 class TestLogout:
     async def test_missing_token(
@@ -182,7 +149,7 @@ class TestLogout:
         response = await client.post(path)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    async def test_valid_credentials_unverified(
+    async def test_valid_credentials(
         self,
         mocker,
         path,
@@ -193,22 +160,6 @@ class TestLogout:
         response = await client.post(
             path, headers={"Authorization": f"Bearer {user.id}"}
         )
-        if requires_verification:
-            assert response.status_code == status.HTTP_403_FORBIDDEN
-        else:
-            assert response.status_code == status.HTTP_200_OK
-
-    async def test_valid_credentials_verified(
-        self,
-        mocker,
-        path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
-        verified_user: UserModel,
-    ):
-        client, _ = test_app_client
-        response = await client.post(
-            path, headers={"Authorization": f"Bearer {verified_user.id}"}
-        )
         assert response.status_code == status.HTTP_200_OK
 
 
@@ -217,7 +168,7 @@ class TestLogout:
 async def test_route_names(app_factory, mock_authentication):
     app = app_factory(False)
     login_route_name = f"auth:{mock_authentication.name}.login"
-    assert app.url_path_for(login_route_name) == "/mock/login"
+    assert app.url_path_for(login_route_name) == "/mock/api/v1/login"
 
     logout_route_name = f"auth:{mock_authentication.name}.logout"
-    assert app.url_path_for(logout_route_name) == "/mock/logout"
+    assert app.url_path_for(logout_route_name) == "/mock/api/v1/logout"

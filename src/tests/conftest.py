@@ -186,6 +186,23 @@ class MockUserDatabase(
             return self.superuser
         return None
 
+    async def get_by_username(self, username: str) -> Optional[UserModel]:
+        lower_username = username.lower()
+        if self.user.username and lower_username == self.user.username.lower():
+            return self.user
+        if (
+            self.inactive_user.username
+            and lower_username == self.inactive_user.username.lower()
+        ):
+            return self.inactive_user
+        if (
+            self.superuser.username
+            and lower_username == self.superuser.username.lower()
+        ):
+            return self.superuser
+
+        return None
+
     async def create(self, create_dict: Dict[str, Any]) -> UserModel:
         return UserModel(**create_dict)
 
@@ -210,6 +227,7 @@ def make_user_manager(mocker: MockerFixture):
     def _make_user_manager(user_manager_class: Type[BaseTestUserManager], mock_user_db):
         user_manager = user_manager_class(mock_user_db)
         mocker.spy(user_manager, "get_by_email")
+        mocker.spy(user_manager, "get_by_username")
         mocker.spy(user_manager, "forgot_password")
         mocker.spy(user_manager, "reset_password")
         mocker.spy(user_manager, "on_after_register")
