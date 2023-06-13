@@ -4,8 +4,14 @@ skip-string-normalization = true
 skip-magic-trailing-comma = true
 
 [tool.pyright]
-venv = 'venv'
+venv = '.venv'
 venvPath = '.'
+
+[tool.pytest.ini_options]
+asyncio_mode = 'auto'
+markers = [
+  "integrational: marks test as dependant on external services"
+]
 
 [tool.alembic]
 script_location = "alembic"

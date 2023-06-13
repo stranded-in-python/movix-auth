@@ -294,6 +294,11 @@ def mock_authentication():
 
 
 @pytest.fixture
+def refresh_mock_authentication():
+    return get_mock_authentication(name="refresh_mock")
+
+
+@pytest.fixture
 def get_test_client():
     async def _get_test_client(app: FastAPI) -> AsyncGenerator[httpx.AsyncClient, None]:
         async with LifespanManager(app):

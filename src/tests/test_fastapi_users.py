@@ -13,17 +13,17 @@ from tests.conftest import UserModel
 @pytest.fixture
 @pytest.mark.asyncio
 async def test_app_client(
-    secret, get_user_manager, mock_authentication, get_test_client
+    secret, get_user_manager, mock_authentication, refresh_mock_authentication, get_test_client
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
     fastapi_users = FastAPIUsers[models.UserRead, models.SIHE](
-        get_user_manager, [mock_authentication], [mock_authentication]
+        get_user_manager, [mock_authentication], [refresh_mock_authentication]
     )
 
     app = FastAPI()
     app.include_router(fastapi_users.get_register_router(schemas.UserRead, schemas.UserCreate))
     app.include_router(fastapi_users.get_reset_password_router())
     app.include_router(
-        fastapi_users.get_auth_router(mock_authentication, mock_authentication)
+        fastapi_users.get_auth_router(mock_authentication, refresh_mock_authentication)
     )
 
     @app.delete("/users/me")
