@@ -43,7 +43,7 @@ def get_users_me_router(
     ) -> schemas.UserRead:
         return user_schema.from_orm(user)
 
-    @router.put(
+    @router.patch(
         "",
         response_model=user_schema,
         dependencies=[Depends(get_current_active_user)],
@@ -113,7 +113,7 @@ def get_users_me_router(
             )
 
     @router.get(
-        "",
+        "/history",
         response_model=list[schemas.BaseSignInHistoryEvent],
         summary="Get sign-in history",
         description="Get user's account sign-in history",
