@@ -7,11 +7,6 @@ skip-magic-trailing-comma = true
 venv = '.venv'
 venvPath = '.'
 
-[tool.pytest.ini_options]
-asyncio_mode = 'auto'
-markers = [
-  "integrational: marks test as dependant on external services"
-]
 
 [tool.alembic]
 script_location = "alembic"
