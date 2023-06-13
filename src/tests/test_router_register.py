@@ -14,7 +14,9 @@ from api.v1.common import ErrorCode
 async def test_app_client(
     get_user_manager, get_test_client
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
-    register_router = get_register_router(get_user_manager, schemas.U, schemas.UC)
+    register_router = get_register_router(
+        get_user_manager, schemas.UserRead, schemas.UserCreate
+    )
 
     app = FastAPI()
     app.include_router(register_router)
@@ -27,27 +29,27 @@ async def test_app_client(
 @pytest.mark.asyncio
 class TestRegister:
     async def test_empty_body(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.post("/register", json={})
+        response = await test_app_client.post("/api/v1/register", json={})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_missing_email(self, test_app_client: httpx.AsyncClient):
         json = {"password": "guinevere"}
-        response = await test_app_client.post("/register", json=json)
+        response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_missing_password(self, test_app_client: httpx.AsyncClient):
         json = {"email": "king.arthur@camelot.bt"}
-        response = await test_app_client.post("/register", json=json)
+        response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_wrong_email(self, test_app_client: httpx.AsyncClient):
         json = {"email": "king.arthur", "password": "guinevere"}
-        response = await test_app_client.post("/register", json=json)
+        response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_invalid_password(self, test_app_client: httpx.AsyncClient):
         json = {"email": "king.arthur@camelot.bt", "password": "g"}
-        response = await test_app_client.post("/register", json=json)
+        response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = cast(Dict[str, Any], response.json())
         assert data["detail"] == {
@@ -56,19 +58,30 @@ class TestRegister:
         }
 
     @pytest.mark.parametrize(
-        "email", ["king.arthur@camelot.bt", "King.Arthur@camelot.bt"]
+        "email, username",
+        [
+            ["king.arthur@camelot.bt", "king.arthur"],
+            ["King.Arthur@camelot.bt", "king.arthur"],
+        ],
     )
-    async def test_existing_user(self, email, test_app_client: httpx.AsyncClient):
-        json = {"email": email, "password": "guinevere"}
-        response = await test_app_client.post("/register", json=json)
+    async def test_existing_user(
+        self, email, username, test_app_client: httpx.AsyncClient
+    ):
+        json = {"email": email, "username": username, "password": "guinevere"}
+        response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = cast(Dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.REGISTER_USER_ALREADY_EXISTS
 
-    @pytest.mark.parametrize("email", ["lancelot@camelot.bt", "Lancelot@camelot.bt"])
-    async def test_valid_body(self, email, test_app_client: httpx.AsyncClient):
-        json = {"email": email, "password": "guinevere"}
-        response = await test_app_client.post("/register", json=json)
+    @pytest.mark.parametrize(
+        "email,username",
+        [["lancelot@camelot.bt", "lancelot"], ["Lancelot@camelot.bt", "lancelot"]],
+    )
+    async def test_valid_body(
+        self, email, username, test_app_client: httpx.AsyncClient
+    ):
+        json = {"email": email, "username": username, "password": "guinevere"}
+        response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_201_CREATED
 
         data = cast(Dict[str, Any], response.json())
@@ -79,10 +92,11 @@ class TestRegister:
     async def test_valid_body_is_superuser(self, test_app_client: httpx.AsyncClient):
         json = {
             "email": "lancelot@camelot.bt",
+            "username": "lancelot",
             "password": "guinevere",
             "is_superuser": True,
         }
-        response = await test_app_client.post("/register", json=json)
+        response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_201_CREATED
 
         data = cast(Dict[str, Any], response.json())
@@ -91,10 +105,11 @@ class TestRegister:
     async def test_valid_body_is_active(self, test_app_client: httpx.AsyncClient):
         json = {
             "email": "lancelot@camelot.bt",
+            "username": "lancelot",
             "password": "guinevere",
             "is_active": False,
         }
-        response = await test_app_client.post("/register", json=json)
+        response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_201_CREATED
 
         data = cast(Dict[str, Any], response.json())
@@ -105,4 +120,4 @@ class TestRegister:
 async def test_register_namespace(get_user_manager):
     app = FastAPI()
     app.include_router(get_register_router(get_user_manager, schemas.U, schemas.UC))
-    assert app.url_path_for("register:register") == "/register"
+    assert app.url_path_for("register") == "/api/v1/register"

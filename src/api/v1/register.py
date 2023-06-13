@@ -1,6 +1,7 @@
 from typing import Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import error_wrappers
 
 import core.exceptions as ex
 from api import schemas
@@ -79,6 +80,12 @@ def get_register_router(
                 },
             )
 
-        return user_schema.from_orm(created_user)
+        try:
+            return user_schema.from_orm(created_user)
+        except error_wrappers.ValidationError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={"code": ErrorCode.REGISTER_INVALID_PASSWORD, "reason": str(e)},
+            )
 
     return router
