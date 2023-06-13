@@ -176,6 +176,8 @@ class Authenticator(Generic[models.UP, models.SIHE]):
             if active and not user.is_active:
                 status_code = status.HTTP_401_UNAUTHORIZED
                 user = None
+            if not user:
+                pass
             elif superuser and not user.is_superuser:
                 user = None
             elif admin and not (user.is_admin or user.is_superuser):

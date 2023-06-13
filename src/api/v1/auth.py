@@ -36,11 +36,7 @@ def get_auth_router(
                         ErrorCode.LOGIN_BAD_CREDENTIALS: {
                             "summary": "Bad credentials or the user is inactive.",
                             "value": {"detail": ErrorCode.LOGIN_BAD_CREDENTIALS},
-                        },
-                        ErrorCode.LOGIN_USER_NOT_VERIFIED: {
-                            "summary": "The user is not verified.",
-                            "value": {"detail": ErrorCode.LOGIN_USER_NOT_VERIFIED},
-                        },
+                        }
                     }
                 }
             },

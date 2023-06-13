@@ -19,37 +19,37 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
 
     async def get(self, user_id: ID) -> UP | None:
         """Get a single user by id."""
-        ...
+        raise NotImplementedError
 
     async def get_by_username(self, username: str) -> UP | None:
         """Get a single user by username."""
-        ...
+        raise NotImplementedError
 
     async def get_by_email(self, email: str) -> UP | None:
         """Get a single user by email."""
-        ...
+        raise NotImplementedError
 
     async def create(self, create_dict: dict[str, t.Any]) -> UP:
         """Create a user."""
-        ...
+        raise NotImplementedError
 
     async def update(self, user: UP, update_dict: dict[str, t.Any]) -> UP:
         """Update a user."""
-        ...
+        raise NotImplementedError
 
     async def delete(self, user: UP) -> None:
         """Delete a user."""
-        ...
+        raise NotImplementedError
 
     async def record_in_sighin_history(self, user_id: ID, event: SIHE):
         """Record in users sigh-in history"""
-        ...
+        raise NotImplementedError
 
     async def get_sign_in_history(
         self, user_id: ID, pagination_params: PaginateQueryParams
     ) -> t.Iterable[SIHE]:
         """Get recorded events in users sigh-in history"""
-        ...
+        raise NotImplementedError
 
 
 class BaseRoleDatabase(t.Generic[RP, ID]):

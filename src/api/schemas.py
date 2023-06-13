@@ -31,31 +31,31 @@ class BaseUser(Generic[UserID], CreateUpdateUserDictModel):
     id: UserID
     username: str
     email: EmailStr
-    first_name: str
-    last_name: str
+    first_name: str | None = None
+    last_name: str | None = None
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False
 
 
 class BaseUserCreate(CreateUpdateUserDictModel):
-    username: str
     password: str
     email: str
-    first_name: str
-    last_name: str
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
     is_active: bool | None = True
     is_superuser: bool | None = False
     is_admin: bool = False
 
 
 class BaseUserUpdate(CreateUpdateUserDictModel):
-    password: str | None
-    email: EmailStr | None
-    first_name: str | None
-    last_name: str | None
-    is_active: bool | None
-    is_superuser: bool | None
+    password: str | None = None
+    email: EmailStr | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    is_active: bool | None = None
+    is_superuser: bool | None = None
     is_admin: bool = False
 
 

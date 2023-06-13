@@ -178,3 +178,4 @@ pyrightconfig.json
 !.envs/.local
 !.envs/.*.example
 projects/
+.vscode/launch.json

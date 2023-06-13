@@ -6,8 +6,8 @@ from core.config import settings
 
 app = FastAPI(
     title=settings.project_name,
-    docs_url="/api/openapi",
-    openapi_url="/api/openapi.json",
+    docs_url="/api/v1/openapi",
+    openapi_url="/api/v1/openapi.json",
     default_response_class=ORJSONResponse,
 )
 

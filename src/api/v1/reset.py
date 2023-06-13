@@ -38,6 +38,7 @@ def get_reset_password_router(
 ) -> APIRouter:
     """Generate a router with the reset pw routes."""
     router = APIRouter()
+    router.prefix = "/api/v1"
 
     @router.post(
         "/forgot-password",

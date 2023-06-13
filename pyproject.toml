@@ -4,8 +4,9 @@ skip-string-normalization = true
 skip-magic-trailing-comma = true
 
 [tool.pyright]
-venv = 'venv'
+venv = '.venv'
 venvPath = '.'
+
 
 [tool.alembic]
 script_location = "alembic"
@@ -48,3 +49,6 @@ formatter = "generic"
 [tool.alembic.logging.formatter_generic]
 format = "%(levelname)-5.5s [%(name)s] %(message)s"
 datefmt = "%H:%M:%S"
+
+[tool.pytest.ini_options]
+asyncio_mode = 'auto'

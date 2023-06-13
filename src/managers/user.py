@@ -66,7 +66,11 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
         existing_user = await self.user_db.get_by_email(user_create.email)
         if existing_user:
             raise exceptions.UserAlreadyExists()
-        existing_user = await self.user_db.get_by_username(user_create.username)
+        existing_user = (
+            await self.user_db.get_by_username(user_create.username)
+            if user_create.username
+            else None
+        )
         if existing_user:
             raise exceptions.UserAlreadyExists()
 
@@ -242,16 +246,6 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
     ) -> None:
         ...
 
-    async def on_after_request_verify(
-        self, user: models_protocol.UP, token: str, request: Request | None = None
-    ) -> None:
-        ...
-
-    async def on_after_verify(
-        self, user: models_protocol.UP, request: Request | None = None
-    ) -> None:
-        ...
-
     async def on_after_forgot_password(
         self, user: models_protocol.UP, token: str, request: Request | None = None
     ) -> None:
@@ -351,11 +345,6 @@ class UserManager(
         self, user: models.UserRead, token: str, request: Request | None = None
     ):
         print(f"User {user.id} has forgot their password. Reset token: {token}")
-
-    async def on_after_request_verify(
-        self, user: models.UserRead, token: str, request: Request | None = None
-    ):
-        print(f"Verification requested for user {user.id}. Verification token: {token}")
 
 
 async def get_user_manager(user_db: SAUserDB = Depends(getters.get_user_db)):
