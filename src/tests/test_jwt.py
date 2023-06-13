@@ -1,6 +1,6 @@
 import pytest
 
-from fastapi_users.jwt import SecretType, decode_jwt, generate_jwt
+from authentication.strategy.jwt import SecretType, decode_jwt, generate_jwt
 
 
 @pytest.mark.jwt

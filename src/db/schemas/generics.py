@@ -37,11 +37,11 @@ class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
     """Base User model."""
 
     id: UserID
-    username: str
+    username: str | None
     email: EmailString
     hashed_password: str
-    first_name: str
-    last_name: str
+    first_name: str | None
+    last_name: str | None
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False
@@ -51,10 +51,10 @@ class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
 
 
 class BaseUserCreate(Generic[EmailString], CreateUpdateUserDictModel):
-    username: str
+    username: str | None
     email: EmailString
-    first_name: str
-    last_name: str
+    first_name: str | None
+    last_name: str | None
     password: str
     is_active: bool = True
     is_superuser: bool = False

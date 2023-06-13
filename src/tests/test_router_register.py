@@ -4,8 +4,9 @@ import httpx
 import pytest
 from fastapi import FastAPI, status
 
-from fastapi_users.router import ErrorCode, get_register_router
-from tests.conftest import User, UserCreate
+from api import schemas
+from api.auth_users import get_register_router
+from api.v1.common import ErrorCode
 
 
 @pytest.fixture
@@ -13,11 +14,7 @@ from tests.conftest import User, UserCreate
 async def test_app_client(
     get_user_manager, get_test_client
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
-    register_router = get_register_router(
-        get_user_manager,
-        User,
-        UserCreate,
-    )
+    register_router = get_register_router(get_user_manager, schemas.U, schemas.UC)
 
     app = FastAPI()
     app.include_router(register_router)
@@ -107,11 +104,5 @@ class TestRegister:
 @pytest.mark.asyncio
 async def test_register_namespace(get_user_manager):
     app = FastAPI()
-    app.include_router(
-        get_register_router(
-            get_user_manager,
-            User,
-            UserCreate,
-        )
-    )
+    app.include_router(get_register_router(get_user_manager, schemas.U, schemas.UC))
     assert app.url_path_for("register:register") == "/register"

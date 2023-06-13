@@ -4,8 +4,9 @@ import httpx
 import pytest
 from fastapi import FastAPI, status
 
-from fastapi_users.authentication import Authenticator
-from fastapi_users.router import ErrorCode, get_auth_router
+from api.auth_users import get_auth_router
+from api.v1.common import ErrorCode
+from authentication import Authenticator
 from tests.conftest import UserModel, get_mock_authentication
 
 
@@ -19,13 +20,17 @@ def app_factory(get_user_manager, mock_authentication):
 
         mock_auth_router = get_auth_router(
             mock_authentication,
+            mock_authentication,
             get_user_manager,
+            authenticator,
             authenticator,
             requires_verification=requires_verification,
         )
         mock_bis_auth_router = get_auth_router(
             mock_authentication_bis,
+            mock_authentication_bis,
             get_user_manager,
+            authenticator,
             authenticator,
             requires_verification=requires_verification,
         )
@@ -58,10 +63,7 @@ async def test_app_client(
 @pytest.mark.asyncio
 class TestLogin:
     async def test_empty_body(
-        self,
-        path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
-        user_manager,
+        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         response = await client.post(path, data={})
@@ -69,10 +71,7 @@ class TestLogin:
         assert user_manager.on_after_login.called is False
 
     async def test_missing_username(
-        self,
-        path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
-        user_manager,
+        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"password": "guinevere"}
@@ -81,10 +80,7 @@ class TestLogin:
         assert user_manager.on_after_login.called is False
 
     async def test_missing_password(
-        self,
-        path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
-        user_manager,
+        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"username": "king.arthur@camelot.bt"}
@@ -93,10 +89,7 @@ class TestLogin:
         assert user_manager.on_after_login.called is False
 
     async def test_not_existing_user(
-        self,
-        path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
-        user_manager,
+        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"username": "lancelot@camelot.bt", "password": "guinevere"}
@@ -107,10 +100,7 @@ class TestLogin:
         assert user_manager.on_after_login.called is False
 
     async def test_wrong_password(
-        self,
-        path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
-        user_manager,
+        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"username": "king.arthur@camelot.bt", "password": "percival"}
@@ -170,10 +160,7 @@ class TestLogin:
         assert all(x is not None for x in args)
 
     async def test_inactive_user(
-        self,
-        path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
-        user_manager,
+        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"username": "percival@camelot.bt", "password": "angharad"}
@@ -189,9 +176,7 @@ class TestLogin:
 @pytest.mark.asyncio
 class TestLogout:
     async def test_missing_token(
-        self,
-        path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
+        self, path, test_app_client: Tuple[httpx.AsyncClient, bool]
     ):
         client, _ = test_app_client
         response = await client.post(path)

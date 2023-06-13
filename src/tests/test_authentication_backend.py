@@ -3,15 +3,11 @@ from typing import Callable, Generic, Optional, Type, cast
 import pytest
 from fastapi import Response
 
-from fastapi_users import models
-from fastapi_users.authentication import (
-    AuthenticationBackend,
-    BearerTransport,
-    Strategy,
-)
-from fastapi_users.authentication.strategy import StrategyDestroyNotSupportedError
-from fastapi_users.authentication.transport.base import Transport
-from fastapi_users.manager import BaseUserManager
+from authentication import AuthenticationBackend, BearerTransport, Strategy
+from authentication.strategy import StrategyDestroyNotSupportedError
+from authentication.transport.base import Transport
+from db import models_protocol as models
+from managers.user import BaseUserManager
 from tests.conftest import MockStrategy, MockTransport, UserModel
 
 
@@ -19,9 +15,11 @@ class MockTransportLogoutNotSupported(BearerTransport):
     pass
 
 
-class MockStrategyDestroyNotSupported(Strategy, Generic[models.UP]):
+class MockStrategyDestroyNotSupported(Strategy, Generic[models.UP, models.SIHE]):
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[models.UP, models.SIHE],
     ) -> Optional[models.UP]:
         return None
 
@@ -35,7 +33,7 @@ class MockStrategyDestroyNotSupported(Strategy, Generic[models.UP]):
 @pytest.fixture(params=[MockTransport, MockTransportLogoutNotSupported])
 def transport(request) -> Transport:
     transport_class: Type[BearerTransport] = request.param
-    return transport_class(tokenUrl="/login")
+    return transport_class(token_url="/login")
 
 
 @pytest.fixture(params=[MockStrategy, MockStrategyDestroyNotSupported])

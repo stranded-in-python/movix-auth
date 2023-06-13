@@ -4,13 +4,14 @@ import httpx
 import pytest
 from fastapi import FastAPI, status
 
-from fastapi_users.exceptions import (
+from api.auth_users import get_reset_password_router
+from api.v1.common import ErrorCode
+from core.exceptions import (
     InvalidPasswordException,
     InvalidResetPasswordToken,
     UserInactive,
     UserNotExists,
 )
-from fastapi_users.router import ErrorCode, get_reset_password_router
 from tests.conftest import AsyncMethodMocker, UserManagerMock
 
 
@@ -71,9 +72,7 @@ class TestForgotPassword:
 @pytest.mark.asyncio
 class TestResetPassword:
     async def test_empty_body(
-        self,
-        test_app_client: httpx.AsyncClient,
-        user_manager: UserManagerMock,
+        self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
         response = await test_app_client.post("/reset-password", json={})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -88,9 +87,7 @@ class TestResetPassword:
         assert user_manager.reset_password.called is False
 
     async def test_missing_password(
-        self,
-        test_app_client: httpx.AsyncClient,
-        user_manager: UserManagerMock,
+        self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
         json = {"token": "foo"}
         response = await test_app_client.post("/reset-password", json=json)
@@ -98,9 +95,7 @@ class TestResetPassword:
         assert user_manager.reset_password.called is False
 
     async def test_invalid_token(
-        self,
-        test_app_client: httpx.AsyncClient,
-        user_manager: UserManagerMock,
+        self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
         user_manager.reset_password.side_effect = InvalidResetPasswordToken()
         json = {"token": "foo", "password": "guinevere"}
@@ -110,9 +105,7 @@ class TestResetPassword:
         assert data["detail"] == ErrorCode.RESET_PASSWORD_BAD_TOKEN
 
     async def test_inactive_user(
-        self,
-        test_app_client: httpx.AsyncClient,
-        user_manager: UserManagerMock,
+        self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
         user_manager.reset_password.side_effect = UserInactive()
         json = {"token": "foo", "password": "guinevere"}
@@ -122,9 +115,7 @@ class TestResetPassword:
         assert data["detail"] == ErrorCode.RESET_PASSWORD_BAD_TOKEN
 
     async def test_invalid_password(
-        self,
-        test_app_client: httpx.AsyncClient,
-        user_manager: UserManagerMock,
+        self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
     ):
         user_manager.reset_password.side_effect = InvalidPasswordException(
             reason="Invalid"

@@ -2,16 +2,13 @@ import pytest
 from fastapi import status
 from fastapi.responses import JSONResponse
 
-from fastapi_users.authentication.transport import (
-    BearerTransport,
-    TransportLogoutNotSupportedError,
-)
-from fastapi_users.authentication.transport.bearer import BearerResponse
+from authentication.transport import BearerTransport, TransportLogoutNotSupportedError
+from authentication.transport.bearer import BearerResponse
 
 
 @pytest.fixture()
 def bearer_transport() -> BearerTransport:
-    return BearerTransport(tokenUrl="/login")
+    return BearerTransport(token_url="/login")
 
 
 @pytest.mark.authentication

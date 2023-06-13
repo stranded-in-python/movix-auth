@@ -3,7 +3,7 @@ import re
 import pytest
 from fastapi import Response, status
 
-from fastapi_users.authentication.transport import CookieTransport
+from authentication.transport import CookieTransport
 
 COOKIE_MAX_AGE = 3600
 COOKIE_NAME = "COOKIE_NAME"

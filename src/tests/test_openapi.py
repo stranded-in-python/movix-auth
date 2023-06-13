@@ -2,28 +2,27 @@ import httpx
 import pytest
 from fastapi import FastAPI, status
 
-from fastapi_users.fastapi_users import FastAPIUsers
-from tests.conftest import IDType, User, UserCreate, UserModel, UserUpdate
+from api import schemas
+from api.container import APIUsers as FastAPIUsers
+from tests.conftest import SignInModel, UserModel
 
 
 @pytest.fixture
 def fastapi_users(get_user_manager, mock_authentication) -> FastAPIUsers:
-    return FastAPIUsers[UserModel, IDType](get_user_manager, [mock_authentication])
+    return FastAPIUsers[UserModel, SignInModel](
+        get_user_manager, [mock_authentication], [mock_authentication]
+    )
 
 
 @pytest.fixture
-def test_app(
-    fastapi_users: FastAPIUsers, secret, mock_authentication, oauth_client
-) -> FastAPI:
+def test_app(fastapi_users: FastAPIUsers, mock_authentication) -> FastAPI:
     app = FastAPI()
-    app.include_router(fastapi_users.get_register_router(User, UserCreate))
+    app.include_router(fastapi_users.get_register_router(schemas.U, schemas.UC))
     app.include_router(fastapi_users.get_reset_password_router())
-    app.include_router(fastapi_users.get_auth_router(mock_authentication))
     app.include_router(
-        fastapi_users.get_oauth_router(oauth_client, mock_authentication, secret)
+        fastapi_users.get_auth_router(mock_authentication, mock_authentication)
     )
-    app.include_router(fastapi_users.get_users_router(User, UserUpdate))
-    app.include_router(fastapi_users.get_verify_router(User))
+    app.include_router(fastapi_users.get_users_router(schemas.U, schemas.UU))
 
     return app
 
@@ -90,23 +89,3 @@ class TestRegister:
     def test_register_status_codes(self, openapi_dict):
         route = openapi_dict["paths"]["/register"]["post"]
         assert list(route["responses"].keys()) == ["201", "400", "422"]
-
-
-class TestVerify:
-    def test_verify_status_codes(self, openapi_dict):
-        route = openapi_dict["paths"]["/verify"]["post"]
-        assert list(route["responses"].keys()) == ["200", "400", "422"]
-
-    def test_request_verify_status_codes(self, openapi_dict):
-        route = openapi_dict["paths"]["/request-verify-token"]["post"]
-        assert list(route["responses"].keys()) == ["202", "422"]
-
-
-class TestOAuth2:
-    def test_oauth_authorize_status_codes(self, openapi_dict):
-        route = openapi_dict["paths"]["/authorize"]["get"]
-        assert list(route["responses"].keys()) == ["200", "422"]
-
-    def test_oauth_callback_status_codes(self, openapi_dict):
-        route = openapi_dict["paths"]["/callback"]["get"]
-        assert list(route["responses"].keys()) == ["200", "400", "422"]

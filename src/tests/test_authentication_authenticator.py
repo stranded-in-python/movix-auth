@@ -1,18 +1,20 @@
-from typing import AsyncGenerator, Generic, List, Optional, Sequence
+from typing import AsyncGenerator, List, Optional, Sequence
 
 import httpx
 import pytest
-from fastapi import Depends, FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.security.base import SecurityBase
 
-from fastapi_users import models
-from fastapi_users.authentication import AuthenticationBackend, Authenticator
-from fastapi_users.authentication.authenticator import DuplicateBackendNamesError
-from fastapi_users.authentication.strategy import Strategy
-from fastapi_users.authentication.transport import Transport
-from fastapi_users.manager import BaseUserManager
-from fastapi_users.types import DependencyCallable
-from tests.conftest import User, UserModel
+from api.schemas import U as User
+from authentication import AuthenticationBackend, Authenticator
+from authentication.authenticator import DuplicateBackendNamesError
+from authentication.strategy import Strategy
+from authentication.transport import Transport
+from core.dependency_types import DependencyCallable
+from db import models_protocol as models
+from managers.user import BaseUserManager
+from openapi import OpenAPIResponseType
+from tests.conftest import SignInModel, UserModel
 
 
 class MockSecurityScheme(SecurityBase):
@@ -26,22 +28,64 @@ class MockTransport(Transport):
     def __init__(self):
         self.scheme = MockSecurityScheme()
 
+    async def get_login_response(self, token: str) -> Response:
+        ...  # pragma: no cover
 
-class NoneStrategy(Strategy):
+    async def get_logout_response(self) -> Response:
+        ...  # pragma: no cover
+
+    @staticmethod
+    def get_openapi_login_responses_success() -> OpenAPIResponseType:
+        """Return a dictionary to use for the openapi responses route parameter."""
+        ...  # pragma: no cover
+
+    @staticmethod
+    def get_openapi_logout_responses_success() -> OpenAPIResponseType:
+        """Return a dictionary to use for the openapi responses route parameter."""
+        ...  # pragma: no cover
+
+    def get_scheme(self):
+        return self.scheme
+
+
+class MockStrategy(Strategy[models.UP, models.SIHE]):
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
-    ) -> Optional[models.UP]:
+        self, token: str | None, user_manager: BaseUserManager[models.UP, models.SIHE]
+    ) -> models.UP | None:
+        ...
+
+    async def write_token(self, user: models.UP) -> str:  # pyright: ignore
+        ...
+
+    async def destroy_token(self, token: str, user: models.UP) -> None:
+        ...
+
+
+class NoneStrategy(MockStrategy[UserModel, SignInModel]):
+    async def read_token(
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[UserModel, SignInModel],
+    ) -> Optional[UserModel]:
         return None
 
 
-class UserStrategy(Strategy, Generic[models.UP]):
-    def __init__(self, user: models.UP):
+class UserStrategy(MockStrategy[UserModel, SignInModel]):
+    def __init__(self, user: UserModel):
         self.user = user
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
-    ) -> Optional[models.UP]:
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[UserModel, SignInModel],
+    ) -> UserModel | None:
         return self.user
+
+    async def write_token(self, user: UserModel) -> str:
+        ...
+
+    async def destroy_token(self, token: str, user: UserModel) -> None:
+        ...
 
 
 @pytest.fixture
@@ -92,7 +136,7 @@ def get_test_auth_client(get_user_manager, get_test_client):
                 authenticator.current_user(
                     active=True, get_enabled_backends=get_enabled_backends
                 )
-            ),
+            )
         ):
             return user
 
@@ -104,7 +148,7 @@ def get_test_auth_client(get_user_manager, get_test_client):
                     superuser=True,
                     get_enabled_backends=get_enabled_backends,
                 )
-            ),
+            )
         ):
             return user
 

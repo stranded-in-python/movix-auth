@@ -1,11 +1,8 @@
 import pytest
 
-from fastapi_users.authentication.strategy import (
-    JWTStrategy,
-    StrategyDestroyNotSupportedError,
-)
-from fastapi_users.jwt import SecretType, decode_jwt, generate_jwt
-from tests.conftest import IDType, UserModel
+from authentication.strategy import JWTStrategy, StrategyDestroyNotSupportedError
+from authentication.strategy.jwt import SecretType, decode_jwt, generate_jwt
+from tests.conftest import IDType, SignInModel, UserModel
 
 LIFETIME = 3600
 
@@ -65,17 +62,23 @@ def jwt_strategy(request, secret: SecretType):
         return JWTStrategy(secret, LIFETIME)
     elif request.param == "RS256":
         return JWTStrategy(
-            RSA_PRIVATE_KEY, LIFETIME, algorithm="RS256", public_key=RSA_PUBLIC_KEY
+            SecretType(RSA_PRIVATE_KEY),
+            LIFETIME,
+            algorithm="RS256",
+            public_key=SecretType(RSA_PUBLIC_KEY),
         )
     elif request.param == "ES256":
         return JWTStrategy(
-            ECC_PRIVATE_KEY, LIFETIME, algorithm="ES256", public_key=ECC_PUBLIC_KEY
+            SecretType(ECC_PRIVATE_KEY),
+            LIFETIME,
+            algorithm="ES256",
+            public_key=SecretType(ECC_PUBLIC_KEY),
         )
     raise ValueError(f"Unrecognized algorithm: {request.param}")
 
 
 @pytest.fixture
-def token(jwt_strategy: JWTStrategy[UserModel, IDType]):
+def token(jwt_strategy: JWTStrategy[UserModel, SignInModel]):
     def _token(user_id=None, lifetime=LIFETIME):
         data = {"aud": "fastapi-users:auth"}
         if user_id is not None:
@@ -92,35 +95,35 @@ def token(jwt_strategy: JWTStrategy[UserModel, IDType]):
 class TestReadToken:
     @pytest.mark.asyncio
     async def test_missing_token(
-        self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager
+        self, jwt_strategy: JWTStrategy[UserModel, SignInModel], user_manager
     ):
         authenticated_user = await jwt_strategy.read_token(None, user_manager)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_invalid_token(
-        self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager
+        self, jwt_strategy: JWTStrategy[UserModel, SignInModel], user_manager
     ):
         authenticated_user = await jwt_strategy.read_token("foo", user_manager)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_valid_token_missing_user_payload(
-        self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token
+        self, jwt_strategy: JWTStrategy[UserModel, SignInModel], user_manager, token
     ):
         authenticated_user = await jwt_strategy.read_token(token(), user_manager)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_valid_token_invalid_uuid(
-        self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token
+        self, jwt_strategy: JWTStrategy[UserModel, SignInModel], user_manager, token
     ):
         authenticated_user = await jwt_strategy.read_token(token("foo"), user_manager)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_valid_token_not_existing_user(
-        self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token
+        self, jwt_strategy: JWTStrategy[UserModel, SignInModel], user_manager, token
     ):
         authenticated_user = await jwt_strategy.read_token(
             token("d35d213e-f3d8-4f08-954a-7e0d1bea286f"), user_manager
@@ -129,7 +132,11 @@ class TestReadToken:
 
     @pytest.mark.asyncio
     async def test_valid_token(
-        self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token, user
+        self,
+        jwt_strategy: JWTStrategy[UserModel, SignInModel],
+        user_manager,
+        token,
+        user,
     ):
         authenticated_user = await jwt_strategy.read_token(token(user.id), user_manager)
         assert authenticated_user is not None
@@ -139,7 +146,7 @@ class TestReadToken:
 @pytest.mark.parametrize("jwt_strategy", ["HS256", "RS256", "ES256"], indirect=True)
 @pytest.mark.authentication
 @pytest.mark.asyncio
-async def test_write_token(jwt_strategy: JWTStrategy[UserModel, IDType], user):
+async def test_write_token(jwt_strategy: JWTStrategy[UserModel, SignInModel], user):
     token = await jwt_strategy.write_token(user)
 
     decoded = decode_jwt(
@@ -154,6 +161,6 @@ async def test_write_token(jwt_strategy: JWTStrategy[UserModel, IDType], user):
 @pytest.mark.parametrize("jwt_strategy", ["HS256", "RS256", "ES256"], indirect=True)
 @pytest.mark.authentication
 @pytest.mark.asyncio
-async def test_destroy_token(jwt_strategy: JWTStrategy[UserModel, IDType], user):
+async def test_destroy_token(jwt_strategy: JWTStrategy[UserModel, SignInModel], user):
     with pytest.raises(StrategyDestroyNotSupportedError):
         await jwt_strategy.destroy_token("TOKEN", user)

@@ -44,10 +44,10 @@ class UserProtocol(Protocol[ID, EmailStr]):
     """User protocol that ORM model should follow."""
 
     id: ID
-    username: str
+    username: str | None
     email: EmailStr
-    first_name: str
-    last_name: str
+    first_name: str | None
+    last_name: str | None
     hashed_password: str
     is_active: bool
     is_superuser: bool

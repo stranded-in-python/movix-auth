@@ -4,32 +4,26 @@ import httpx
 import pytest
 from fastapi import Depends, FastAPI, status
 
-from fastapi_users import FastAPIUsers
-from tests.conftest import IDType, User, UserCreate, UserModel, UserUpdate
+from api import schemas
+from api.container import APIUsers as FastAPIUsers
+from db.schemas import models
+from tests.conftest import IDType, SignInModel, UserModel
 
 
 @pytest.fixture
 @pytest.mark.asyncio
 async def test_app_client(
-    secret,
-    get_user_manager,
-    mock_authentication,
-    oauth_client,
-    get_test_client,
+    secret, get_user_manager, mock_authentication, get_test_client
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
-    fastapi_users = FastAPIUsers[UserModel, IDType](
-        get_user_manager, [mock_authentication]
+    fastapi_users = FastAPIUsers[models.U, models.SIHE](
+        get_user_manager, [mock_authentication], [mock_authentication]
     )
 
     app = FastAPI()
-    app.include_router(fastapi_users.get_register_router(User, UserCreate))
+    app.include_router(fastapi_users.get_register_router(schemas.U, schemas.UC))
     app.include_router(fastapi_users.get_reset_password_router())
-    app.include_router(fastapi_users.get_auth_router(mock_authentication))
     app.include_router(
-        fastapi_users.get_oauth_router(oauth_client, mock_authentication, secret)
-    )
-    app.include_router(
-        fastapi_users.get_oauth_associate_router(oauth_client, User, secret)
+        fastapi_users.get_auth_router(mock_authentication, mock_authentication)
     )
 
     @app.delete("/users/me")
@@ -37,27 +31,20 @@ async def test_app_client(
         return None
 
     app.include_router(
-        fastapi_users.get_users_router(User, UserUpdate), prefix="/users"
+        fastapi_users.get_users_router(schemas.U, schemas.UU), prefix="/users"
     )
-    app.include_router(fastapi_users.get_verify_router(User))
 
-    @app.get("/current-user", response_model=User)
+    @app.get("/current-user", response_model=schemas.U)
     def current_user(user: UserModel = Depends(fastapi_users.current_user())):
         return user
 
-    @app.get("/current-active-user", response_model=User)
+    @app.get("/current-active-user", response_model=schemas.U)
     def current_active_user(
         user: UserModel = Depends(fastapi_users.current_user(active=True)),
     ):
         return user
 
-    @app.get("/current-verified-user", response_model=User)
-    def current_verified_user(
-        user: UserModel = Depends(fastapi_users.current_user(verified=True)),
-    ):
-        return user
-
-    @app.get("/current-superuser", response_model=User)
+    @app.get("/current-superuser", response_model=schemas.U)
     def current_superuser(
         user: UserModel = Depends(
             fastapi_users.current_user(active=True, superuser=True)
@@ -65,53 +52,27 @@ async def test_app_client(
     ):
         return user
 
-    @app.get("/current-verified-superuser", response_model=User)
-    def current_verified_superuser(
-        user: UserModel = Depends(
-            fastapi_users.current_user(active=True, verified=True, superuser=True)
-        ),
-    ):
-        return user
-
     @app.get("/optional-current-user")
     def optional_current_user(
         user: Optional[UserModel] = Depends(fastapi_users.current_user(optional=True)),
     ):
-        return User.from_orm(user) if user else None
+        return schemas.U.from_orm(user) if user else None
 
     @app.get("/optional-current-active-user")
     def optional_current_active_user(
         user: Optional[UserModel] = Depends(
             fastapi_users.current_user(optional=True, active=True)
-        ),
+        )
     ):
-        return User.from_orm(user) if user else None
-
-    @app.get("/optional-current-verified-user")
-    def optional_current_verified_user(
-        user: Optional[UserModel] = Depends(
-            fastapi_users.current_user(optional=True, verified=True)
-        ),
-    ):
-        return User.from_orm(user) if user else None
+        return schemas.U.from_orm(user) if user else None
 
     @app.get("/optional-current-superuser")
     def optional_current_superuser(
         user: Optional[UserModel] = Depends(
             fastapi_users.current_user(optional=True, active=True, superuser=True)
-        ),
+        )
     ):
-        return User.from_orm(user) if user else None
-
-    @app.get("/optional-current-verified-superuser")
-    def optional_current_verified_superuser(
-        user: Optional[UserModel] = Depends(
-            fastapi_users.current_user(
-                optional=True, active=True, verified=True, superuser=True
-            )
-        ),
-    ):
-        return User.from_orm(user) if user else None
+        return schemas.U.from_orm(user) if user else None
 
     async for client in get_test_client(app):
         yield client
@@ -205,38 +166,6 @@ class TestGetCurrentActiveUser:
 
 @pytest.mark.fastapi_users
 @pytest.mark.asyncio
-class TestGetCurrentVerifiedUser:
-    async def test_missing_token(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.get("/current-verified-user")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    async def test_invalid_token(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.get(
-            "/current-verified-user", headers={"Authorization": "Bearer foo"}
-        )
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    async def test_valid_token_unverified_user(
-        self, test_app_client: httpx.AsyncClient, user: UserModel
-    ):
-        response = await test_app_client.get(
-            "/current-verified-user",
-            headers={"Authorization": f"Bearer {user.id}"},
-        )
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    async def test_valid_token_verified_user(
-        self, test_app_client: httpx.AsyncClient, verified_user: UserModel
-    ):
-        response = await test_app_client.get(
-            "/current-verified-user",
-            headers={"Authorization": f"Bearer {verified_user.id}"},
-        )
-        assert response.status_code == status.HTTP_200_OK
-
-
-@pytest.mark.fastapi_users
-@pytest.mark.asyncio
 class TestGetCurrentSuperuser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.get("/current-superuser")
@@ -267,56 +196,6 @@ class TestGetCurrentSuperuser:
 
 @pytest.mark.fastapi_users
 @pytest.mark.asyncio
-class TestGetCurrentVerifiedSuperuser:
-    async def test_missing_token(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.get("/current-verified-superuser")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    async def test_invalid_token(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.get(
-            "/current-verified-superuser", headers={"Authorization": "Bearer foo"}
-        )
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    async def test_valid_token_regular_user(
-        self, test_app_client: httpx.AsyncClient, user: UserModel
-    ):
-        response = await test_app_client.get(
-            "/current-verified-superuser",
-            headers={"Authorization": f"Bearer {user.id}"},
-        )
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    async def test_valid_token_verified_user(
-        self, test_app_client: httpx.AsyncClient, verified_user: UserModel
-    ):
-        response = await test_app_client.get(
-            "/current-verified-superuser",
-            headers={"Authorization": f"Bearer {verified_user.id}"},
-        )
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    async def test_valid_token_superuser(
-        self, test_app_client: httpx.AsyncClient, superuser: UserModel
-    ):
-        response = await test_app_client.get(
-            "/current-verified-superuser",
-            headers={"Authorization": f"Bearer {superuser.id}"},
-        )
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    async def test_valid_token_verified_superuser(
-        self, test_app_client: httpx.AsyncClient, verified_superuser: UserModel
-    ):
-        response = await test_app_client.get(
-            "/current-verified-superuser",
-            headers={"Authorization": f"Bearer {verified_superuser.id}"},
-        )
-        assert response.status_code == status.HTTP_200_OK
-
-
-@pytest.mark.fastapi_users
-@pytest.mark.asyncio
 class TestOptionalGetCurrentUser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.get("/optional-current-user")
@@ -335,42 +214,6 @@ class TestOptionalGetCurrentUser:
     ):
         response = await test_app_client.get(
             "/optional-current-user", headers={"Authorization": f"Bearer {user.id}"}
-        )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is not None
-
-
-@pytest.mark.fastapi_users
-@pytest.mark.asyncio
-class TestOptionalGetCurrentVerifiedUser:
-    async def test_missing_token(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.get("/optional-current-verified-user")
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
-
-    async def test_invalid_token(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.get(
-            "/optional-current-verified-user", headers={"Authorization": "Bearer foo"}
-        )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
-
-    async def test_valid_token_unverified_user(
-        self, test_app_client: httpx.AsyncClient, user: UserModel
-    ):
-        response = await test_app_client.get(
-            "/optional-current-verified-user",
-            headers={"Authorization": f"Bearer {user.id}"},
-        )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
-
-    async def test_valid_token_verified_user(
-        self, test_app_client: httpx.AsyncClient, verified_user: UserModel
-    ):
-        response = await test_app_client.get(
-            "/optional-current-verified-user",
-            headers={"Authorization": f"Bearer {verified_user.id}"},
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json() is not None
@@ -443,63 +286,6 @@ class TestOptionalGetCurrentSuperuser:
         response = await test_app_client.get(
             "/optional-current-superuser",
             headers={"Authorization": f"Bearer {superuser.id}"},
-        )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is not None
-
-
-@pytest.mark.fastapi_users
-@pytest.mark.asyncio
-class TestOptionalGetCurrentVerifiedSuperuser:
-    async def test_missing_token(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.get("/optional-current-verified-superuser")
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
-
-    async def test_invalid_token(self, test_app_client: httpx.AsyncClient):
-        response = await test_app_client.get(
-            "/optional-current-verified-superuser",
-            headers={"Authorization": "Bearer foo"},
-        )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
-
-    async def test_valid_token_regular_user(
-        self, test_app_client: httpx.AsyncClient, user: UserModel
-    ):
-        response = await test_app_client.get(
-            "/optional-current-verified-superuser",
-            headers={"Authorization": f"Bearer {user.id}"},
-        )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
-
-    async def test_valid_token_verified_user(
-        self, test_app_client: httpx.AsyncClient, verified_user: UserModel
-    ):
-        response = await test_app_client.get(
-            "/optional-current-verified-superuser",
-            headers={"Authorization": f"Bearer {verified_user.id}"},
-        )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
-
-    async def test_valid_token_superuser(
-        self, test_app_client: httpx.AsyncClient, superuser: UserModel
-    ):
-        response = await test_app_client.get(
-            "/optional-current-verified-superuser",
-            headers={"Authorization": f"Bearer {superuser.id}"},
-        )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() is None
-
-    async def test_valid_token_verified_superuser(
-        self, test_app_client: httpx.AsyncClient, verified_superuser: UserModel
-    ):
-        response = await test_app_client.get(
-            "/optional-current-verified-superuser",
-            headers={"Authorization": f"Bearer {verified_superuser.id}"},
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json() is not None
