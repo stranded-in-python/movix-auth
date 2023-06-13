@@ -54,3 +54,6 @@ formatter = "generic"
 [tool.alembic.logging.formatter_generic]
 format = "%(levelname)-5.5s [%(name)s] %(message)s"
 datefmt = "%H:%M:%S"
+
+[tool.pytest.ini_options]
+asyncio_mode = 'auto'

@@ -2,16 +2,7 @@ import asyncio
 import dataclasses
 import datetime
 import uuid
-from typing import (
-    Any,
-    AsyncGenerator,
-    Callable,
-    Dict,
-    Generic,
-    Optional,
-    Type,
-    Union,
-)
+from typing import Any, AsyncGenerator, Callable, Dict, Generic, Optional, Type, Union
 from unittest.mock import MagicMock
 
 import httpx
@@ -50,7 +41,7 @@ class UserModel:
     first_name: str | None
     last_name: str | None
     hashed_password: str
-    id: IDType = uuid.uuid4()
+    id: IDType = dataclasses.field(default_factory=uuid.uuid4)
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False

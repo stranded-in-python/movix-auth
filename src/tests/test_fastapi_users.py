@@ -20,7 +20,9 @@ async def test_app_client(
     )
 
     app = FastAPI()
-    app.include_router(fastapi_users.get_register_router(schemas.UserRead, schemas.UserCreate))
+    app.include_router(
+        fastapi_users.get_register_router(schemas.UserRead, schemas.UserCreate)
+    )
     app.include_router(fastapi_users.get_reset_password_router())
     app.include_router(
         fastapi_users.get_auth_router(mock_authentication, refresh_mock_authentication)
