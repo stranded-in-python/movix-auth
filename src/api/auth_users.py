@@ -46,7 +46,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         self.auth_current_user = self.refresh_authenticator.current_user
 
     def get_register_router(
-        self, user_schema: Type[schemas.U], user_create_schema: Type[schemas.UC]
+        self, user_schema: type[schemas.U], user_create_schema: type[schemas.UC]
     ) -> APIRouter:
         """
         Return a router with a register route.
@@ -88,9 +88,9 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     def get_users_me_router(
         self,
-        user_schema: Type[schemas.UserRead],
-        user_update_schema: Type[schemas.UserUpdate],
-        event_schema: Type[schemas.EventRead],
+        user_schema: type[schemas.UserRead],
+        user_update_schema: type[schemas.UserUpdate],
+        event_schema: type[schemas.EventRead],
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
@@ -109,8 +109,8 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     def get_users_router(
         self,
-        user_schema: Type[schemas.UserRead],
-        user_update_schema: Type[schemas.UserUpdate],
+        user_schema: type[schemas.UserRead],
+        user_update_schema: type[schemas.UserUpdate],
     ) -> APIRouter:
         """
         Return a router with routes to manage users.

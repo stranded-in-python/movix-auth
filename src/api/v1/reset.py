@@ -1,14 +1,14 @@
+import logging
+
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import EmailStr
 
 import core.exceptions as exceptions
 from api.v1.common import ErrorCode, ErrorModel
+from core.logger import logger
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
-
-import logging
-from core.logger import logger
 
 logger()
 
@@ -68,7 +68,7 @@ def get_reset_password_router(
         except exceptions.UserInactive:
             logging.exception("UserInactive:%s" % email)
             pass
-        
+
         logging.info("success:%s" % email)
         return None
 
@@ -104,7 +104,7 @@ def get_reset_password_router(
                     "reason": e.reason,
                 },
             )
-        
+
         logging.info("success:%s" % token)
 
     return router

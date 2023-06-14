@@ -57,6 +57,7 @@ owIDAQAB
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
 def jwt_strategy(request, secret: SecretType):
     if request.param == "HS256":

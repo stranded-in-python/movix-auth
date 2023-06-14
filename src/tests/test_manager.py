@@ -22,6 +22,7 @@ from tests.conftest import SignInModel, UserManagerMock, UserModel
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
 def verify_token(user_manager: UserManagerMock[UserModel, SignInModel]):
     def _verify_token(

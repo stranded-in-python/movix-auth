@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -5,14 +6,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
+from core.logger import logger
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
 
-import logging
-from core.logger import logger
-
 logger()
+
 
 def get_auth_router(
     access_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
@@ -70,7 +70,7 @@ def get_auth_router(
             )
         response = await refresh_backend.login(strategy, user)
         await user_manager.on_after_login(user, request, response)
-        logging.info("success:%s" %user.id)
+        logging.info("success:%s" % user.id)
         return response
 
     @router.post(
@@ -79,7 +79,7 @@ def get_auth_router(
         responses=login_responses,
     )
     async def refresh(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(
+        user_token: tuple[models_protocol.UP, str] = Depends(
             get_current_user_refresh_token
         ),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
@@ -113,7 +113,7 @@ def get_auth_router(
         responses=logout_responses,
     )
     async def blacklist(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(get_current_user_token),
+        user_token: tuple[models_protocol.UP, str] = Depends(get_current_user_token),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
             access_backend.get_strategy
         ),
@@ -132,7 +132,7 @@ def get_auth_router(
         "/logout", name=f"auth:{access_backend.name}.logout", responses=logout_responses
     )
     async def logout(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(
+        user_token: tuple[models_protocol.UP, str] = Depends(
             get_current_user_refresh_token
         ),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
@@ -146,7 +146,7 @@ def get_auth_router(
                 detail=ErrorCode.REFRESH_BAD_TOKEN,
             )
         user, token = user_token
-        logging.info("success:%s" %user.id)
+        logging.info("success:%s" % user.id)
         return await refresh_backend.logout(strategy, user, token)
 
     return router

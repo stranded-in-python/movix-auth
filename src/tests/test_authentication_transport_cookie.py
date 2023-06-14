@@ -10,6 +10,7 @@ COOKIE_NAME = "COOKIE_NAME"
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture(
     params=[
         ("/", None, True, True),

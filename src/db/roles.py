@@ -99,7 +99,7 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
         await self.session.delete(role_to_delete)
         await self.session.commit()
 
-    async def _get_role(self, statement: Select[Tuple[SARole]]) -> SARole | None:
+    async def _get_role(self, statement: Select[tuple[SARole]]) -> SARole | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
@@ -144,7 +144,7 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
     @cache_decorator()
     async def get_user_role(self, user_role_id: UUID_ID) -> models.UserRole | None:
         statement = select(self.user_role_table).where(
-            (self.user_role_table.id == user_role_id)
+            self.user_role_table.id == user_role_id
         )
 
         results = await self.session.execute(statement)

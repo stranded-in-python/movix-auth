@@ -1,6 +1,5 @@
-from typing import Any
-
 import logging.config
+from typing import Any
 
 LOG_FORMAT = '%(asctime)s:%(name)s:%(module)s:%(funcName)s:%(message)s'
 LOG_DEFAULT_HANDLERS = ['console', 'file']
@@ -49,11 +48,11 @@ def get_logging_config(
                 'stream': 'ext://sys.stdout',
             },
             'file': {
-            'level': 'INFO',
-            'formatter': 'verbose',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'error.log',
-            'mode': 'a'
+                'level': 'INFO',
+                'formatter': 'verbose',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': 'error.log',
+                'mode': 'a',
             },
         },
         'loggers': {

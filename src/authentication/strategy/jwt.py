@@ -19,7 +19,7 @@ class JWTStrategy(
         self,
         secret: SecretType,
         lifetime_seconds: int | None,
-        token_audience: List[str] = ["fastapi-users:auth"],
+        token_audience: list[str] = ["fastapi-users:auth"],
         algorithm: str = "HS256",
         public_key: SecretType | None = None,
     ):
@@ -82,7 +82,7 @@ class JWTBlacklistStrategy(
         self,
         secret: SecretType,
         lifetime_seconds: int | None,
-        token_audience: List[str] = ["fastapi-users:auth"],
+        token_audience: list[str] = ["fastapi-users:auth"],
         algorithm: str = "HS256",
         public_key: SecretType | None = None,
         blacklist_manager: TokenBlacklistManager | None = None,

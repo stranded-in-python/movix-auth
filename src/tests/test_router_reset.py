@@ -16,6 +16,7 @@ from tests.conftest import AsyncMethodMocker, UserManagerMock
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
 async def test_app_client(
     get_user_manager, get_test_client
@@ -99,7 +100,7 @@ class TestResetPassword:
         json = {"token": "foo", "password": "guinevere"}
         response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.RESET_PASSWORD_BAD_TOKEN
 
     async def test_inactive_user(
@@ -109,7 +110,7 @@ class TestResetPassword:
         json = {"token": "foo", "password": "guinevere"}
         response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.RESET_PASSWORD_BAD_TOKEN
 
     async def test_invalid_password(
@@ -121,7 +122,7 @@ class TestResetPassword:
         json = {"token": "foo", "password": "guinevere"}
         response = await test_app_client.post("/api/v1/reset-password", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["detail"] == {
             "code": ErrorCode.RESET_PASSWORD_INVALID_PASSWORD,
             "reason": "Invalid",

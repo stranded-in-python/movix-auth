@@ -18,6 +18,7 @@ from tests.conftest import SignInModel, UserModel
 
 pytestmark = pytest.mark.asyncio
 
+
 class MockSecurityScheme(SecurityBase):
     def __call__(self, request: Request) -> Optional[str]:
         return "mock"
@@ -114,7 +115,7 @@ def get_backend_user(user: UserModel):
 @pytest.fixture
 def get_test_auth_client(get_user_manager, get_test_client):
     async def _get_test_auth_client(
-        backends: List[AuthenticationBackend[models.UP, models.SIHE]],
+        backends: list[AuthenticationBackend[models.UP, models.SIHE]],
         get_enabled_backends: Optional[
             DependencyCallable[Sequence[AuthenticationBackend[models.UP, models.SIHE]]]
         ] = None,

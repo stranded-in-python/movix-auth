@@ -1,3 +1,4 @@
+import logging
 from typing import Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -6,20 +7,19 @@ import core.exceptions as exceptions
 from api import schemas
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import Authenticator
+from core.logger import logger
 from core.pagination import PaginateQueryParams
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 
-import logging
-from core.logger import logger
-
 logger()
+
 
 def get_users_me_router(
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
-    user_schema: Type[schemas.U],
-    user_update_schema: Type[schemas.UU],
-    event_schema: Type[schemas.EventRead],
+    user_schema: type[schemas.U],
+    user_update_schema: type[schemas.UU],
+    event_schema: type[schemas.EventRead],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
 ) -> APIRouter:
     router = APIRouter()
@@ -99,7 +99,7 @@ def get_users_me_router(
             user = await user_manager.update(
                 user_update, user, safe=True, request=request
             )
-            logging.info("success:%s" %user.id)
+            logging.info("success:%s" % user.id)
             return user_schema.from_orm(user)
 
         except exceptions.InvalidPasswordException as e:
@@ -142,8 +142,8 @@ def get_users_me_router(
 
 def get_users_router(
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
-    user_schema: Type[schemas.U],
-    user_update_schema: Type[schemas.UU],
+    user_schema: type[schemas.U],
+    user_update_schema: type[schemas.UU],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
 ) -> APIRouter:
     router = APIRouter()
@@ -162,7 +162,7 @@ def get_users_router(
             logging.info("success:%s" % parsed_id)
             return await user_manager.get(parsed_id)
         except (exceptions.UserNotExists, exceptions.InvalidID) as e:
-            logging.exception("UserNotExists:invalidid:%s" %parsed_id)
+            logging.exception("UserNotExists:invalidid:%s" % parsed_id)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
     @router.get(

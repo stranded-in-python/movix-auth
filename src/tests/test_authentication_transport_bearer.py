@@ -7,6 +7,7 @@ from authentication.transport.bearer import BearerResponse
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture()
 def bearer_transport() -> BearerTransport:
     return BearerTransport(token_url="/login")

@@ -11,9 +11,14 @@ from tests.conftest import UserModel
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
 async def test_app_client(
-    secret, get_user_manager, mock_authentication, refresh_mock_authentication, get_test_client
+    secret,
+    get_user_manager,
+    mock_authentication,
+    refresh_mock_authentication,
+    get_test_client,
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
     fastapi_users = FastAPIUsers[models.UserRead, models.SIHE](
         get_user_manager, [mock_authentication], [refresh_mock_authentication]

@@ -22,9 +22,11 @@ RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
 import logging
+
 from core.logger import logger
 
 logger()
+
 
 class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
     reset_password_token_secret: SecretType
@@ -146,7 +148,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
                 [self.reset_password_token_audience],
             )
         except jwt.PyJWTError:
-            logging.exception("InvalidResetPasswordToken:%s" %token)
+            logging.exception("InvalidResetPasswordToken:%s" % token)
             raise exceptions.InvalidResetPasswordToken()
 
         try:
@@ -168,7 +170,9 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
             user.hashed_password, password_fingerprint
         )
         if not valid_password_fingerprint:
-            logging.exception("InvalidResetPasswordToken:validpasswordfingerprint:%s" %parsed_id)
+            logging.exception(
+                "InvalidResetPasswordToken:validpasswordfingerprint:%s" % parsed_id
+            )
             raise exceptions.InvalidResetPasswordToken()
 
         if not user.is_active:

@@ -83,8 +83,8 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
     def __init__(
         self,
         session: AsyncSession,
-        user_table: Type[SAUser],
-        history_table: Type[SASignInHistory],
+        user_table: type[SAUser],
+        history_table: type[SASignInHistory],
     ):
         self.session = session
         self.user_table = user_table
@@ -142,7 +142,7 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
         await self.session.delete(user)
         await self.session.commit()
 
-    async def _get_user(self, statement: Select[Tuple[SAUser]]) -> SAUser | None:
+    async def _get_user(self, statement: Select[tuple[SAUser]]) -> SAUser | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 

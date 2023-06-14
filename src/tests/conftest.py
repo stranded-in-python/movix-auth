@@ -203,10 +203,10 @@ class MockUserDatabase(
 
         return None
 
-    async def create(self, create_dict: Dict[str, Any]) -> UserModel:
+    async def create(self, create_dict: dict[str, Any]) -> UserModel:
         return UserModel(**create_dict)
 
-    async def update(self, user: UserModel, update_dict: Dict[str, Any]) -> UserModel:
+    async def update(self, user: UserModel, update_dict: dict[str, Any]) -> UserModel:
         for field, value in update_dict.items():
             setattr(user, field, value)
         return user
@@ -224,7 +224,7 @@ def mock_user_db(
 
 @pytest.fixture
 def make_user_manager(mocker: MockerFixture):
-    def _make_user_manager(user_manager_class: Type[BaseTestUserManager], mock_user_db):
+    def _make_user_manager(user_manager_class: type[BaseTestUserManager], mock_user_db):
         user_manager = user_manager_class(mock_user_db)
         mocker.spy(user_manager, "get_by_email")
         mocker.spy(user_manager, "get_by_username")

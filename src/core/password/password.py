@@ -15,7 +15,7 @@ class PasswordHelper(PasswordHelperProtocol):
 
     def verify_and_update(
         self, plain_password: str, hashed_password: str
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         is_ok, hashed = self.context.verify_and_update(plain_password, hashed_password)
         if not hashed:
             return is_ok, ""
