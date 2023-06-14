@@ -352,12 +352,12 @@ class UserManager(
     async def on_after_register(
         self, user: models.UserRead, request: Request | None = None
     ):
-        print(f"User {user.id} has registered.")
+        logging.info("%s registered" % user.id)
 
     async def on_after_forgot_password(
         self, user: models.UserRead, token: str, request: Request | None = None
     ):
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
+        logging.info("%s forgot password. Reset token:%s" % user.id, token)
 
 
 async def get_user_manager(user_db: SAUserDB = Depends(getters.get_user_db)):
