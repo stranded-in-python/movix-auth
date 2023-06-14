@@ -79,8 +79,8 @@ def upgrade() -> None:
         sa.Column('is_active', sa.Boolean(), nullable=False),
         sa.Column('is_superuser', sa.Boolean(), nullable=False),
         sa.Column('is_admin', sa.Boolean(), nullable=False),
-        sa.Column('first_name', sa.String(length=32), nullable=False),
-        sa.Column('last_name', sa.String(length=32), nullable=False),
+        sa.Column('first_name', sa.String(length=32), nullable=True),
+        sa.Column('last_name', sa.String(length=32), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         schema='users',
     )
