@@ -10,6 +10,7 @@ from api.v1.common import ErrorCode
 from authentication import Authenticator
 from tests.conftest import UserModel, get_mock_authentication
 
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def app_factory(get_user_manager, mock_authentication):
@@ -37,7 +38,6 @@ def app_factory(get_user_manager, mock_authentication):
 
 
 @pytest.fixture()
-@pytest.mark.asyncio
 async def test_app_client(
     request, get_test_client, app_factory
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
@@ -48,7 +48,6 @@ async def test_app_client(
 
 
 @pytest.mark.router
-@pytest.mark.asyncio
 class TestMe:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         client = test_app_client
@@ -81,7 +80,6 @@ class TestMe:
 
 
 @pytest.mark.router
-@pytest.mark.asyncio
 class TestUpdateMe:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         client = test_app_client
@@ -189,7 +187,6 @@ class TestUpdateMe:
 
 
 @pytest.mark.router
-@pytest.mark.asyncio
 class TestGetUser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         client = test_app_client
@@ -240,7 +237,6 @@ class TestGetUser:
 
 
 @pytest.mark.router
-@pytest.mark.asyncio
 class TestUpdateUser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         client = test_app_client
@@ -304,7 +300,6 @@ class TestUpdateUser:
 
 
 @pytest.mark.router
-@pytest.mark.asyncio
 class TestDeleteUser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         client = test_app_client

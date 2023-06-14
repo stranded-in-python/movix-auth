@@ -87,7 +87,7 @@ def get_register_router(
         try:
             return user_schema.from_orm(created_user)
         except error_wrappers.ValidationError as e:
-            logging.exception("%s:%s" % e, created_user)
+            logging.exception("%s:%s" % (e, created_user))
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail={"code": ErrorCode.REGISTER_INVALID_PASSWORD, "reason": str(e)},

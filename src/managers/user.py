@@ -153,7 +153,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
             user_id = data["sub"]
             password_fingerprint = data["password_fgpt"]
         except KeyError:
-            logging.exception("InvalidResetPasswordToken:fingerprint:%s" %password_fingerprint)
+            logging.exception("InvalidResetPasswordToken:fingerprint:nofingerprint!")
             raise exceptions.InvalidResetPasswordToken()
 
         try:

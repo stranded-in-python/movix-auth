@@ -105,6 +105,6 @@ def get_reset_password_router(
                 },
             )
         
-        logging.info("success:%s" % updated_user.id)
+        logging.info("success:%s" % token)
 
     return router
