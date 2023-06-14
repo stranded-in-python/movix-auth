@@ -21,6 +21,10 @@ from db.users import SAUserDB
 RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
+import logging
+from core.logger import logger
+
+logger()
 
 class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
     reset_password_token_secret: SecretType
@@ -65,6 +69,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
 
         existing_user = await self.user_db.get_by_email(user_create.email)
         if existing_user:
+            logging.exception("UserAlreadyexists: %s" % user_create.email)
             raise exceptions.UserAlreadyExists()
         existing_user = (
             await self.user_db.get_by_username(user_create.username)
@@ -72,6 +77,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
             else None
         )
         if existing_user:
+            logging.exception("UserAlreadyexists: %s" % user_create.username)
             raise exceptions.UserAlreadyExists()
 
         user_dict = (
@@ -140,17 +146,20 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
                 [self.reset_password_token_audience],
             )
         except jwt.PyJWTError:
+            logging.exception("InvalidResetPasswordToken:%s" %token)
             raise exceptions.InvalidResetPasswordToken()
 
         try:
             user_id = data["sub"]
             password_fingerprint = data["password_fgpt"]
         except KeyError:
+            logging.exception("InvalidResetPasswordToken:fingerprint:%s" %password_fingerprint)
             raise exceptions.InvalidResetPasswordToken()
 
         try:
             parsed_id = self.parse_id(user_id)
         except exceptions.InvalidID:
+            logging.exception("InvalidResetPasswordToken:invalidid:%s" % user_id)
             raise exceptions.InvalidResetPasswordToken()
 
         user = await self.get(parsed_id)
@@ -159,9 +168,11 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
             user.hashed_password, password_fingerprint
         )
         if not valid_password_fingerprint:
+            logging.exception("InvalidResetPasswordToken:validpasswordfingerprint:%s" %parsed_id)
             raise exceptions.InvalidResetPasswordToken()
 
         if not user.is_active:
+            logging.exception("UserInactive:%s" % parsed_id)
             raise exceptions.UserInactive()
 
         updated_user = await self._update(user, {"password": password})
@@ -283,8 +294,10 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
             if field == "email" and value != user.email:
                 try:
                     await self.get_by_email(value)
+                    logging.exception("UserAlreadyExists:%s" % user.email)
                     raise exceptions.UserAlreadyExists()
                 except exceptions.UserNotExists:
+                    logging.exception("UserNotExists: %s" % user.email)
                     validated_update_dict["email"] = value
 
             elif field == "password":

@@ -9,6 +9,10 @@ from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
 
+import logging
+from core.logger import logger
+
+logger()
 
 def get_auth_router(
     access_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
@@ -58,8 +62,8 @@ def get_auth_router(
         ),
     ):
         user = await user_manager.authenticate(credentials)
-
         if user is None or not user.is_active:
+            logging.exception("BAD_CREDS:%s" % credentials)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.LOGIN_BAD_CREDENTIALS,
@@ -82,6 +86,7 @@ def get_auth_router(
         ),
     ):
         if not user_token:
+            logging.exception("BAD_TOKEN:%s" % user_token)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ErrorCode.REFRESH_BAD_TOKEN,
@@ -112,6 +117,7 @@ def get_auth_router(
         ),
     ):
         if not user_token:
+            logging.exception("BAD_TOKEN:%s" % user_token)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ErrorCode.ACCESS_BAD_TOKEN,
@@ -131,6 +137,7 @@ def get_auth_router(
         ),
     ):
         if not user_token:
+            logging.exception("BAD_TOKEN:%s" % user_token)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ErrorCode.REFRESH_BAD_TOKEN,

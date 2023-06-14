@@ -12,6 +12,10 @@ from db import models_protocol
 from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import BaseUserManager, UserManagerDependency
 
+import logging
+from core.logger import logger
+
+logger()
 
 def get_roles_router(
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
@@ -75,6 +79,7 @@ def get_roles_router(
             return role_schema.from_orm(role)
 
         except exceptions.RoleAlreadyExists:
+            logging.exception("RoleAlreadyExists:%s" %role_create)
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_ROLE_NAME_ALREADY_EXISTS,
@@ -102,6 +107,7 @@ def get_roles_router(
             return role_schema.from_orm(role)
 
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" %role_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
@@ -132,11 +138,13 @@ def get_roles_router(
             return role_schema.from_orm(role)
 
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" % role_update)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
 
         except exceptions.RoleAlreadyExists:
+            logging.exception("RoleAlreadyExists:%s" % role_update)
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_ROLE_NAME_ALREADY_EXISTS,
@@ -168,6 +176,7 @@ def get_roles_router(
             return role_schema.from_orm(role)
 
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" % role_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
@@ -202,14 +211,17 @@ def get_roles_router(
                 raise exceptions.UserHaveNotRole
 
         except exceptions.UserNotExists:
+            logging.exception("UserNotExists:%s" %user_role)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.USER_IS_NOT_EXISTS
             )
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" %user_role)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.UserHaveNotRole:
+            logging.exception("UserHaveNotRole:%s" %user_role)
             raise HTTPException(
                 status.HTTP_204_NO_CONTENT, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
@@ -246,10 +258,12 @@ def get_roles_router(
             await role_manager.assign_user_role(user_role)
 
         except exceptions.UserNotExists:
+            logging.exception("UserNotExists:%s" %user_role)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" %user_role)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
@@ -286,10 +300,12 @@ def get_roles_router(
             await role_manager.remove_user_role(user_role.id)
 
         except exceptions.UserNotExists:
+            logging.exception("UserNotExists:%s" %user_role)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" %user_role)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
@@ -319,6 +335,7 @@ def get_roles_router(
             return list(user_role_schema.from_orm(role) for role in roles)
 
         except exceptions.UserNotExists:
+            logging.exception("UserNotExists:%s" %user_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )

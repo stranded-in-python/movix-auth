@@ -9,6 +9,10 @@ from api.v1.common import ErrorCode, ErrorModel
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 
+import logging
+from core.logger import logger
+
+logger()
 
 def get_register_router(
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
@@ -62,11 +66,12 @@ def get_register_router(
             models_protocol.UP, models_protocol.SIHE
         ] = Depends(get_user_manager),
     ) -> user_schema:
+        logging.info("PROVERKA")
         try:
             created_user = await user_service.create(
                 user_create, safe=True, request=request
             )
-        except ex.UserAlreadyExists:
+        except ex.UserAlreadyExists as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.REGISTER_USER_ALREADY_EXISTS,
@@ -83,6 +88,7 @@ def get_register_router(
         try:
             return user_schema.from_orm(created_user)
         except error_wrappers.ValidationError as e:
+            logging.exception("%s:%s" % e, created_user)
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail={"code": ErrorCode.REGISTER_INVALID_PASSWORD, "reason": str(e)},

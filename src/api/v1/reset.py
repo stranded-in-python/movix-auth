@@ -7,6 +7,11 @@ from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
 
+import logging
+from core.logger import logger
+
+logger()
+
 RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
         "model": ErrorModel,
@@ -55,11 +60,13 @@ def get_reset_password_router(
         try:
             user = await user_manager.get_by_email(email)
         except exceptions.UserNotExists:
+            logging.exception("UserNotExists:%s" % email)
             return None
 
         try:
             await user_manager.forgot_password(user, request)
         except exceptions.UserInactive:
+            logging.exception("UserInactive:%s" % email)
             pass
 
         return None

@@ -1,7 +1,9 @@
 from typing import Any
 
-LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LOG_DEFAULT_HANDLERS = ['console']
+import logging.config
+
+LOG_FORMAT = '%(asctime)s:%(name)s:%(module)s:%(message)s'
+LOG_DEFAULT_HANDLERS = ['console', 'file']
 
 LOG_LEVEL = 'INFO'
 
@@ -46,15 +48,28 @@ def get_logging_config(
                 'class': 'logging.StreamHandler',
                 'stream': 'ext://sys.stdout',
             },
+            'file': {
+            'level': 'INFO',
+            'formatter': 'verbose',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'error.log',
+            'mode': 'a'
+            },
         },
         'loggers': {
             '': {'handlers': handlers, 'level': level},
             'uvicorn.error': {'level': level},
             'uvicorn.access': {
-                'handlers': ['access'],
+                'handlers': ['access', 'file'],
                 'level': level,
                 'propagate': False,
             },
         },
         'root': {'level': level, 'formatter': 'verbose', 'handlers': handlers},
     }
+
+
+def logger():
+    logging.config.dictConfig(get_logging_config())
+    logger = logging.getLogger(__file__)
+    return logger
