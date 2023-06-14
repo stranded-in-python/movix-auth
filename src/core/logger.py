@@ -2,7 +2,7 @@ from typing import Any
 
 import logging.config
 
-LOG_FORMAT = '%(asctime)s:%(name)s:%(module)s:%(message)s'
+LOG_FORMAT = '%(asctime)s:%(name)s:%(module)s:%(funcName)s:%(message)s'
 LOG_DEFAULT_HANDLERS = ['console', 'file']
 
 LOG_LEVEL = 'INFO'

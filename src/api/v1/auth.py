@@ -70,6 +70,7 @@ def get_auth_router(
             )
         response = await refresh_backend.login(strategy, user)
         await user_manager.on_after_login(user, request, response)
+        logging.info("success:%s" %user.id)
         return response
 
     @router.post(
@@ -94,6 +95,7 @@ def get_auth_router(
         user, _ = user_token
 
         response = await access_backend.login(strategy, user)
+        logging.info("success:%s" % user.id)
         return response
 
     logout_responses: OpenAPIResponseType = {
@@ -123,6 +125,7 @@ def get_auth_router(
                 detail=ErrorCode.ACCESS_BAD_TOKEN,
             )
         user, token = user_token
+        logging.info("success:%s" % user.id)
         return await access_backend.logout(strategy, user, token)
 
     @router.post(
@@ -143,6 +146,7 @@ def get_auth_router(
                 detail=ErrorCode.REFRESH_BAD_TOKEN,
             )
         user, token = user_token
+        logging.info("success:%s" %user.id)
         return await refresh_backend.logout(strategy, user, token)
 
     return router

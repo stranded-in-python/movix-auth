@@ -56,6 +56,7 @@ def get_access_rights_router(
         ] = Depends(get_access_right_manager),
     ) -> list[access_right_schema]:
         rights = await access_right_manager.search(page_params, filter_param)
+        logging.info("success")
         return list(access_right_schema.from_orm(right) for right in rights)
 
     @router.get(
@@ -75,8 +76,10 @@ def get_access_rights_router(
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
+            access_right = await access_right_manager.get(access_right_id)
+            logging.info("success:%s" % access_right.id)
             return access_right_schema.from_orm(
-                await access_right_manager.get(access_right_id)
+                access_right
             )
 
         except exceptions.AccessRightNotExists:
@@ -105,6 +108,7 @@ def get_access_rights_router(
             access_right = await access_right_manager.create(
                 access_right_create, request=request
             )
+            logging.info("success:%s" % access_right.id)
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightAlreadyExists:
@@ -136,6 +140,7 @@ def get_access_rights_router(
             access_right = await access_right_manager.update(
                 access_right_update, access_right, request=request
             )
+            logging.info("success:%s" % access_right.id)
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightNotExists:
@@ -174,6 +179,7 @@ def get_access_rights_router(
             access_right = await access_right_manager.delete(
                 access_right, request=request
             )
+            logging.info("success:%s" % access_right.id)
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightNotExists:
@@ -208,12 +214,14 @@ def get_access_rights_router(
             ):
                 raise exceptions.UserHaveNotRole
 
+            logging.info("success:%s" % role_access_right.access_right_id)
+
         except exceptions.RoleHaveNotAccessRight:
             logging.exception("RoleHaveNotAccessRight:%s" %role_access_right)
             raise HTTPException(
                 status.HTTP_204_NO_CONTENT, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
-
+        
     @router.post(
         "/roles/rights",
         status_code=status.HTTP_201_CREATED,
@@ -244,6 +252,8 @@ def get_access_rights_router(
 
             await access_right_manager.assign_role_access_right(role_access_right)
 
+            logging.info("success:%s" % role_access_right.access_right_id)
+
         except exceptions.RoleNotExists:
             logging.exception("RoleNotExists:%s" %role_access_right)
             raise HTTPException(
@@ -254,6 +264,7 @@ def get_access_rights_router(
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
+
 
     @router.delete(
         "/roles/rights",
@@ -287,6 +298,8 @@ def get_access_rights_router(
 
             await access_right_manager.remove_role_access_right(role_access_right)
 
+            logging.info("success:%s" % role_access_right.access_right_id)
+
         except exceptions.RoleNotExists:
             logging.exception("RoleNotExists:%s" %role_access_right)
             raise HTTPException(
@@ -297,6 +310,8 @@ def get_access_rights_router(
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
+        
+
 
     @router.get(
         "/roles/{roles_id}/rights",
@@ -321,6 +336,7 @@ def get_access_rights_router(
 
             rights = await access_right_manager.get_role_access_rights(role.id)
 
+            logging.info("success:%s" % role_id)
             return list(access_right_schema.from_orm(right) for right in rights)
 
         except exceptions.RoleNotExists:
@@ -328,5 +344,5 @@ def get_access_rights_router(
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
-
+        
     return router

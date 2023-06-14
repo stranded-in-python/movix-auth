@@ -68,7 +68,8 @@ def get_reset_password_router(
         except exceptions.UserInactive:
             logging.exception("UserInactive:%s" % email)
             pass
-
+        
+        logging.info("success:%s" % email)
         return None
 
     @router.post(
@@ -85,7 +86,7 @@ def get_reset_password_router(
         ] = Depends(get_user_manager),
     ):
         try:
-            await user_manager.reset_password(token, password, request)
+            updated_user = await user_manager.reset_password(token, password, request)
         except (
             exceptions.InvalidResetPasswordToken,
             exceptions.UserNotExists,
@@ -103,5 +104,7 @@ def get_reset_password_router(
                     "reason": e.reason,
                 },
             )
+        
+        logging.info("success:%s" % updated_user.id)
 
     return router

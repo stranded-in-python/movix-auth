@@ -66,7 +66,6 @@ def get_register_router(
             models_protocol.UP, models_protocol.SIHE
         ] = Depends(get_user_manager),
     ) -> user_schema:
-        logging.info("PROVERKA")
         try:
             created_user = await user_service.create(
                 user_create, safe=True, request=request
