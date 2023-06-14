@@ -10,6 +10,10 @@ from core.pagination import PaginateQueryParams
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 
+import logging
+from core.logger import logger
+
+logger()
 
 def get_users_me_router(
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
@@ -155,6 +159,7 @@ def get_users_router(
             parsed_id = user_manager.parse_id(id)
             return await user_manager.get(parsed_id)
         except (exceptions.UserNotExists, exceptions.InvalidID) as e:
+            logging.exception("UserNotExists:invalidid:%s" %parsed_id)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
     @router.get(

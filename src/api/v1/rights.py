@@ -13,6 +13,10 @@ from managers.rights import AccessRightManagerDependency, BaseAccessRightManager
 from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import UserManagerDependency
 
+import logging
+from core.logger import logger
+
+logger()
 
 def get_access_rights_router(
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
@@ -76,6 +80,7 @@ def get_access_rights_router(
             )
 
         except exceptions.AccessRightNotExists:
+            logging.exception("AccessRightNotExists:%s" %access_right_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
@@ -103,6 +108,7 @@ def get_access_rights_router(
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightAlreadyExists:
+            logging.exception("AccessRightAlreadyExists: %s" %access_right_create)
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_ACCESS_NAME_ALREADY_EXISTS,
@@ -133,12 +139,14 @@ def get_access_rights_router(
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightNotExists:
+            logging.exception("AccessRightNotExists:%s" %access_right_update)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
                 detail=ErrorCode.UPDATE_ACCESS_NAME_ALREADY_EXISTS,
             )
 
         except exceptions.RoleAlreadyExists:
+            logging.exception("RoleAlreadyExists:%s" %access_right_update)
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_ROLE_NAME_ALREADY_EXISTS,
@@ -169,6 +177,7 @@ def get_access_rights_router(
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightNotExists:
+            logging.exception("AccessRightNotExists: %s" %access_right_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
@@ -200,6 +209,7 @@ def get_access_rights_router(
                 raise exceptions.UserHaveNotRole
 
         except exceptions.RoleHaveNotAccessRight:
+            logging.exception("RoleHaveNotAccessRight:%s" %role_access_right)
             raise HTTPException(
                 status.HTTP_204_NO_CONTENT, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
@@ -235,10 +245,12 @@ def get_access_rights_router(
             await access_right_manager.assign_role_access_right(role_access_right)
 
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" %role_access_right)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.AccessRightNotExists:
+            logging.exception("RoleNotExists:%s" %role_access_right)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
@@ -276,10 +288,12 @@ def get_access_rights_router(
             await access_right_manager.remove_role_access_right(role_access_right)
 
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" %role_access_right)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.AccessRightNotExists:
+            logging.exception("AccessRightNotExists:%s" %role_access_right)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
@@ -310,6 +324,7 @@ def get_access_rights_router(
             return list(access_right_schema.from_orm(right) for right in rights)
 
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" % role_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
