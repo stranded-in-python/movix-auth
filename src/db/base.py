@@ -29,7 +29,7 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE, OAP, UOAP]):
         """Get a single user by email."""
         raise NotImplementedError
 
-    async def get_by_oauth_account(self, oauth: str, account_id: str) -> UP | None:
+    async def get_by_oauth_account(self, oauth: str, account_id: str) -> UOAP | None:
         """Get a single user by OAuth account id."""
         raise NotImplementedError()
 
@@ -56,7 +56,7 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE, OAP, UOAP]):
         raise NotImplementedError
 
     async def add_oauth_account(
-        self, user: UOAP, create_dict: dict[str, t.Any]
+        self, user: UP, create_dict: dict[str, t.Any]
     ) -> UOAP:
         """Create an OAuth account and add it to the user."""
         raise NotImplementedError()

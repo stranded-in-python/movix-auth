@@ -200,7 +200,7 @@ class SAUserDB(
             return []
         return list(models.EventRead.from_orm(event[0]) for event in events)
 
-    async def get_by_oauth_account(self, oauth: str, account_id: str) -> models.UserRead | None:
+    async def get_by_oauth_account(self, oauth: str, account_id: str) -> models.UserOAuth | None:
         statement: Select[Any] = (
             select(self.user_table)
             .join(self.oauth_account_table)
@@ -209,7 +209,7 @@ class SAUserDB(
         )
         user = await self._get_user(statement)
 
-        return models.UserRead.from_orm(user)
+        return models.UserOAuth.from_orm(user)
     
     async def add_oauth_account(self, user: models.UserRead, create_dict: dict[str, Any]) -> models.UserOAuth:
         user_model = await self._get_user_by_id(user.id)

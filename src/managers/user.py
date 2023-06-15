@@ -5,6 +5,7 @@ from typing import Any, Generic, Iterable
 import jwt
 from fastapi import Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
+from httpx_oauth.clients.google import GoogleOAuth2
 
 import core.exceptions as exceptions
 import core.password.password as pw
@@ -21,8 +22,19 @@ from db.users import SAUserDB
 RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
+google_oauth_client = GoogleOAuth2(
+    str(settings.google_oauth_client_id), str(settings.google_oauth_client_secret)
+)
 
-class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
+
+class BaseUserManager(
+    Generic[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ]
+):
     reset_password_token_secret: SecretType
     reset_password_token_lifetime_seconds: int = 3600
     reset_password_token_audience: str = RESET_PASSWORD_TOKEN_AUDIENCE
@@ -31,12 +43,24 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
     verification_token_lifetime_seconds: int = 3600
     verification_token_audience: str = VERIFY_USER_TOKEN_AUDIENCE
 
-    user_db: BaseUserDatabase[models_protocol.UP, uuid.UUID, models_protocol.SIHE]
+    user_db: BaseUserDatabase[
+        models_protocol.UP,
+        uuid.UUID,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ]
     password_helper: pw.PasswordHelperProtocol
 
     def __init__(
         self,
-        user_db: BaseUserDatabase[models_protocol.UP, uuid.UUID, models_protocol.SIHE],
+        user_db: BaseUserDatabase[
+            models_protocol.UP,
+            uuid.UUID,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
+        ],
         password_helper: pw.PasswordHelperProtocol | None = None,
     ):
         self.user_db = user_db
@@ -298,14 +322,120 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
 
         return await self.user_db.update(user, validated_update_dict)
 
+    async def get_by_oauth_account(
+        self, oauth: str, account_id: str
+    ) -> models_protocol.UOAP:
+        """
+        Get a user by OAuth account.
+
+        :param oauth: Name of the OAuth client.
+        :param account_id: Id. of the account on the external OAuth service.
+        :raises UserNotExists: The user does not exist.
+        :return: A user.
+        """
+        user = await self.user_db.get_by_oauth_account(oauth, account_id)
+
+        if user is None:
+            raise exceptions.UserNotExists()
+
+        return user
+
+    async def oauth_callback(
+        self,
+        oauth_name: str,
+        access_token: str,
+        account_id: str,
+        account_email: str,
+        expires_at: int | None = None,
+        refresh_token: str | None = None,
+        request: Request | None = None,
+        *,
+        associate_by_email: bool = False,
+    ) -> models_protocol.UOAP:
+        """
+        Handle the callback after a successful OAuth authentication.
+
+        If the user already exists with this OAuth account, the token is updated.
+
+        If a user with the same e-mail already exists and `associate_by_email` is True,
+        the OAuth account is associated to this user.
+        Otherwise, the `UserNotExists` exception is raised.
+
+        If the user does not exist, it is created and the on_after_register handler
+        is triggered.
+
+        :param oauth_name: Name of the OAuth client.
+        :param access_token: Valid access token for the service provider.
+        :param account_id: models.ID of the user on the service provider.
+        :param account_email: E-mail of the user on the service provider.
+        :param expires_at: Optional timestamp at which the access token expires.
+        :param refresh_token: Optional refresh token to get a
+        fresh access token from the service provider.
+        :param request: Optional FastAPI request that
+        triggered the operation, defaults to None
+        :param associate_by_email: If True, any existing user with the same
+        e-mail address will be associated to this user. Defaults to False.
+        :return: A user.
+        """
+        oauth_account_dict = {
+            "oauth_name": oauth_name,
+            "access_token": access_token,
+            "account_id": account_id,
+            "account_email": account_email,
+            "expires_at": expires_at,
+            "refresh_token": refresh_token,
+        }
+
+        try:
+            user = await self.get_by_oauth_account(oauth_name, account_id)
+        except exceptions.UserNotExists:
+            try:
+                # Associate account
+                user = await self.get_by_email(account_email)
+                if not associate_by_email:
+                    raise exceptions.UserAlreadyExists()
+                user = await self.user_db.add_oauth_account(user, oauth_account_dict)
+            except exceptions.UserNotExists:
+                # Create account
+                password = self.password_helper.generate()
+                user_dict = {
+                    "email": account_email,
+                    "hashed_password": self.password_helper.hash(password),
+                }
+                _user = await self.user_db.create(user_dict)
+                user = await self.user_db.add_oauth_account(_user, oauth_account_dict)
+                await self.on_after_register(_user, request)
+        else:
+            # Update oauth
+            for existing_oauth_account in user.oauth_accounts:
+                if (
+                    existing_oauth_account.account_id == account_id
+                    and existing_oauth_account.oauth_name == oauth_name
+                ):
+                    user = await self.user_db.update_oauth_account(
+                        user, existing_oauth_account, oauth_account_dict
+                    )
+
+        return user
+
 
 UserManagerDependency = DependencyCallable[
-    BaseUserManager[models_protocol.UP, models_protocol.SIHE]
+    BaseUserManager[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP]
 ]
 
 
 class UserManager(
-    models_protocol.UUIDIDMixin, BaseUserManager[models.UserRead, models.EventRead]
+    models_protocol.UUIDIDMixin,
+    BaseUserManager[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP
+    ]
 ):
     reset_password_token_secret = settings.reset_password_token_secret
     verification_token_secret = settings.verification_password_token_secret
