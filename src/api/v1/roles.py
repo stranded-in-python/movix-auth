@@ -1,5 +1,4 @@
 import logging
-from typing import Type
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -17,7 +16,7 @@ from managers.user import BaseUserManager, UserManagerDependency
 logger()
 
 
-def get_roles_router(
+def get_roles_router(  # noqa: C901
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
     get_role_manager: RoleManagerDependency[
         models_protocol.UP, models_protocol.RP, models_protocol.URP

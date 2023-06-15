@@ -38,7 +38,7 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
 }
 
 
-def get_reset_password_router(
+def get_reset_password_router(  # noqa: C901
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE]
 ) -> APIRouter:
     """Generate a router with the reset pw routes."""
@@ -86,7 +86,7 @@ def get_reset_password_router(
         ] = Depends(get_user_manager),
     ):
         try:
-            updated_user = await user_manager.reset_password(token, password, request)
+            await user_manager.reset_password(token, password, request)
         except (
             exceptions.InvalidResetPasswordToken,
             exceptions.UserNotExists,

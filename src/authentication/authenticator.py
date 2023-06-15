@@ -1,6 +1,6 @@
 import re
 from inspect import Parameter, Signature
-from typing import Any, Callable, Generic, List, Optional, Sequence, Tuple, cast
+from typing import Any, Callable, Generic, Optional, Sequence, cast
 
 from fastapi import Depends, HTTPException, status
 from makefun import with_signature  # type: ignore
@@ -143,7 +143,7 @@ class Authenticator(Generic[models.UP, models.SIHE]):
 
         return current_user_dependency
 
-    async def _authenticate(
+    async def _authenticate(  # noqa: C901
         self,
         *args: tuple[Any, ...],
         user_manager: BaseUserManager[models.UP, models.SIHE],

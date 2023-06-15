@@ -1,5 +1,5 @@
 import logging
-from typing import Generic, List
+from typing import Generic
 
 import jwt
 

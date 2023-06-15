@@ -1,4 +1,4 @@
-from typing import Generic, Sequence, Type
+from typing import Generic, Sequence
 
 from fastapi import APIRouter
 

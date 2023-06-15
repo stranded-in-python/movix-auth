@@ -1,7 +1,7 @@
 """FastAPI Users database adapter for SQLAlchemy."""
 import uuid
 from datetime import datetime
-from typing import Any, Iterable, Sequence, Tuple, Type
+from typing import Any, Iterable, Sequence
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Row, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession

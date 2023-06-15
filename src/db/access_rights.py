@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Iterable, Mapping, Sequence, Tuple
+from typing import Any, Iterable, Mapping, Sequence
 
 from sqlalchemy import ForeignKey, Row, String, select
 from sqlalchemy.ext.asyncio import AsyncSession

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 from passlib import pwd
 from passlib.context import CryptContext

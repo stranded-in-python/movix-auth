@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime
 from typing import Any, Generic, Iterable
@@ -12,6 +13,7 @@ from api import schemas
 from core.config import settings
 from core.dependency_types import DependencyCallable
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt  # type: ignore
+from core.logger import logger
 from core.pagination import PaginateQueryParams
 from db import getters, models_protocol
 from db.base import BaseUserDatabase
@@ -20,10 +22,6 @@ from db.users import SAUserDB
 
 RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
-
-import logging
-
-from core.logger import logger
 
 logger()
 
@@ -138,7 +136,7 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
         )
         await self.on_after_forgot_password(user, token, request)
 
-    async def reset_password(
+    async def reset_password(  # noqa: C901
         self, token: str, password: str, request: Request | None = None
     ) -> models_protocol.UP:
         try:

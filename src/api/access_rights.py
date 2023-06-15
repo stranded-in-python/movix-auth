@@ -1,4 +1,4 @@
-from typing import Generic, Sequence, Type
+from typing import Generic, Sequence
 
 import api.schemas as schemas
 import db.models_protocol as models_protocol

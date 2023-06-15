@@ -1,5 +1,4 @@
 import logging
-from typing import Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
@@ -140,7 +139,7 @@ def get_users_me_router(
     return router
 
 
-def get_users_router(
+def get_users_router(  # noqa: C901
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
     user_schema: type[schemas.U],
     user_update_schema: type[schemas.UU],

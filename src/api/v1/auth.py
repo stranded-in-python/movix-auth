@@ -1,5 +1,4 @@
 import logging
-from typing import Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,7 +13,7 @@ from openapi import OpenAPIResponseType
 logger()
 
 
-def get_auth_router(
+def get_auth_router(  # noqa: C901
     access_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
     refresh_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
