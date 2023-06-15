@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -13,7 +11,12 @@ from openapi import OpenAPIResponseType
 def get_auth_router(
     access_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
     refresh_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ],
     access_authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
     refresh_authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
     requires_verification: bool = False,
@@ -51,7 +54,10 @@ def get_auth_router(
         request: Request,
         credentials: OAuth2PasswordRequestForm = Depends(),
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
             refresh_backend.get_strategy
@@ -74,7 +80,7 @@ def get_auth_router(
         responses=login_responses,
     )
     async def refresh(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(
+        user_token: tuple[models_protocol.UP, str] = Depends(
             get_current_user_refresh_token
         ),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
@@ -106,7 +112,7 @@ def get_auth_router(
         responses=logout_responses,
     )
     async def blacklist(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(get_current_user_token),
+        user_token: tuple[models_protocol.UP, str] = Depends(get_current_user_token),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
             access_backend.get_strategy
         ),
@@ -123,7 +129,7 @@ def get_auth_router(
         "/logout", name=f"auth:{access_backend.name}.logout", responses=logout_responses
     )
     async def logout(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(
+        user_token: tuple[models_protocol.UP, str] = Depends(
             get_current_user_refresh_token
         ),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(

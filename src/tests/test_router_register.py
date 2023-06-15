@@ -51,7 +51,7 @@ class TestRegister:
         json = {"email": "king.arthur@camelot.bt", "password": "g"}
         response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["detail"] == {
             "code": ErrorCode.REGISTER_INVALID_PASSWORD,
             "reason": "Password should be at least 3 characters",
@@ -70,7 +70,7 @@ class TestRegister:
         json = {"email": email, "username": username, "password": "guinevere"}
         response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.REGISTER_USER_ALREADY_EXISTS
 
     @pytest.mark.parametrize(
@@ -84,7 +84,7 @@ class TestRegister:
         response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_201_CREATED
 
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert "hashed_password" not in data
         assert "password" not in data
         assert data["id"] is not None
@@ -99,7 +99,7 @@ class TestRegister:
         response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_201_CREATED
 
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["is_superuser"] is False
 
     async def test_valid_body_is_active(self, test_app_client: httpx.AsyncClient):
@@ -112,7 +112,7 @@ class TestRegister:
         response = await test_app_client.post("/api/v1/register", json=json)
         assert response.status_code == status.HTTP_201_CREATED
 
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["is_active"] is True
 
 

@@ -1,5 +1,3 @@
-from typing import Type
-
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import error_wrappers
 
@@ -11,9 +9,14 @@ from managers.user import BaseUserManager, UserManagerDependency
 
 
 def get_register_router(
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
-    user_schema: Type[schemas.U],
-    user_create_schema: Type[schemas.UC],
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ],
+    user_schema: type[schemas.U],
+    user_create_schema: type[schemas.UC],
 ) -> APIRouter:
     """Generate a router with the register route."""
     router = APIRouter()
@@ -59,7 +62,10 @@ def get_register_router(
         request: Request,
         user_create: user_create_schema,
         user_service: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
     ) -> user_schema:
         try:

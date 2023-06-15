@@ -14,7 +14,7 @@ from core.dependency_types import DependencyCallable
 from db import models_protocol as models
 from managers.user import BaseUserManager
 from openapi import OpenAPIResponseType
-from tests.conftest import SignInModel, UserModel, UserOAuth, OAuthAccount
+from tests.conftest import OAuthAccount, SignInModel, UserModel, UserOAuth
 
 
 class MockSecurityScheme(SecurityBase):
@@ -50,7 +50,9 @@ class MockTransport(Transport):
 
 class MockStrategy(Strategy[models.UP, models.SIHE]):
     async def read_token(
-        self, token: str | None, user_manager: BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]
+        self,
+        token: str | None,
+        user_manager: BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP],
     ) -> models.UP | None:
         ...
 
@@ -114,7 +116,7 @@ def get_backend_user(user: UserModel):
 @pytest.mark.asyncio
 def get_test_auth_client(get_user_manager, get_test_client):
     async def _get_test_auth_client(
-        backends: List[AuthenticationBackend[models.UP, models.SIHE]],
+        backends: list[AuthenticationBackend[models.UP, models.SIHE]],
         get_enabled_backends: Optional[
             DependencyCallable[Sequence[AuthenticationBackend[models.UP, models.SIHE]]]
         ] = None,

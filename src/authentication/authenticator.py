@@ -1,6 +1,6 @@
 import re
 from inspect import Parameter, Signature
-from typing import Any, Callable, Generic, List, Optional, Sequence, Tuple, cast
+from typing import Any, Callable, Generic, Optional, Sequence, cast
 
 from fastapi import Depends, HTTPException, status
 from makefun import with_signature  # type: ignore
@@ -53,7 +53,9 @@ class Authenticator(Generic[models.UP, models.SIHE]):
     def __init__(
         self,
         backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]],
-        get_user_manager: UserManagerDependency[models.UP, models.SIHE, models.OAP, models.UOAP],
+        get_user_manager: UserManagerDependency[
+            models.UP, models.SIHE, models.OAP, models.UOAP
+        ],
     ):
         self.backends = backends
         self.get_user_manager = get_user_manager
@@ -91,7 +93,7 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         @with_signature(signature)
         async def current_user_token_dependency(
             *args: Any, **kwargs: Any
-        ) -> Tuple[Optional[models.UP], Optional[str]]:
+        ) -> tuple[Optional[models.UP], Optional[str]]:
             return await self._authenticate(
                 *args, optional=optional, active=active, superuser=superuser, **kwargs
             )
@@ -152,7 +154,7 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         superuser: bool = False,
         admin: bool = False,
         **kwargs: Any,
-    ) -> Tuple[Optional[models.UP], Optional[str]]:
+    ) -> tuple[Optional[models.UP], Optional[str]]:
         user: Optional[models.UP] = None
         token: Optional[str] = None
         enabled_backends: Sequence[
@@ -202,7 +204,7 @@ class Authenticator(Generic[models.UP, models.SIHE]):
         This way, each security schemes are detected by the OpenAPI generator.
         """
         try:
-            parameters: List[Parameter] = [
+            parameters: list[Parameter] = [
                 Parameter(
                     name="user_manager",
                     kind=Parameter.POSITIONAL_OR_KEYWORD,

@@ -3,9 +3,7 @@ from fastapi.responses import ORJSONResponse
 
 from api import container, schemas
 from core.config import settings
-
 from managers.user import google_oauth_client
-
 
 app = FastAPI(
     title=settings.project_name,

@@ -1,4 +1,4 @@
-from typing import Generic, Sequence, Type
+from typing import Generic, Sequence
 
 from fastapi import APIRouter
 
@@ -16,7 +16,10 @@ class APIRoles(Generic[models_protocol.RP, models_protocol.UP, models_protocol.S
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ],
         get_role_manager: RoleManagerDependency[
             models_protocol.UP, models_protocol.RP, models_protocol.URP,
@@ -32,11 +35,11 @@ class APIRoles(Generic[models_protocol.RP, models_protocol.UP, models_protocol.S
 
     def get_roles_router(
         self,
-        role_schema: Type[schemas.R],
-        role_create_schema: Type[schemas.RC],
-        role_update_schema: Type[schemas.RU],
-        user_role_schema: Type[schemas.UR],
-        user_role_update_schema: Type[schemas.URU],
+        role_schema: type[schemas.R],
+        role_create_schema: type[schemas.RC],
+        role_update_schema: type[schemas.RU],
+        user_role_schema: type[schemas.UR],
+        user_role_update_schema: type[schemas.URU],
     ) -> APIRouter:
         """
         Return a router with routes to manage roles.

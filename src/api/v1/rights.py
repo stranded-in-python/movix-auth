@@ -1,4 +1,3 @@
-from typing import Type
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -15,18 +14,23 @@ from managers.user import UserManagerDependency
 
 
 def get_access_rights_router(
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ],
     get_role_manager: RoleManagerDependency[
         models_protocol.UP, models_protocol.RP, models_protocol.URP
     ],
     get_access_right_manager: AccessRightManagerDependency[
         models_protocol.ARP, models_protocol.RARP,
     ],
-    access_right_schema: Type[schemas.AR],
-    access_right_create_schema: Type[schemas.ARC],
-    access_right_update_schema: Type[schemas.ARU],
-    role_access_right_schema: Type[schemas.RAR],
-    role_access_right_update_schema: Type[schemas.RARU],
+    access_right_schema: type[schemas.AR],
+    access_right_create_schema: type[schemas.ARC],
+    access_right_update_schema: type[schemas.ARU],
+    role_access_right_schema: type[schemas.RAR],
+    role_access_right_update_schema: type[schemas.RARU],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
 ) -> APIRouter:
     router = APIRouter()

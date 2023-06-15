@@ -1,5 +1,5 @@
 import logging
-from typing import Generic, List
+from typing import Generic
 
 import jwt
 
@@ -19,7 +19,7 @@ class JWTStrategy(
         self,
         secret: SecretType,
         lifetime_seconds: int | None,
-        token_audience: List[str] = ["fastapi-users:auth"],
+        token_audience: list[str] = ["fastapi-users:auth"],
         algorithm: str = "HS256",
         public_key: SecretType | None = None,
     ):
@@ -40,7 +40,12 @@ class JWTStrategy(
     async def read_token(
         self,
         token: str | None,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
+        user_manager: BaseUserManager[
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
+        ],
     ) -> models_protocol.UP | None:
         if token is None:
             return None
@@ -82,7 +87,7 @@ class JWTBlacklistStrategy(
         self,
         secret: SecretType,
         lifetime_seconds: int | None,
-        token_audience: List[str] = ["fastapi-users:auth"],
+        token_audience: list[str] = ["fastapi-users:auth"],
         algorithm: str = "HS256",
         public_key: SecretType | None = None,
         blacklist_manager: TokenBlacklistManager | None = None,
@@ -95,7 +100,12 @@ class JWTBlacklistStrategy(
     async def read_token(
         self,
         token: str | None,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
+        user_manager: BaseUserManager[
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
+        ],
     ) -> models_protocol.UP | None:
         if self.blacklist_manager and await self.blacklist_manager.check_token(token):
             return None

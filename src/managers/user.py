@@ -424,7 +424,8 @@ UserManagerDependency = DependencyCallable[
         models_protocol.UP,
         models_protocol.SIHE,
         models_protocol.OAP,
-        models_protocol.UOAP]
+        models_protocol.UOAP,
+    ]
 ]
 
 
@@ -434,8 +435,8 @@ class UserManager(
         models_protocol.UP,
         models_protocol.SIHE,
         models_protocol.OAP,
-        models_protocol.UOAP
-    ]
+        models_protocol.UOAP,
+    ],
 ):
     reset_password_token_secret = settings.reset_password_token_secret
     verification_token_secret = settings.verification_password_token_secret

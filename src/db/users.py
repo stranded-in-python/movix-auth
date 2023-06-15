@@ -1,7 +1,7 @@
 """FastAPI Users database adapter for SQLAlchemy."""
 import uuid
 from datetime import datetime
-from typing import Any, Iterable, Sequence, Tuple, Type
+from typing import Any, Iterable, Sequence
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Row, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -79,12 +79,13 @@ class SASignInHistory(SQLAlchemyBase):
 
 
 class SAUserDB(
-    BaseUserDatabase[models.UserRead,
-                     uuid.UUID,
-                     models.EventRead,
-                     models.OAuthAccount,
-                     models.UserOAuth,
-                     ]
+    BaseUserDatabase[
+        models.UserRead,
+        uuid.UUID,
+        models.EventRead,
+        models.OAuthAccount,
+        models.UserOAuth,
+    ]
 ):
     """
     Database adapter for SQLAlchemy.
@@ -98,9 +99,9 @@ class SAUserDB(
     def __init__(
         self,
         session: AsyncSession,
-        user_table: Type[SAUser],
-        history_table: Type[SASignInHistory],
-        oauth_account_table: Type[SAOAuthAccount]
+        user_table: type[SAUser],
+        history_table: type[SASignInHistory],
+        oauth_account_table: type[SAOAuthAccount],
     ):
         self.session = session
         self.user_table = user_table
@@ -159,7 +160,7 @@ class SAUserDB(
         await self.session.delete(user)
         await self.session.commit()
 
-    async def _get_user(self, statement: Select[Tuple[SAUser]]) -> SAUser | None:
+    async def _get_user(self, statement: Select[tuple[SAUser]]) -> SAUser | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
@@ -167,10 +168,10 @@ class SAUserDB(
         statement = select(self.user_table).where(self.user_table.id == user_id)
         return await self._get_user(statement)
 
-    async def _get_oauth_account_by_id(self, account_id: uuid.UUID) -> SAOAuthAccount | None:
-        statement = select(
-            self.oauth_account_table
-        ).where(
+    async def _get_oauth_account_by_id(
+        self, account_id: uuid.UUID
+    ) -> SAOAuthAccount | None:
+        statement = select(self.oauth_account_table).where(
             self.oauth_account_table.account_id == account_id
         )
         results = await self.session.execute(statement)
@@ -200,7 +201,9 @@ class SAUserDB(
             return []
         return list(models.EventRead.from_orm(event[0]) for event in events)
 
-    async def get_by_oauth_account(self, oauth: str, account_id: str) -> models.UserOAuth | None:
+    async def get_by_oauth_account(
+        self, oauth: str, account_id: str
+    ) -> models.UserOAuth | None:
         statement: Select[Any] = (
             select(self.user_table)
             .join(self.oauth_account_table)
@@ -211,7 +214,9 @@ class SAUserDB(
 
         return models.UserOAuth.from_orm(user)
 
-    async def add_oauth_account(self, user: models.UserRead, create_dict: dict[str, Any]) -> models.UserOAuth:
+    async def add_oauth_account(
+        self, user: models.UserRead, create_dict: dict[str, Any]
+    ) -> models.UserOAuth:
         user_model = await self._get_user_by_id(user.id)
 
         await self.session.refresh(user_model)
@@ -225,7 +230,10 @@ class SAUserDB(
         return models.UserOAuth.from_orm(user_model)
 
     async def update_oauth_account(
-        self, user: models.UserRead, oauth_account: models.OAuthAccount, update_dict: dict[str, Any]
+        self,
+        user: models.UserRead,
+        oauth_account: models.OAuthAccount,
+        update_dict: dict[str, Any],
     ) -> models.UserOAuth:
         user_model = await self._get_user_by_id(user.id)
         oauth_account_model = await self._get_oauth_account_by_id(oauth_account.id)

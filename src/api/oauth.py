@@ -1,17 +1,15 @@
-from typing import Dict, List, Optional, Tuple
-
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from httpx_oauth.integrations.fastapi import OAuth2AuthorizeCallback
 from httpx_oauth.oauth2 import BaseOAuth2, OAuth2Token
 from pydantic import BaseModel
 
-from db import models_protocol as models
+from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Strategy
 from core.exceptions import UserAlreadyExists
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt
+from db import models_protocol as models
 from managers.user import BaseUserManager, UserManagerDependency
-from api.v1.common import ErrorCode, ErrorModel
 
 STATE_TOKEN_AUDIENCE = "fastapi-users:oauth-state"
 
@@ -21,7 +19,7 @@ class OAuth2AuthorizeResponse(BaseModel):
 
 
 def generate_state_token(
-    data: Dict[str, str], secret: SecretType, lifetime_seconds: int = 3600
+    data: dict[str, str], secret: SecretType, lifetime_seconds: int = 3600
 ) -> str:
     data["aud"] = STATE_TOKEN_AUDIENCE
     return generate_jwt(data, secret, lifetime_seconds)
@@ -30,9 +28,11 @@ def generate_state_token(
 def get_oauth_router(
     oauth_client: BaseOAuth2,
     backend: AuthenticationBackend,
-    get_user_manager: UserManagerDependency[models.UP, models.SIHE, models.OAP, models.UOAP],
+    get_user_manager: UserManagerDependency[
+        models.UP, models.SIHE, models.OAP, models.UOAP
+    ],
     state_secret: SecretType,
-    redirect_url: Optional[str] = None,
+    redirect_url: str | None = None,
     associate_by_email: bool = False,
 ) -> APIRouter:
     """Generate a router with the OAuth routes."""
@@ -41,13 +41,11 @@ def get_oauth_router(
 
     if redirect_url is not None:
         oauth2_authorize_callback = OAuth2AuthorizeCallback(
-            oauth_client,
-            redirect_url=redirect_url,
+            oauth_client, redirect_url=redirect_url
         )
     else:
         oauth2_authorize_callback = OAuth2AuthorizeCallback(
-            oauth_client,
-            route_name=callback_route_name,
+            oauth_client, route_name=callback_route_name
         )
 
     @router.get(
@@ -56,19 +54,17 @@ def get_oauth_router(
         response_model=OAuth2AuthorizeResponse,
     )
     async def authorize(
-        request: Request, scopes: List[str] = Query(None)
+        request: Request, scopes: list[str] = Query(None)
     ) -> OAuth2AuthorizeResponse:
         if redirect_url is not None:
             authorize_redirect_url = redirect_url
         else:
             authorize_redirect_url = str(request.url_for(callback_route_name))
 
-        state_data: Dict[str, str] = {}
+        state_data: dict[str, str] = {}
         state = generate_state_token(state_data, state_secret)
         authorization_url = await oauth_client.get_authorization_url(
-            authorize_redirect_url,
-            state,
-            scopes,
+            authorize_redirect_url, state, scopes
         )
 
         return OAuth2AuthorizeResponse(authorization_url=authorization_url)
@@ -94,15 +90,17 @@ def get_oauth_router(
                         }
                     }
                 },
-            },
+            }
         },
     )
     async def callback(
         request: Request,
-        access_token_state: Tuple[OAuth2Token, str] = Depends(
+        access_token_state: tuple[OAuth2Token, str] = Depends(
             oauth2_authorize_callback
         ),
-        user_manager: BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models.UP, models.SIHE, models.OAP, models.UOAP
+        ] = Depends(get_user_manager),
         strategy: Strategy[models.UP, models.SIHE] = Depends(backend.get_strategy),
     ):
         token, state = access_token_state
@@ -130,7 +128,7 @@ def get_oauth_router(
                 token.get("expires_at"),
                 token.get("refresh_token"),
                 request,
-                associate_by_email=associate_by_email
+                associate_by_email=associate_by_email,
             )
         except UserAlreadyExists:
             raise HTTPException(

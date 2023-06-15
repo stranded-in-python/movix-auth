@@ -9,9 +9,9 @@ import httpx
 import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI, Response
+from httpx_oauth.oauth2 import OAuth2
 from pydantic import EmailStr, SecretStr
 from pytest_mock import MockerFixture
-from httpx_oauth.oauth2 import OAuth2
 
 from api import schemas
 from authentication import AuthenticationBackend, BearerTransport
@@ -106,11 +106,15 @@ class UserManager(BaseTestUserManager[models.UP, models.SIHE, models.OAP, models
     pass
 
 
-class UserManagerOAuth(BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]):
+class UserManagerOAuth(
+    BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]
+):
     pass
 
 
-class UserManagerMock(BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]):
+class UserManagerMock(
+    BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]
+):
     get_by_email: MagicMock
     forgot_password: MagicMock
     reset_password: MagicMock
@@ -170,9 +174,7 @@ def user() -> UserModel:
 
 
 @pytest.fixture
-def user_oauth(
-    oauth_account1: OAuthAccount, oauth_account2: OAuthAccount
-) -> UserOAuth:
+def user_oauth(oauth_account1: OAuthAccount, oauth_account2: OAuthAccount) -> UserOAuth:
     return UserOAuth(
         email="king.arthur@camelot.bt",
         hashed_password=guinevere_password_hash,
@@ -281,7 +283,7 @@ def superuser() -> UserModel:
 
 class MockUserDatabase(
     Generic[models.UP, models.SIHE, models.OAP, models.UOAP],
-    BaseUserDatabase[models.UP, IDType, models.SIHE, models.OAP, models.UOAP]
+    BaseUserDatabase[models.UP, IDType, models.SIHE, models.OAP, models.UOAP],
 ):
     def __init__(self, user: UserModel, inactive_user: UserModel, superuser: UserModel):
         self.user: UserModel = user
@@ -324,10 +326,10 @@ class MockUserDatabase(
 
         return None
 
-    async def create(self, create_dict: Dict[str, Any]) -> UserModel:
+    async def create(self, create_dict: dict[str, Any]) -> UserModel:
         return UserModel(**create_dict)
 
-    async def update(self, user: UserModel, update_dict: Dict[str, Any]) -> UserModel:
+    async def update(self, user: UserModel, update_dict: dict[str, Any]) -> UserModel:
         for field, value in update_dict.items():
             setattr(user, field, value)
         return user
@@ -339,24 +341,15 @@ class MockUserDatabase(
 @pytest.fixture
 def mock_user_db(
     user: UserModel, inactive_user: UserModel, superuser: UserModel
-) -> BaseUserDatabase[
-    UserModel,
-    IDType,
-    SignInModel,
-    UserOAuth,
-    OAuthAccount
-]:
-    return MockUserDatabase[
-        UserModel,
-        SignInModel,
-        UserOAuth,
-        OAuthAccount
-    ](user, inactive_user, superuser)
+) -> BaseUserDatabase[UserModel, IDType, SignInModel, UserOAuth, OAuthAccount]:
+    return MockUserDatabase[UserModel, SignInModel, UserOAuth, OAuthAccount](
+        user, inactive_user, superuser
+    )
 
 
 @pytest.fixture
 def make_user_manager(mocker: MockerFixture):
-    def _make_user_manager(user_manager_class: Type[BaseTestUserManager], mock_user_db):
+    def _make_user_manager(user_manager_class: type[BaseTestUserManager], mock_user_db):
         user_manager = user_manager_class(mock_user_db)
         mocker.spy(user_manager, "get_by_email")
         mocker.spy(user_manager, "get_by_username")
@@ -453,21 +446,10 @@ def get_test_client():
 
 @pytest.fixture
 def mock_user_db_oauth(
-    user_oauth: UserOAuth,
-    inactive_user_oauth: UserOAuth,
-    superuser_oauth: UserOAuth,
-) -> BaseUserDatabase[
-    UserModel,
-    IDType,
-    SignInModel,
-    UserOAuth,
-    OAuthAccount
-]:
-    class MockUserDatabase(BaseUserDatabase[UserModel,
-        IDType,
-        SignInModel,
-        UserOAuth,
-        OAuthAccount]
+    user_oauth: UserOAuth, inactive_user_oauth: UserOAuth, superuser_oauth: UserOAuth
+) -> BaseUserDatabase[UserModel, IDType, SignInModel, UserOAuth, OAuthAccount]:
+    class MockUserDatabase(
+        BaseUserDatabase[UserModel, IDType, SignInModel, UserOAuth, OAuthAccount]
     ):
         async def get(self, id: IDType) -> Optional[UserOAuth]:
             if id == user_oauth.id:
@@ -506,11 +488,11 @@ def mock_user_db_oauth(
                 return inactive_user_oauth
             return None
 
-        async def create(self, create_dict: Dict[str, Any]) -> UserOAuth:
+        async def create(self, create_dict: dict[str, Any]) -> UserOAuth:
             return UserOAuth(**create_dict)
 
         async def update(
-            self, user: UserOAuth, update_dict: Dict[str, Any]
+            self, user: UserOAuth, update_dict: dict[str, Any]
         ) -> UserOAuth:
             for field, value in update_dict.items():
                 setattr(user, field, value)
@@ -520,7 +502,7 @@ def mock_user_db_oauth(
             pass
 
         async def add_oauth_account(
-            self, user: UserOAuth, create_dict: Dict[str, Any]
+            self, user: UserOAuth, create_dict: dict[str, Any]
         ) -> UserOAuth:
             oauth_account = OAuthAccount(**create_dict)
             user.oauth_accounts.append(oauth_account)
@@ -530,7 +512,7 @@ def mock_user_db_oauth(
             self,
             user: UserOAuth,
             oauth_account: OAuthAccount,
-            update_dict: Dict[str, Any],
+            update_dict: dict[str, Any],
         ) -> UserOAuth:
             for field, value in update_dict.items():
                 setattr(oauth_account, field, value)
@@ -551,6 +533,7 @@ def mock_user_db_oauth(
 @pytest.fixture
 def user_manager_oauth(make_user_manager, mock_user_db_oauth):
     return make_user_manager(UserManagerOAuth, mock_user_db_oauth)
+
 
 @pytest.fixture
 def get_user_manager_oauth(user_manager_oauth):

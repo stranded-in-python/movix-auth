@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db.models_protocol import ARP, ID, RARP, RP, SIHE, UP, URP, OAP, UOAP
+from db.models_protocol import ARP, ID, OAP, RARP, RP, SIHE, UOAP, UP, URP
 
 metadata_obj = MetaData(schema="users")
 
@@ -55,17 +55,12 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE, OAP, UOAP]):
         """Get recorded events in users sigh-in history"""
         raise NotImplementedError
 
-    async def add_oauth_account(
-        self, user: UP, create_dict: dict[str, t.Any]
-    ) -> UOAP:
+    async def add_oauth_account(self, user: UP, create_dict: dict[str, t.Any]) -> UOAP:
         """Create an OAuth account and add it to the user."""
         raise NotImplementedError()
 
     async def update_oauth_account(
-        self,
-        user: UOAP,
-        oauth_account: OAP,
-        update_dict: dict[str, t.Any],
+        self, user: UOAP, oauth_account: OAP, update_dict: dict[str, t.Any]
     ) -> UOAP:
         """Update an OAuth account on a user."""
         raise NotImplementedError()

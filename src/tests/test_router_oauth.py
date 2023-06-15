@@ -5,24 +5,15 @@ import pytest
 from fastapi import FastAPI, status
 from httpx_oauth.oauth2 import BaseOAuth2
 
-from core import exceptions
+from api.oauth import generate_state_token, get_oauth_router
 from api.v1.common import ErrorCode
-from api.oauth import (
-    generate_state_token,
-    get_oauth_router,
-)
-from tests.conftest import (
-    AsyncMethodMocker,
-    UserManagerMock,
-    UserOAuth,
-)
+from core import exceptions
+from tests.conftest import AsyncMethodMocker, UserManagerMock, UserOAuth
 
 
 @pytest.fixture
 def app_factory(secret, get_user_manager_oauth, mock_authentication, oauth_client):
-    def _app_factory(
-        redirect_url: str | None = None
-    ) -> FastAPI:
+    def _app_factory(redirect_url: str | None = None) -> FastAPI:
         oauth_router = get_oauth_router(
             oauth_client,
             mock_authentication,
@@ -137,8 +128,7 @@ class TestCallback:
         )
 
         response = await test_app_client.get(
-            "/oauth/callback",
-            params={"code": "CODE", "state": "STATE"},
+            "/oauth/callback", params={"code": "CODE", "state": "STATE"}
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -163,13 +153,12 @@ class TestCallback:
         ).side_effect = exceptions.UserAlreadyExists
 
         response = await test_app_client.get(
-            "/oauth/callback",
-            params={"code": "CODE", "state": state_jwt},
+            "/oauth/callback", params={"code": "CODE", "state": state_jwt}
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.OAUTH_USER_ALREADY_EXISTS
 
         assert user_manager_oauth.on_after_login.called is False
@@ -193,13 +182,12 @@ class TestCallback:
         )
 
         response = await test_app_client.get(
-            "/oauth/callback",
-            params={"code": "CODE", "state": state_jwt},
+            "/oauth/callback", params={"code": "CODE", "state": state_jwt}
         )
 
         assert response.status_code == status.HTTP_200_OK
 
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["access_token"] == str(user_oauth.id)
 
         assert user_manager_oauth.on_after_login.called is True
@@ -225,8 +213,7 @@ class TestCallback:
         )
 
         response = await test_app_client.get(
-            "/oauth/callback",
-            params={"code": "CODE", "state": state_jwt},
+            "/oauth/callback", params={"code": "CODE", "state": state_jwt}
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -253,8 +240,7 @@ class TestCallback:
         )
 
         response = await test_app_client_redirect_url.get(
-            "/oauth/callback",
-            params={"code": "CODE", "state": state_jwt},
+            "/oauth/callback", params={"code": "CODE", "state": state_jwt}
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -263,7 +249,7 @@ class TestCallback:
             "CODE", "http://www.tintagel.bt/callback", None
         )
 
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["access_token"] == str(user_oauth.id)
         assert user_manager_oauth.on_after_login.called is True
 
@@ -286,8 +272,7 @@ class TestCallback:
         )
 
         response = await test_app_client_redirect_url.get(
-            "/oauth/callback",
-            params={"code": "CODE", "state": state_jwt},
+            "/oauth/callback", params={"code": "CODE", "state": state_jwt}
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -5,9 +5,13 @@ import psycopg2
 
 from core.password.password import PasswordHelper
 
-dsl = {'dbname': os.getenv('POSTGRES_DB'), 'user': os.getenv('POSTGRES_USER'),
-    'password': os.getenv('POSTGRES_PASSWORD'), 'host': os.getenv('POSTGRES_HOST'), 
-    'port': os.getenv('POSTGRES_PORT')}
+dsl = {
+    'dbname': os.getenv('POSTGRES_DB'),
+    'user': os.getenv('POSTGRES_USER'),
+    'password': os.getenv('POSTGRES_PASSWORD'),
+    'host': os.getenv('POSTGRES_HOST'),
+    'port': os.getenv('POSTGRES_PORT'),
+}
 
 
 password_hasher = PasswordHelper()
@@ -24,9 +28,18 @@ if __name__ == '__main__':
             INSERT INTO users.user (id, username, email, hashed_password, is_active, is_superuser, first_name, last_name)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO UPDATE SET
-            (id, username, email, hashed_password, is_active, is_superuser, first_name, last_name) 
+            (id, username, email, hashed_password, is_active, is_superuser, first_name, last_name)
             = (EXCLUDED.id, EXCLUDED.username, EXCLUDED.email, EXCLUDED.hashed_password, EXCLUDED.is_active, EXCLUDED.is_superuser, EXCLUDED.first_name, EXCLUDED.last_name);
         """
-        values = (superuser_id, superuser_login, superuser_email, superuser_password, True, True, "super", "user")
+        values = (
+            superuser_id,
+            superuser_login,
+            superuser_email,
+            superuser_password,
+            True,
+            True,
+            "super",
+            "user",
+        )
         curs.execute(curs.mogrify(query, values))
         pg_conn.commit()

@@ -1,7 +1,7 @@
 import uuid
 from typing import TypeVar
 
-from pydantic import EmailStr, BaseModel
+from pydantic import BaseModel, EmailStr
 
 from db.schemas import generics
 

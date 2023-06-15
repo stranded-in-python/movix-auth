@@ -1,4 +1,3 @@
-from typing import Type
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -14,15 +13,20 @@ from managers.user import BaseUserManager, UserManagerDependency
 
 
 def get_roles_router(
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ],
     get_role_manager: RoleManagerDependency[
         models_protocol.UP, models_protocol.RP, models_protocol.URP
     ],
-    role_schema: Type[schemas.R],
-    role_create_schema: Type[schemas.RC],
-    role_update_schema: Type[schemas.RU],
-    user_role_schema: Type[schemas.UR],
-    user_role_update_schema: Type[schemas.URU],
+    role_schema: type[schemas.R],
+    role_create_schema: type[schemas.RC],
+    role_update_schema: type[schemas.RU],
+    user_role_schema: type[schemas.UR],
+    user_role_update_schema: type[schemas.URU],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
 ) -> APIRouter:
     router = APIRouter()
@@ -187,7 +191,10 @@ def get_roles_router(
     async def check_user_role(  # pyright: ignore
         user_role: user_role_update_schema,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -226,7 +233,10 @@ def get_roles_router(
     async def assign_role(  # pyright: ignore
         user_role: user_role_update_schema,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -269,7 +279,10 @@ def get_roles_router(
     async def remove_user_role(  # pyright: ignore
         user_role: user_role_schema,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -305,7 +318,10 @@ def get_roles_router(
     async def user_roles(  # pyright: ignore
         user_id: UUID,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP

@@ -1,16 +1,16 @@
-from typing import Generic, Sequence, Type
+from typing import Generic, Sequence
 
 from fastapi import APIRouter
-from core.jwt_utils import SecretType
 from httpx_oauth.oauth2 import BaseOAuth2
 
 from api import schemas
+from api.oauth import get_oauth_router
 from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
 from api.v1.user import get_users_me_router, get_users_router
-from api.oauth import get_oauth_router
 from authentication import AuthenticationBackend, Authenticator
+from core.jwt_utils import SecretType
 from db import models_protocol
 from managers.user import UserManagerDependency
 
@@ -33,7 +33,10 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ],
         access_backends: Sequence[
             AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
@@ -49,7 +52,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         self.auth_current_user = self.refresh_authenticator.current_user
 
     def get_register_router(
-        self, user_schema: Type[schemas.U], user_create_schema: Type[schemas.UC]
+        self, user_schema: type[schemas.U], user_create_schema: type[schemas.UC]
     ) -> APIRouter:
         """
         Return a router with a register route.
@@ -91,9 +94,9 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     def get_users_me_router(
         self,
-        user_schema: Type[schemas.UserRead],
-        user_update_schema: Type[schemas.UserUpdate],
-        event_schema: Type[schemas.EventRead],
+        user_schema: type[schemas.UserRead],
+        user_update_schema: type[schemas.UserUpdate],
+        event_schema: type[schemas.EventRead],
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
@@ -112,8 +115,8 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
 
     def get_users_router(
         self,
-        user_schema: Type[schemas.UserRead],
-        user_update_schema: Type[schemas.UserUpdate],
+        user_schema: type[schemas.UserRead],
+        user_update_schema: type[schemas.UserUpdate],
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
@@ -147,7 +150,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         If not given, the URL to the callback endpoint will be generated.
         :param associate_by_email: If True, any existing user with the same
         e-mail address will be associated to this user. Defaults to False.
-       """
+        """
         return get_oauth_router(
             oauth_client,
             backend,
