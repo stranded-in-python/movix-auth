@@ -4,7 +4,7 @@ from typing import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from core.config import get_database_url_async, settings
+from core.config import get_database_url_async
 
 from . import access_rights, base, roles, users
 
@@ -25,7 +25,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    yield users.SAUserDB(session, users.SAUser, users.SASignInHistory)
+    yield users.SAUserDB(session, users.SAUser, users.SASignInHistory, users.SAOAuthAccount)
 
 
 async def get_role_db(session: AsyncSession = Depends(get_async_session)):
