@@ -39,7 +39,7 @@ jobs:
       - name: pre-commit
         run: |
           python3.11 -m venv venv
-          source venv/bin/activate
+          source .venv/bin/activate
           pip install -r requirements/local.txt
           pre-commit run --show-diff-on-failure --color=always --all-files
 
