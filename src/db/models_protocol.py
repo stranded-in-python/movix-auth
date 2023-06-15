@@ -70,7 +70,16 @@ class OAuthAccountProtocol(Protocol[ID]):
     account_email: str
 
 
-OAP = TypeVar("OAP", bound=OAuthAccountProtocol)
+OAP = TypeVar("OAP", bound=OAuthAccountProtocol[UUID])
+
+
+class UserOAuthProtocol(Protocol[UserProtocol[UUID, pydantic.EmailStr], OAuthAccountProtocol[UUID]]):
+    """User protocol including a list of OAuth accounts."""
+
+    oauth_accounts: list[OAuthAccountProtocol[UUID]]
+
+
+UOAP = TypeVar("UOAP", bound=UserOAuthProtocol)
 
 
 class RoleProtocol(Protocol[ID]):

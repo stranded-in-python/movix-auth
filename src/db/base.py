@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from core.dependency_types import DependencyCallable
 from core.pagination import PaginateQueryParams
-from db.models_protocol import ARP, ID, RARP, RP, SIHE, UP, URP
+from db.models_protocol import ARP, ID, RARP, RP, SIHE, UP, URP, OAP, UOAP
 
 metadata_obj = MetaData(schema="users")
 
@@ -14,7 +14,7 @@ class SQLAlchemyBase(DeclarativeBase):
     metadata = metadata_obj
 
 
-class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
+class BaseUserDatabase(t.Generic[UP, ID, SIHE, OAP, UOAP]):
     """Base adapter for retrieving, creating and updating users from a database."""
 
     async def get(self, user_id: ID) -> UP | None:
@@ -29,6 +29,10 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
         """Get a single user by email."""
         raise NotImplementedError
 
+    async def get_by_oauth_account(self, oauth: str, account_id: str) -> UP | None:
+        """Get a single user by OAuth account id."""
+        raise NotImplementedError()
+
     async def create(self, create_dict: dict[str, t.Any]) -> UP:
         """Create a user."""
         raise NotImplementedError
@@ -41,7 +45,7 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
         """Delete a user."""
         raise NotImplementedError
 
-    async def record_in_sighin_history(self, user_id: ID, event: SIHE):
+    async def record_in_sighin_history(self, user_id: ID, event: SIHE) -> None:
         """Record in users sigh-in history"""
         raise NotImplementedError
 
@@ -50,6 +54,21 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
     ) -> t.Iterable[SIHE]:
         """Get recorded events in users sigh-in history"""
         raise NotImplementedError
+
+    async def add_oauth_account(
+        self, user: UOAP, create_dict: dict[str, t.Any]
+    ) -> UOAP:
+        """Create an OAuth account and add it to the user."""
+        raise NotImplementedError()
+
+    async def update_oauth_account(
+        self,
+        user: UOAP,
+        oauth_account: OAP,
+        update_dict: dict[str, t.Any],
+    ) -> UOAP:
+        """Update an OAuth account on a user."""
+        raise NotImplementedError()
 
 
 class BaseRoleDatabase(t.Generic[RP, ID]):
@@ -151,7 +170,7 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
 
 RETURN_TYPE = t.TypeVar("RETURN_TYPE")
 
-UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID, SIHE]]
+UserDatabaseDependency = DependencyCallable[BaseUserDatabase[UP, ID, SIHE, OAP, UOAP]]
 BaseRoleDatabaseDependency = DependencyCallable[BaseRoleDatabase[RP, ID]]
 BaseUserRoleRoleDatabaseDependency = DependencyCallable[BaseUserRoleDatabase[URP, ID]]
 BaseAccessRightDatabaseDependency = DependencyCallable[BaseAccessRightDatabase[ARP, ID]]
