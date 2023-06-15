@@ -5,7 +5,7 @@ from typing import Any, Iterable, Sequence, Tuple, Type
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Row, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
@@ -41,6 +41,31 @@ class SAUser(SQLAlchemyBase):
     signin = relationship("SASignInHistory")
 
 
+class SABaseOAuthAccountTable(SQLAlchemyBase):
+    """Base SQLAlchemy OAuth account table definition."""
+
+    __tablename__ = "oauth_account"
+
+    oauth_name: Mapped[str] = mapped_column(
+        String(length=100), index=True, nullable=False
+    )
+    access_token: Mapped[str] = mapped_column(String(length=1024), nullable=False)
+    expires_at: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    refresh_token: Mapped[str | None] = mapped_column(
+        String(length=1024), nullable=True
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(length=320), index=True, nullable=False
+    )
+    account_email: Mapped[str] = mapped_column(String(length=320), nullable=False)
+
+    @declared_attr
+    def user_id(cls) -> Mapped[GUID]:
+        return mapped_column(
+            GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False
+        )
+
+
 class SASignInHistory(SQLAlchemyBase):
     __tablename__ = 'signins_history'
 
@@ -50,27 +75,14 @@ class SASignInHistory(SQLAlchemyBase):
     user_id: Mapped[UUID_ID] = mapped_column("user", ForeignKey("user.id"))
 
 
-class SQLAlchemyOAuthAccountTable(SQLAlchemyBase):
-    """Base SQLAlchemy OAuth account table definition."""
-
-    __tablename__ = "oauth_account"
-
-    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    oauth_name: Mapped[str] = mapped_column(
-        String(length=100), index=True, nullable=False
-    )
-    access_token: Mapped[str] = mapped_column(String(length=1024), nullable=False)
-    expires_at: Mapped[None | int] = mapped_column(Integer, nullable=True)
-    refresh_token: Mapped[str | None] = mapped_column(
-        String(length=1024), nullable=True
-    )
-    account_id: Mapped[str] = mapped_column(
-        String(length=320), index=True, nullable=False
-    )
-    account_email: Mapped[str] = mapped_column(String(length=320), nullable=False)
-
-
-class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
+class SAUserDB(
+    BaseUserDatabase[models.UserRead,
+                     uuid.UUID,
+                     models.EventRead,
+                     models.OAuthAccount,
+                     models.UserOAuth,
+                     ]
+):
     """
     Database adapter for SQLAlchemy.
 
