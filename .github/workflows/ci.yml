@@ -58,6 +58,22 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.TOKEN }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements/base.txt
+            requirements/local.txt
+
+      - name: pytest
+        run: |
+          python3.11 -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements/local.txt
+          pytest .
+
       - name: Build Docker image
         uses: docker/build-push-action@v4
         with:
@@ -68,9 +84,6 @@ jobs:
           labels: |
             maintainer=${{ github.actor }}
             build-date=${{ github.event.head_commit.timestamp }}
-
-      - name: Run pytest
-        run: pytest ./src/tests
 
   builder:
     environment: production
