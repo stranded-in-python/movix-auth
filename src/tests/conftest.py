@@ -48,6 +48,31 @@ class UserModel:
 
 
 @dataclasses.dataclass
+class OAuthAccount:
+    id: uuid.UUID
+    oauth_name: str
+    access_token: str
+    expires_at: int | None
+    refresh_token: str | None
+    account_id: str
+    account_email: str
+
+
+@dataclasses.dataclass
+class UserOAuth:
+    oauth_accounts: list[OAuthAccount]
+    email: EmailStr
+    hashed_password: str
+    id: IDType = dataclasses.field(default_factory=uuid.uuid4)
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    is_active: bool = True
+    is_superuser: bool = False
+    is_admin: bool = False
+
+
+@dataclasses.dataclass
 class SignInModel(models.SignInHistoryEvent[IDType]):
     id: IDType
     user_id: IDType
@@ -56,9 +81,9 @@ class SignInModel(models.SignInHistoryEvent[IDType]):
 
 
 class BaseTestUserManager(
-    Generic[models.UP, models.SIHE],
+    Generic[models.UP, models.SIHE, models.OAP, models.UOAP],
     models.UUIDIDMixin,
-    BaseUserManager[models.UP, models.SIHE],
+    BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP],
 ):
     reset_password_token_secret = "SECRET"  # type: ignore
     verification_token_secret = "SECRET"  # type: ignore
@@ -72,11 +97,11 @@ class BaseTestUserManager(
             )
 
 
-class UserManager(BaseTestUserManager[models.UP, models.SIHE]):
+class UserManager(BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]):
     pass
 
 
-class UserManagerMock(BaseTestUserManager[models.UP, models.SIHE]):
+class UserManagerMock(BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]):
     get_by_email: MagicMock
     forgot_password: MagicMock
     reset_password: MagicMock
@@ -160,7 +185,8 @@ def superuser() -> UserModel:
 
 
 class MockUserDatabase(
-    Generic[models.UP, models.SIHE], BaseUserDatabase[models.UP, IDType, models.SIHE]
+    Generic[models.UP, models.SIHE, models.OAP, models.UOAP],
+    BaseUserDatabase[models.UP, IDType, models.SIHE, models.OAP, models.UOAP]
 ):
     def __init__(self, user: UserModel, inactive_user: UserModel, superuser: UserModel):
         self.user: UserModel = user
@@ -218,8 +244,19 @@ class MockUserDatabase(
 @pytest.fixture
 def mock_user_db(
     user: UserModel, inactive_user: UserModel, superuser: UserModel
-) -> BaseUserDatabase[UserModel, IDType, SignInModel]:
-    return MockUserDatabase[UserModel, SignInModel](user, inactive_user, superuser)
+) -> BaseUserDatabase[
+    UserModel,
+    IDType,
+    SignInModel,
+    UserOAuth,
+    OAuthAccount
+]:
+    return MockUserDatabase[
+        UserModel,
+        SignInModel,
+        UserOAuth,
+        OAuthAccount
+    ](user, inactive_user, superuser)
 
 
 @pytest.fixture
@@ -272,7 +309,7 @@ class MockStrategy(Strategy[UserModel, SignInModel]):
     async def read_token(
         self,
         token: Optional[str],
-        user_manager: BaseUserManager[UserModel, SignInModel],
+        user_manager: BaseUserManager[UserModel, SignInModel, UserOAuth, OAuthAccount],
     ) -> Optional[UserModel]:
         if token is not None:
             try:

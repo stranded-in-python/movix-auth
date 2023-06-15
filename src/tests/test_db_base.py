@@ -3,13 +3,13 @@ import uuid
 import pytest
 
 from db.users import BaseUserDatabase
-from tests.conftest import IDType, SignInModel, UserModel
+from tests.conftest import IDType, SignInModel, UserModel, UserOAuth, OAuthAccount
 
 
 @pytest.mark.asyncio
 @pytest.mark.db
 async def test_not_implemented_methods(user: UserModel):
-    base_user_db = BaseUserDatabase[UserModel, IDType, SignInModel]()
+    base_user_db = BaseUserDatabase[UserModel, IDType, SignInModel, UserOAuth, OAuthAccount]()
 
     with pytest.raises(NotImplementedError):
         await base_user_db.get(uuid.uuid4())

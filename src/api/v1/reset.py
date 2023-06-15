@@ -34,7 +34,7 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
 
 
 def get_reset_password_router(
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE]
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP]
 ) -> APIRouter:
     """Generate a router with the reset pw routes."""
     router = APIRouter()
@@ -49,7 +49,7 @@ def get_reset_password_router(
         request: Request,
         email: EmailStr = Body(..., embed=True),
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
         ] = Depends(get_user_manager),
     ):
         try:
@@ -74,7 +74,7 @@ def get_reset_password_router(
         token: str = Body(...),
         password: str = Body(...),
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
         ] = Depends(get_user_manager),
     ):
         try:

@@ -16,7 +16,7 @@ class APIRoles(Generic[models_protocol.RP, models_protocol.UP, models_protocol.S
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
         ],
         get_role_manager: RoleManagerDependency[
             models_protocol.UP, models_protocol.RP, models_protocol.URP,

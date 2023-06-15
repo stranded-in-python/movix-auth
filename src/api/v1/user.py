@@ -12,7 +12,7 @@ from managers.user import BaseUserManager, UserManagerDependency
 
 
 def get_users_me_router(
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
     user_schema: Type[schemas.U],
     user_update_schema: Type[schemas.UU],
     event_schema: Type[schemas.EventRead],
@@ -88,7 +88,7 @@ def get_users_me_router(
         user_update: user_update_schema,
         user: models_protocol.UP = Depends(get_current_active_user),
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
         ] = Depends(get_user_manager),
     ) -> schemas.UserRead:
         try:
@@ -122,7 +122,7 @@ def get_users_me_router(
     )
     async def sign_in_history(  # pyright: ignore
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
         ] = Depends(get_user_manager),
         user: models_protocol.UP = Depends(get_current_active_user),
         paginate_params: PaginateQueryParams = Depends(PaginateQueryParams),
@@ -135,7 +135,7 @@ def get_users_me_router(
 
 
 def get_users_router(
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
     user_schema: Type[schemas.U],
     user_update_schema: Type[schemas.UU],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
@@ -148,7 +148,7 @@ def get_users_router(
     async def get_user_or_404(
         id: str,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
         ] = Depends(get_user_manager),
     ) -> models_protocol.UP:
         try:
@@ -218,7 +218,7 @@ def get_users_router(
         request: Request,
         user: models_protocol.UP = Depends(get_user_or_404),
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
         ] = Depends(get_user_manager),
     ):
         try:
@@ -257,7 +257,7 @@ def get_users_router(
     async def delete_user(  # pyright: ignore
         user: models_protocol.UP = Depends(get_user_or_404),
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP
         ] = Depends(get_user_manager),
     ):
         await user_manager.delete(user)

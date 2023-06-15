@@ -40,7 +40,7 @@ class JWTStrategy(
     async def read_token(
         self,
         token: str | None,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE],
+        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
     ) -> models_protocol.UP | None:
         if token is None:
             return None
@@ -95,7 +95,7 @@ class JWTBlacklistStrategy(
     async def read_token(
         self,
         token: str | None,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE],
+        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
     ) -> models_protocol.UP | None:
         if self.blacklist_manager and await self.blacklist_manager.check_token(token):
             return None

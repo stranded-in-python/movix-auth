@@ -15,7 +15,7 @@ from managers.user import UserManagerDependency
 
 
 def get_access_rights_router(
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
     get_role_manager: RoleManagerDependency[
         models_protocol.UP, models_protocol.RP, models_protocol.URP
     ],

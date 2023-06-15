@@ -12,7 +12,7 @@ class Strategy(Protocol[models_protocol.UP, models_protocol.SIHE]):
     async def read_token(
         self,
         token: str | None,
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE],
+        user_manager: BaseUserManager[models_protocol.UP, models_protocol.SIHE, models_protocol.OAP, models_protocol.UOAP],
     ) -> models_protocol.UP | None:
         ...
 

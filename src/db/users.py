@@ -21,7 +21,7 @@ class SAOAuthAccount(SQLAlchemyBase):
     """Base SQLAlchemy OAuth account table definition."""
 
     __tablename__ = "oauth_account"
-
+    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
     oauth_name: Mapped[str] = mapped_column(
         String(length=100), index=True, nullable=False
     )
@@ -210,10 +210,10 @@ class SAUserDB(
         user = await self._get_user(statement)
 
         return models.UserOAuth.from_orm(user)
-    
+
     async def add_oauth_account(self, user: models.UserRead, create_dict: dict[str, Any]) -> models.UserOAuth:
         user_model = await self._get_user_by_id(user.id)
-        
+
         await self.session.refresh(user_model)
         oauth_account = self.oauth_account_table(**create_dict)
         self.session.add(oauth_account)
@@ -236,7 +236,7 @@ class SAUserDB(
         await self.session.commit()
 
         return models.UserOAuth.from_orm(user_model)
-    
+
     async def _get_events(self, statement: Select[Any]) -> Sequence[Row[Any]]:
         results = await self.session.execute(statement)
 
