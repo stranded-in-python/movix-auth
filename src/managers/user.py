@@ -23,7 +23,7 @@ RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
 google_oauth_client = GoogleOAuth2(
-    str(settings.google_oauth_client_id), str(settings.google_oauth_client_secret)
+    settings.google_oauth_client_id, settings.google_oauth_client_secret
 )
 
 
@@ -400,6 +400,7 @@ class BaseUserManager(
                 password = self.password_helper.generate()
                 user_dict = {
                     "email": account_email,
+                    "username": account_email.split("@")[0],
                     "hashed_password": self.password_helper.hash(password),
                 }
                 _user = await self.user_db.create(user_dict)

@@ -169,10 +169,10 @@ class SAUserDB(
         return await self._get_user(statement)
 
     async def _get_oauth_account_by_id(
-        self, account_id: uuid.UUID
+        self, row_id: uuid.UUID
     ) -> SAOAuthAccount | None:
         statement = select(self.oauth_account_table).where(
-            self.oauth_account_table.account_id == account_id
+            self.oauth_account_table.id == row_id
         )
         results = await self.session.execute(statement)
 
@@ -211,7 +211,8 @@ class SAUserDB(
             .where(self.oauth_account_table.account_id == account_id)
         )
         user = await self._get_user(statement)
-
+        if not user:
+            return None
         return models.UserOAuth.from_orm(user)
 
     async def add_oauth_account(

@@ -2,7 +2,7 @@ import asyncio
 import dataclasses
 import datetime
 import uuid
-from typing import Any, AsyncGenerator, Callable, Dict, Generic, Optional, Type, Union
+from typing import Any, AsyncGenerator, Callable, Generic, Optional, Union
 from unittest.mock import MagicMock
 
 import httpx
