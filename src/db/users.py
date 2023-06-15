@@ -217,13 +217,16 @@ class SAUserDB(
 
     async def add_oauth_account(
         self, user: models.UserRead, create_dict: dict[str, Any]
-    ) -> models.UserOAuth:
+    ) -> models.UserOAuth | None:
         user_model = await self._get_user_by_id(user.id)
+        if not user_model:
+            return None
 
         await self.session.refresh(user_model)
         oauth_account = self.oauth_account_table(**create_dict)
         self.session.add(oauth_account)
-        user_model.oauth_accounts.append(oauth_account)
+        oaccounts = list(user_model.oauth_accounts)
+        oaccounts.append(oauth_account)
         self.session.add(user_model)
 
         await self.session.commit()

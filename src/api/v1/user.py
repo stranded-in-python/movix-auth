@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 import logging
 
->>>>>>> main
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 import core.exceptions as exceptions
@@ -18,16 +15,12 @@ logger()
 
 
 def get_users_me_router(
-<<<<<<< HEAD
     get_user_manager: UserManagerDependency[
         models_protocol.UP,
         models_protocol.SIHE,
         models_protocol.OAP,
         models_protocol.UOAP,
     ],
-=======
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
->>>>>>> main
     user_schema: type[schemas.U],
     user_update_schema: type[schemas.UU],
     event_schema: type[schemas.EventRead],
@@ -157,7 +150,6 @@ def get_users_me_router(
     return router
 
 
-<<<<<<< HEAD
 def get_users_router(
     get_user_manager: UserManagerDependency[
         models_protocol.UP,
@@ -165,10 +157,6 @@ def get_users_router(
         models_protocol.OAP,
         models_protocol.UOAP,
     ],
-=======
-def get_users_router(  # noqa: C901
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
->>>>>>> main
     user_schema: type[schemas.U],
     user_update_schema: type[schemas.UU],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],

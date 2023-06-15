@@ -1,4 +1,5 @@
-import logging.config
+import logging
+import logging.config as lconfig
 from typing import Any
 
 LOG_FORMAT = '%(asctime)s:%(name)s:%(levelname)s:%(module)s:%(funcName)s:%(message)s'
@@ -69,6 +70,6 @@ def get_logging_config(
 
 
 def logger():
-    logging.config.dictConfig(get_logging_config())
+    lconfig.dictConfig(get_logging_config())
     logger = logging.getLogger(__file__)
     return logger
