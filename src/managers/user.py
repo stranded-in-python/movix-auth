@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime
 from typing import Any, Generic, Iterable
@@ -13,6 +14,7 @@ from api import schemas
 from core.config import settings
 from core.dependency_types import DependencyCallable
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt  # type: ignore
+from core.logger import logger
 from core.pagination import PaginateQueryParams
 from db import getters, models_protocol
 from db.base import BaseUserDatabase
@@ -23,8 +25,9 @@ RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
 VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
 
 google_oauth_client = GoogleOAuth2(
-    settings.google_oauth_client_id, settings.google_oauth_client_secret
+    str(settings.google_oauth_client_id), str(settings.google_oauth_client_secret)
 )
+logger()
 
 
 class BaseUserManager(
@@ -89,6 +92,7 @@ class BaseUserManager(
 
         existing_user = await self.user_db.get_by_email(user_create.email)
         if existing_user:
+            logging.exception("UserAlreadyexists: %s" % user_create.email)
             raise exceptions.UserAlreadyExists()
         existing_user = (
             await self.user_db.get_by_username(user_create.username)
@@ -96,6 +100,7 @@ class BaseUserManager(
             else None
         )
         if existing_user:
+            logging.exception("UserAlreadyexists: %s" % user_create.username)
             raise exceptions.UserAlreadyExists()
 
         user_dict = (
@@ -154,7 +159,7 @@ class BaseUserManager(
         )
         await self.on_after_forgot_password(user, token, request)
 
-    async def reset_password(
+    async def reset_password(  # noqa: C901
         self, token: str, password: str, request: Request | None = None
     ) -> models_protocol.UP:
         try:
@@ -164,17 +169,20 @@ class BaseUserManager(
                 [self.reset_password_token_audience],
             )
         except jwt.PyJWTError:
+            logging.exception("InvalidResetPasswordToken:%s" % token)
             raise exceptions.InvalidResetPasswordToken()
 
         try:
             user_id = data["sub"]
             password_fingerprint = data["password_fgpt"]
         except KeyError:
+            logging.exception("InvalidResetPasswordToken:fingerprint:nofingerprint!")
             raise exceptions.InvalidResetPasswordToken()
 
         try:
             parsed_id = self.parse_id(user_id)
         except exceptions.InvalidID:
+            logging.exception("InvalidResetPasswordToken:invalidid:%s" % user_id)
             raise exceptions.InvalidResetPasswordToken()
 
         user = await self.get(parsed_id)
@@ -183,9 +191,13 @@ class BaseUserManager(
             user.hashed_password, password_fingerprint
         )
         if not valid_password_fingerprint:
+            logging.exception(
+                "InvalidResetPasswordToken:validpasswordfingerprint:%s" % parsed_id
+            )
             raise exceptions.InvalidResetPasswordToken()
 
         if not user.is_active:
+            logging.exception("UserInactive:%s" % parsed_id)
             raise exceptions.UserInactive()
 
         updated_user = await self._update(user, {"password": password})
@@ -307,8 +319,10 @@ class BaseUserManager(
             if field == "email" and value != user.email:
                 try:
                     await self.get_by_email(value)
+                    logging.exception("UserAlreadyExists:%s" % user.email)
                     raise exceptions.UserAlreadyExists()
                 except exceptions.UserNotExists:
+                    logging.exception("UserNotExists: %s" % user.email)
                     validated_update_dict["email"] = value
 
             elif field == "password":
@@ -471,12 +485,12 @@ class UserManager(
     async def on_after_register(
         self, user: models.UserRead, request: Request | None = None
     ):
-        print(f"User {user.id} has registered.")
+        logging.info("%s registered" % user.id)
 
     async def on_after_forgot_password(
         self, user: models.UserRead, token: str, request: Request | None = None
     ):
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
+        logging.info("%s forgot password. Reset token:%s" % user.id, token)
 
 
 async def get_user_manager(user_db: SAUserDB = Depends(getters.get_user_db)):

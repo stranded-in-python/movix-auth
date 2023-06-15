@@ -29,13 +29,13 @@ class Settings(BaseSettings):
     database_adapter: str = "postgresql"
     database_sqlalchemy_adapter: str = "postgresql+asyncpg"
     # Параметры аутентификации
-    reset_password_token_secret: SecretStr = "SECRET"
-    verification_password_token_secret: SecretStr = "SECRET"
-    access_token_secret: SecretStr = "SECRET"
-    refresh_token_secret: SecretStr = "SECRET"
-    google_oauth_client_id: SecretStr = "SECRET"
-    google_oauth_client_secret: SecretStr = "SECRET"
-    state_secret: SecretStr = "SECRET"
+    google_oauth_client_id: SecretStr = SecretStr("SECRET")
+    google_oauth_client_secret: SecretStr = SecretStr("SECRET")
+    state_secret: SecretStr = SecretStr("SECRET")
+    reset_password_token_secret: SecretStr = SecretStr('reset_password')
+    verification_password_token_secret: SecretStr = SecretStr('verify_password')
+    access_token_secret: SecretStr = SecretStr('access_token')
+    refresh_token_secret: SecretStr = SecretStr('refresh_token')
 
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))

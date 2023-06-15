@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Protocol, Sequence, TypeVar
 from uuid import UUID
 
 import pydantic
@@ -73,13 +73,13 @@ class OAuthAccountProtocol(Protocol[ID]):
 OAP = TypeVar("OAP", bound=OAuthAccountProtocol[UUID])
 
 
-class UserOAuthProtocol(UserProtocol[UUID, pydantic.EmailStr], Generic[ID, OAP]):
+class UserOAuthProtocol(Protocol[OAP]):
     """User protocol including a list of OAuth accounts."""
 
-    oauth_accounts: list[OAP]
+    oauth_accounts: Sequence[OAP]
 
 
-UOAP = TypeVar("UOAP", bound=UserOAuthProtocol)
+UOAP = TypeVar("UOAP", bound=UserOAuthProtocol and UserProtocol)
 
 
 class RoleProtocol(Protocol[ID]):

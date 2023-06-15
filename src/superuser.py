@@ -16,10 +16,10 @@ dsl = {
 
 password_hasher = PasswordHelper()
 
-superuser_password = password_hasher.hash(os.getenv('SUPER_USER_PW'))
-superuser_id = os.getenv('SUPER_USER_ID')
-superuser_login = os.getenv('SUPER_USER_LOGIN')
-superuser_email = os.getenv('SUPER_USER_EMAIL')
+superuser_password = password_hasher.hash(os.getenv('SUPER_USER_PW', 'qweasd123'))
+superuser_id = os.getenv('SUPER_USER_ID', '90cb9877-c9fe-466a-9ba6-0505b2931779')
+superuser_login = os.getenv('SUPER_USER_LOGIN', 'superuser')
+superuser_email = os.getenv('SUPER_USER_EMAIL', 'superuser@movix.com')
 
 if __name__ == '__main__':
     with closing(psycopg2.connect(**dsl)) as pg_conn:

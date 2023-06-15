@@ -64,7 +64,7 @@ class SAUser(SQLAlchemyBase):
         String(length=32), unique=False, index=True, nullable=True
     )
     signin = relationship("SASignInHistory")
-    oauth_accounts: Mapped[list[SAOAuthAccount]] = relationship(
+    oauth_accounts: Mapped[Sequence[SAOAuthAccount]] = relationship(
         "SAOAuthAccount", lazy="joined"
     )
 

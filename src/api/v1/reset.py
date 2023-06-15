@@ -1,11 +1,16 @@
+import logging
+
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import EmailStr
 
 import core.exceptions as exceptions
 from api.v1.common import ErrorCode, ErrorModel
+from core.logger import logger
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
+
+logger()
 
 RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
@@ -63,13 +68,16 @@ def get_reset_password_router(
         try:
             user = await user_manager.get_by_email(email)
         except exceptions.UserNotExists:
+            logging.exception("UserNotExists:%s" % email)
             return None
 
         try:
             await user_manager.forgot_password(user, request)
         except exceptions.UserInactive:
+            logging.exception("UserInactive:%s" % email)
             pass
 
+        logging.info("success:%s" % email)
         return None
 
     @router.post(
@@ -107,5 +115,7 @@ def get_reset_password_router(
                     "reason": e.reason,
                 },
             )
+
+        logging.info("success:%s" % token)
 
     return router

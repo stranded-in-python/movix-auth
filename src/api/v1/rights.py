@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -6,11 +7,14 @@ from api import schemas
 from api.v1.common import ErrorCode
 from authentication import Authenticator
 from core import exceptions
+from core.logger import logger
 from core.pagination import PaginateQueryParams
 from db import models_protocol
 from managers.rights import AccessRightManagerDependency, BaseAccessRightManager
 from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import UserManagerDependency
+
+logger()
 
 
 def get_access_rights_router(
@@ -24,7 +28,7 @@ def get_access_rights_router(
         models_protocol.UP, models_protocol.RP, models_protocol.URP
     ],
     get_access_right_manager: AccessRightManagerDependency[
-        models_protocol.ARP, models_protocol.RARP,
+        models_protocol.ARP, models_protocol.RARP
     ],
     access_right_schema: type[schemas.AR],
     access_right_create_schema: type[schemas.ARC],
@@ -52,10 +56,11 @@ def get_access_rights_router(
         page_params: PaginateQueryParams = Depends(PaginateQueryParams),
         filter_param: str | None = None,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
     ) -> list[access_right_schema]:
         rights = await access_right_manager.search(page_params, filter_param)
+        logging.info("success")
         return list(access_right_schema.from_orm(right) for right in rights)
 
     @router.get(
@@ -71,15 +76,16 @@ def get_access_rights_router(
         request: Request,
         access_right_id: UUID,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
-            return access_right_schema.from_orm(
-                await access_right_manager.get(access_right_id)
-            )
+            access_right = await access_right_manager.get(access_right_id)
+            logging.info("success:%s" % access_right.id)
+            return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightNotExists:
+            logging.exception("AccessRightNotExists:%s" % access_right_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
@@ -97,16 +103,18 @@ def get_access_rights_router(
         request: Request,
         access_right_create: access_right_create_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
             access_right = await access_right_manager.create(
                 access_right_create, request=request
             )
+            logging.info("success:%s" % access_right.id)
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightAlreadyExists:
+            logging.exception("AccessRightAlreadyExists: %s" % access_right_create)
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_ACCESS_NAME_ALREADY_EXISTS,
@@ -125,7 +133,7 @@ def get_access_rights_router(
         request: Request,
         access_right_update: access_right_update_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
@@ -134,15 +142,18 @@ def get_access_rights_router(
             access_right = await access_right_manager.update(
                 access_right_update, access_right, request=request
             )
+            logging.info("success:%s" % access_right.id)
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightNotExists:
+            logging.exception("AccessRightNotExists:%s" % access_right_update)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
                 detail=ErrorCode.UPDATE_ACCESS_NAME_ALREADY_EXISTS,
             )
 
         except exceptions.RoleAlreadyExists:
+            logging.exception("RoleAlreadyExists:%s" % access_right_update)
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.UPDATE_ROLE_NAME_ALREADY_EXISTS,
@@ -161,7 +172,7 @@ def get_access_rights_router(
         request: Request,
         access_right_id: UUID,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
     ) -> access_right_schema:
         try:
@@ -170,9 +181,11 @@ def get_access_rights_router(
             access_right = await access_right_manager.delete(
                 access_right, request=request
             )
+            logging.info("success:%s" % access_right.id)
             return access_right_schema.from_orm(access_right)
 
         except exceptions.AccessRightNotExists:
+            logging.exception("AccessRightNotExists: %s" % access_right_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
@@ -194,7 +207,7 @@ def get_access_rights_router(
     async def check_access_right(  # pyright: ignore
         role_access_right: role_access_right_update_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
     ) -> None:
         try:
@@ -203,7 +216,10 @@ def get_access_rights_router(
             ):
                 raise exceptions.UserHaveNotRole
 
+            logging.info("success:%s" % role_access_right.access_right_id)
+
         except exceptions.RoleHaveNotAccessRight:
+            logging.exception("RoleHaveNotAccessRight:%s" % role_access_right)
             raise HTTPException(
                 status.HTTP_204_NO_CONTENT, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
@@ -220,7 +236,7 @@ def get_access_rights_router(
     async def assign_access_right(  # pyright: ignore
         role_access_right: role_access_right_update_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -238,11 +254,15 @@ def get_access_rights_router(
 
             await access_right_manager.assign_role_access_right(role_access_right)
 
+            logging.info("success:%s" % role_access_right.access_right_id)
+
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" % role_access_right)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.AccessRightNotExists:
+            logging.exception("RoleNotExists:%s" % role_access_right)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
@@ -264,7 +284,7 @@ def get_access_rights_router(
     async def remove_role_access(  # pyright: ignore
         role_access_right: role_access_right_update_schema,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -279,11 +299,15 @@ def get_access_rights_router(
 
             await access_right_manager.remove_role_access_right(role_access_right)
 
+            logging.info("success:%s" % role_access_right.access_right_id)
+
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" % role_access_right)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.AccessRightNotExists:
+            logging.exception("AccessRightNotExists:%s" % role_access_right)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ACCESS_IS_NOT_EXISTS
             )
@@ -300,7 +324,7 @@ def get_access_rights_router(
     async def get_role_rights(  # pyright: ignore
         role_id: UUID,
         access_right_manager: BaseAccessRightManager[
-            models_protocol.ARP, models_protocol.RARP,
+            models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -311,9 +335,11 @@ def get_access_rights_router(
 
             rights = await access_right_manager.get_role_access_rights(role.id)
 
+            logging.info("success:%s" % role_id)
             return list(access_right_schema.from_orm(right) for right in rights)
 
         except exceptions.RoleNotExists:
+            logging.exception("RoleNotExists:%s" % role_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )

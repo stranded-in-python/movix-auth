@@ -5,6 +5,8 @@ from fastapi.responses import JSONResponse
 from authentication.transport import BearerTransport, TransportLogoutNotSupportedError
 from authentication.transport.bearer import BearerResponse
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture()
 def bearer_transport() -> BearerTransport:
@@ -12,7 +14,6 @@ def bearer_transport() -> BearerTransport:
 
 
 @pytest.mark.authentication
-@pytest.mark.asyncio
 async def test_get_login_response(bearer_transport: BearerTransport):
     response = await bearer_transport.get_login_response("TOKEN")
 
@@ -21,7 +22,6 @@ async def test_get_login_response(bearer_transport: BearerTransport):
 
 
 @pytest.mark.authentication
-@pytest.mark.asyncio
 async def test_get_logout_response(bearer_transport: BearerTransport):
     with pytest.raises(TransportLogoutNotSupportedError):
         await bearer_transport.get_logout_response()

@@ -145,7 +145,7 @@ class Authenticator(Generic[models.UP, models.SIHE]):
 
         return current_user_dependency
 
-    async def _authenticate(
+    async def _authenticate(  # noqa: C901
         self,
         *args: tuple[Any, ...],
         user_manager: BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP],

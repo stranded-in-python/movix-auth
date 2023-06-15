@@ -9,6 +9,8 @@ from api.v1.common import ErrorCode
 from authentication import Authenticator
 from tests.conftest import UserModel, get_mock_authentication, get_user_manager
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def app_factory(get_user_manager, mock_authentication):
@@ -47,7 +49,6 @@ def app_factory(get_user_manager, mock_authentication):
 @pytest.fixture(
     params=[True, False], ids=["required_verification", "not_required_verification"]
 )
-@pytest.mark.asyncio
 async def test_app_client(
     request, get_test_client, app_factory
 ) -> AsyncGenerator[tuple[httpx.AsyncClient, bool], None]:
@@ -60,7 +61,6 @@ async def test_app_client(
 
 @pytest.mark.router
 @pytest.mark.parametrize("path", ["/mock/api/v1/login", "/mock-bis/api/v1/login"])
-@pytest.mark.asyncio
 class TestLogin:
     async def test_empty_body(
         self, path, test_app_client: tuple[httpx.AsyncClient, bool], user_manager
@@ -141,7 +141,6 @@ class TestLogin:
 
 @pytest.mark.router
 @pytest.mark.parametrize("path", ["/mock/api/v1/logout", "/mock-bis/api/v1/logout"])
-@pytest.mark.asyncio
 class TestLogout:
     async def test_missing_token(
         self, path, test_app_client: tuple[httpx.AsyncClient, bool]
@@ -164,7 +163,6 @@ class TestLogout:
         assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.asyncio
 @pytest.mark.router
 async def test_route_names(app_factory, mock_authentication):
     app = app_factory(False)

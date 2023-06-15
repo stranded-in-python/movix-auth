@@ -16,6 +16,8 @@ from managers.user import BaseUserManager
 from openapi import OpenAPIResponseType
 from tests.conftest import OAuthAccount, SignInModel, UserModel, UserOAuth
 
+pytestmark = pytest.mark.asyncio
+
 
 class MockSecurityScheme(SecurityBase):
     def __call__(self, request: Request) -> Optional[str]:
@@ -113,7 +115,6 @@ def get_backend_user(user: UserModel):
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 def get_test_auth_client(get_user_manager, get_test_client):
     async def _get_test_auth_client(
         backends: list[AuthenticationBackend[models.UP, models.SIHE]],
@@ -161,7 +162,6 @@ def get_test_auth_client(get_user_manager, get_test_client):
 
 
 @pytest.mark.authentication
-@pytest.mark.asyncio
 async def test_authenticator(get_test_auth_client, get_backend_none, get_backend_user):
     async for client in get_test_auth_client([get_backend_none(), get_backend_user()]):
         response = await client.get("/test-current-user")
@@ -169,7 +169,6 @@ async def test_authenticator(get_test_auth_client, get_backend_none, get_backend
 
 
 @pytest.mark.authentication
-@pytest.mark.asyncio
 async def test_authenticator_none(get_test_auth_client, get_backend_none):
     async for client in get_test_auth_client(
         [get_backend_none(), get_backend_none(name="none-bis")]
@@ -179,7 +178,6 @@ async def test_authenticator_none(get_test_auth_client, get_backend_none):
 
 
 @pytest.mark.authentication
-@pytest.mark.asyncio
 async def test_authenticator_none_enabled(
     get_test_auth_client, get_backend_none, get_backend_user
 ):
@@ -197,7 +195,6 @@ async def test_authenticator_none_enabled(
 
 
 @pytest.mark.authentication
-@pytest.mark.asyncio
 async def test_authenticators_with_same_name(get_test_auth_client, get_backend_none):
     with pytest.raises(DuplicateBackendNamesError):
         async for _ in get_test_auth_client([get_backend_none(), get_backend_none()]):

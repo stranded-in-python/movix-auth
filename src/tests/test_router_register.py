@@ -8,9 +8,10 @@ from api import schemas
 from api.auth_users import get_register_router
 from api.v1.common import ErrorCode
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def test_app_client(
     get_user_manager, get_test_client
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
@@ -26,7 +27,6 @@ async def test_app_client(
 
 
 @pytest.mark.router
-@pytest.mark.asyncio
 class TestRegister:
     async def test_empty_body(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.post("/api/v1/register", json={})
@@ -116,7 +116,6 @@ class TestRegister:
         assert data["is_active"] is True
 
 
-@pytest.mark.asyncio
 async def test_register_namespace(get_user_manager):
     app = FastAPI()
     app.include_router(get_register_router(get_user_manager, schemas.U, schemas.UC))

@@ -1,21 +1,33 @@
+<<<<<<< HEAD
+=======
+import logging
+
+>>>>>>> main
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 import core.exceptions as exceptions
 from api import schemas
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import Authenticator
+from core.logger import logger
 from core.pagination import PaginateQueryParams
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 
+logger()
+
 
 def get_users_me_router(
+<<<<<<< HEAD
     get_user_manager: UserManagerDependency[
         models_protocol.UP,
         models_protocol.SIHE,
         models_protocol.OAP,
         models_protocol.UOAP,
     ],
+=======
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
+>>>>>>> main
     user_schema: type[schemas.U],
     user_update_schema: type[schemas.UU],
     event_schema: type[schemas.EventRead],
@@ -101,6 +113,7 @@ def get_users_me_router(
             user = await user_manager.update(
                 user_update, user, safe=True, request=request
             )
+            logging.info("success:%s" % user.id)
             return user_schema.from_orm(user)
 
         except exceptions.InvalidPasswordException as e:
@@ -138,11 +151,13 @@ def get_users_me_router(
     ) -> list[event_schema]:
         events = await user_manager.get_sign_in_history(user, paginate_params)
 
+        logging.info("success:%s" % user.id)
         return list(event_schema.from_orm(event) for event in events)
 
     return router
 
 
+<<<<<<< HEAD
 def get_users_router(
     get_user_manager: UserManagerDependency[
         models_protocol.UP,
@@ -150,6 +165,10 @@ def get_users_router(
         models_protocol.OAP,
         models_protocol.UOAP,
     ],
+=======
+def get_users_router(  # noqa: C901
+    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
+>>>>>>> main
     user_schema: type[schemas.U],
     user_update_schema: type[schemas.UU],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
@@ -170,8 +189,10 @@ def get_users_router(
     ) -> models_protocol.UP:
         try:
             parsed_id = user_manager.parse_id(id)
+            logging.info("success:%s" % parsed_id)
             return await user_manager.get(parsed_id)
         except (exceptions.UserNotExists, exceptions.InvalidID) as e:
+            logging.exception("UserNotExists:invalidid:%s" % id)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
     @router.get(
@@ -190,6 +211,7 @@ def get_users_router(
     async def get_user(  # pyright: ignore
         user: models_protocol.UP = Depends(get_user_or_404),
     ):
+        logging.info("success:%s" % user.id)
         return user_schema.from_orm(user)
 
     @router.patch(
@@ -245,6 +267,7 @@ def get_users_router(
             user = await user_manager.update(
                 user_update, user, safe=False, request=request
             )
+            logging.info("success:%s" % user.id)
             return user_schema.from_orm(user)
         except exceptions.InvalidPasswordException as e:
             raise HTTPException(
@@ -284,6 +307,7 @@ def get_users_router(
         ] = Depends(get_user_manager),
     ):
         await user_manager.delete(user)
+        logging.info("success:%s" % user.id)
         return None
 
     return router

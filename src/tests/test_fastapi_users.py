@@ -9,9 +9,10 @@ from api.container import APIUsers as FastAPIUsers
 from db.schemas import models
 from tests.conftest import UserModel
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def test_app_client(
     secret,
     get_user_manager,
@@ -85,7 +86,6 @@ async def test_app_client(
 
 
 @pytest.mark.fastapi_users
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "path,method",
     [
@@ -109,14 +109,12 @@ async def test_route_exists(test_app_client: httpx.AsyncClient, path: str, metho
 
 
 @pytest.mark.fastapi_users
-@pytest.mark.asyncio
 async def test_custom_users_route_not_catched(test_app_client: httpx.AsyncClient):
     response = await test_app_client.request("DELETE", "/users/me")
     assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.fastapi_users
-@pytest.mark.asyncio
 class TestGetCurrentUser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.get("/current-user")
@@ -138,7 +136,6 @@ class TestGetCurrentUser:
 
 
 @pytest.mark.fastapi_users
-@pytest.mark.asyncio
 class TestGetCurrentActiveUser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.get("/current-active-user")
@@ -169,7 +166,6 @@ class TestGetCurrentActiveUser:
 
 
 @pytest.mark.fastapi_users
-@pytest.mark.asyncio
 class TestGetCurrentSuperuser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.get("/current-superuser")
@@ -199,7 +195,6 @@ class TestGetCurrentSuperuser:
 
 
 @pytest.mark.fastapi_users
-@pytest.mark.asyncio
 class TestOptionalGetCurrentUser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.get("/optional-current-user")
@@ -224,7 +219,6 @@ class TestOptionalGetCurrentUser:
 
 
 @pytest.mark.fastapi_users
-@pytest.mark.asyncio
 class TestOptionalGetCurrentActiveUser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.get("/optional-current-active-user")
@@ -260,7 +254,6 @@ class TestOptionalGetCurrentActiveUser:
 
 
 @pytest.mark.fastapi_users
-@pytest.mark.asyncio
 class TestOptionalGetCurrentSuperuser:
     async def test_missing_token(self, test_app_client: httpx.AsyncClient):
         response = await test_app_client.get("/optional-current-superuser")

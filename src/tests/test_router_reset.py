@@ -14,9 +14,10 @@ from core.exceptions import (
 )
 from tests.conftest import AsyncMethodMocker, UserManagerMock
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def test_app_client(
     get_user_manager, get_test_client
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
@@ -30,7 +31,6 @@ async def test_app_client(
 
 
 @pytest.mark.router
-@pytest.mark.asyncio
 class TestForgotPassword:
     async def test_empty_body(
         self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
@@ -69,7 +69,6 @@ class TestForgotPassword:
 
 
 @pytest.mark.router
-@pytest.mark.asyncio
 class TestResetPassword:
     async def test_empty_body(
         self, test_app_client: httpx.AsyncClient, user_manager: UserManagerMock
@@ -141,14 +140,12 @@ class TestResetPassword:
         assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.asyncio
 async def test_forgot_password_namespace(get_user_manager):
     app = FastAPI()
     app.include_router(get_reset_password_router(get_user_manager))
     assert app.url_path_for("reset:forgot_password") == "/api/v1/forgot-password"
 
 
-@pytest.mark.asyncio
 async def test_reset_password_namespace(get_user_manager):
     app = FastAPI()
     app.include_router(get_reset_password_router(get_user_manager))

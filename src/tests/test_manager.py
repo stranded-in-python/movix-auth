@@ -26,6 +26,8 @@ from tests.conftest import (
     UserOAuth,
 )
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def verify_token(
@@ -67,7 +69,6 @@ def forgot_password_token(
     return _forgot_password_token
 
 
-@pytest.mark.asyncio
 @pytest.mark.manager
 class TestGet:
     async def test_not_existing_user(
@@ -86,7 +87,6 @@ class TestGet:
         assert retrieved_user.id == user.id
 
 
-@pytest.mark.asyncio
 @pytest.mark.manager
 class TestGetByEmail:
     async def test_not_existing_user(
@@ -105,7 +105,6 @@ class TestGetByEmail:
         assert retrieved_user.id == user.id
 
 
-@pytest.mark.asyncio
 @pytest.mark.manager
 class TestCreateUser:
     @pytest.mark.parametrize(
@@ -172,7 +171,6 @@ class TestCreateUser:
         assert user_manager.on_after_register.called is True
 
 
-@pytest.mark.asyncio
 @pytest.mark.manager
 class TestForgotPassword:
     async def test_user_inactive(
@@ -209,7 +207,6 @@ class TestForgotPassword:
         assert valid_fingerprint is True
 
 
-@pytest.mark.asyncio
 @pytest.mark.manager
 class TestResetPassword:
     async def test_invalid_token(
@@ -334,7 +331,6 @@ class TestResetPassword:
         assert actual_user.id == user.id
 
 
-@pytest.mark.asyncio
 @pytest.mark.manager
 class TestUpdateUser:
     async def test_safe_update(
@@ -412,7 +408,6 @@ class TestUpdateUser:
         assert user_manager.on_after_update.called is True
 
 
-@pytest.mark.asyncio
 @pytest.mark.manager
 class TestDelete:
     async def test_delete(
