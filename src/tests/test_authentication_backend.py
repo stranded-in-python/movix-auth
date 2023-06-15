@@ -32,13 +32,13 @@ class MockStrategyDestroyNotSupported(Strategy, Generic[models.UP, models.SIHE])
 
 @pytest.fixture(params=[MockTransport, MockTransportLogoutNotSupported])
 def transport(request) -> Transport:
-    transport_class: Type[BearerTransport] = request.param
+    transport_class: type[BearerTransport] = request.param
     return transport_class(token_url="/login")
 
 
 @pytest.fixture(params=[MockStrategy, MockStrategyDestroyNotSupported])
 def get_strategy(request) -> Callable[..., Strategy]:
-    strategy_class: Type[Strategy] = request.param
+    strategy_class: type[Strategy] = request.param
     return lambda: strategy_class()
 
 

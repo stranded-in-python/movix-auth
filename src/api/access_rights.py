@@ -1,4 +1,4 @@
-from typing import Generic, Sequence, Type
+from typing import Generic, Sequence
 
 import api.schemas as schemas
 import db.models_protocol as models_protocol
@@ -43,11 +43,11 @@ class APIAccessRight(
 
     def get_access_rights_router(
         self,
-        access_right_schema: Type[schemas.AR],
-        access_right_create_schema: Type[schemas.ARC],
-        access_right_update_schema: Type[schemas.ARU],
-        role_access_right_schema: Type[schemas.RAR],
-        role_access_right_update_schema: Type[schemas.RARU],
+        access_right_schema: type[schemas.AR],
+        access_right_create_schema: type[schemas.ARC],
+        access_right_update_schema: type[schemas.ARU],
+        role_access_right_schema: type[schemas.RAR],
+        role_access_right_update_schema: type[schemas.RARU],
     ) -> APIRouter:
         return get_access_rights_router(
             self.get_user_manager,

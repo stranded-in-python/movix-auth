@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Iterable, Mapping, Sequence, Tuple
+from typing import Any, Iterable, Mapping, Sequence
 
 from sqlalchemy import ForeignKey, Row, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -91,7 +91,7 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
         await self.session.commit()
 
     async def _get_access_right(
-        self, statement: Select[Tuple[SAAccessRight]]
+        self, statement: Select[tuple[SAAccessRight]]
     ) -> SAAccessRight | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
@@ -105,8 +105,8 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
         return await self._get_access_right(statement)
 
     async def _get_access_rights(
-        self, statement: Select[Tuple[SAAccessRight]]
-    ) -> Sequence[Row[Tuple[SAAccessRight]]]:
+        self, statement: Select[tuple[SAAccessRight]]
+    ) -> Sequence[Row[tuple[SAAccessRight]]]:
         results = await self.session.execute(statement)
         if not results:
             return results
@@ -204,14 +204,14 @@ class SARoleAccessRightDB(
         return list(models.RoleAccessRight.from_orm(right) for right in arights)
 
     async def _get_role_access_right(
-        self, statement: Select[Tuple[SARoleAccessRight]]
+        self, statement: Select[tuple[SARoleAccessRight]]
     ) -> SARoleAccessRight | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
     async def _get_role_access_rights(
-        self, statement: Select[Tuple[SARoleAccessRight]]
-    ) -> Sequence[Row[Tuple[SARoleAccessRight]]]:
+        self, statement: Select[tuple[SARoleAccessRight]]
+    ) -> Sequence[Row[tuple[SARoleAccessRight]]]:
         results = await self.session.execute(statement)
         if not results:
             return results

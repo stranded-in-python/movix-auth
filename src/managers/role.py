@@ -159,7 +159,7 @@ RoleManagerDependency = DependencyCallable[
 
 class RoleManager(
     models_protocol.UUIDIDMixin,
-    BaseRoleManager[models.UserRead, models.RoleRead, models.UserRole,],
+    BaseRoleManager[models.UserRead, models.RoleRead, models.UserRole],
 ):
     pass
 

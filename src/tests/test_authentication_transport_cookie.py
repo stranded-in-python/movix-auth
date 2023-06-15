@@ -8,6 +8,8 @@ from authentication.transport import CookieTransport
 COOKIE_MAX_AGE = 3600
 COOKIE_NAME = "COOKIE_NAME"
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture(
     params=[
@@ -31,7 +33,6 @@ def cookie_transport(request) -> CookieTransport:
 
 
 @pytest.mark.authentication
-@pytest.mark.asyncio
 async def test_get_login_response(cookie_transport: CookieTransport):
     path = cookie_transport.cookie_path
     domain = cookie_transport.cookie_domain
@@ -77,7 +78,6 @@ async def test_get_login_response(cookie_transport: CookieTransport):
 
 
 @pytest.mark.authentication
-@pytest.mark.asyncio
 async def test_get_logout_response(cookie_transport: CookieTransport):
     response = await cookie_transport.get_logout_response()
 

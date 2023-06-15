@@ -6,6 +6,8 @@ from api import schemas
 from api.container import APIUsers as FastAPIUsers
 from tests.conftest import SignInModel, UserModel
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def fastapi_users(get_user_manager, mock_authentication) -> FastAPIUsers:
@@ -31,7 +33,6 @@ def test_app(fastapi_users: FastAPIUsers, mock_authentication) -> FastAPI:
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def test_app_client(test_app, get_test_client):
     async for client in get_test_client(test_app):
         yield client
@@ -47,7 +48,6 @@ def url_prefix():
     return "/api/v1"
 
 
-@pytest.mark.asyncio
 @pytest.mark.openapi
 async def test_openapi_route(test_app_client: httpx.AsyncClient, url_prefix: str):
     response = await test_app_client.get("/openapi.json")

@@ -1,16 +1,19 @@
-from typing import Tuple
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
+from core.logger import logger
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
 
+logger()
 
-def get_auth_router(
+
+def get_auth_router(  # noqa: C901
     access_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
     refresh_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
@@ -58,14 +61,15 @@ def get_auth_router(
         ),
     ):
         user = await user_manager.authenticate(credentials)
-
         if user is None or not user.is_active:
+            logging.exception("BAD_CREDS:%s" % credentials)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.LOGIN_BAD_CREDENTIALS,
             )
         response = await refresh_backend.login(strategy, user)
         await user_manager.on_after_login(user, request, response)
+        logging.info("success:%s" % user.id)
         return response
 
     @router.post(
@@ -74,7 +78,7 @@ def get_auth_router(
         responses=login_responses,
     )
     async def refresh(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(
+        user_token: tuple[models_protocol.UP, str] = Depends(
             get_current_user_refresh_token
         ),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
@@ -82,6 +86,7 @@ def get_auth_router(
         ),
     ):
         if not user_token:
+            logging.exception("BAD_TOKEN:%s" % user_token)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ErrorCode.REFRESH_BAD_TOKEN,
@@ -89,6 +94,7 @@ def get_auth_router(
         user, _ = user_token
 
         response = await access_backend.login(strategy, user)
+        logging.info("success:%s" % user.id)
         return response
 
     logout_responses: OpenAPIResponseType = {
@@ -106,24 +112,26 @@ def get_auth_router(
         responses=logout_responses,
     )
     async def blacklist(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(get_current_user_token),
+        user_token: tuple[models_protocol.UP, str] = Depends(get_current_user_token),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
             access_backend.get_strategy
         ),
     ):
         if not user_token:
+            logging.exception("BAD_TOKEN:%s" % user_token)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ErrorCode.ACCESS_BAD_TOKEN,
             )
         user, token = user_token
+        logging.info("success:%s" % user.id)
         return await access_backend.logout(strategy, user, token)
 
     @router.post(
         "/logout", name=f"auth:{access_backend.name}.logout", responses=logout_responses
     )
     async def logout(  # pyright: ignore
-        user_token: Tuple[models_protocol.UP, str] = Depends(
+        user_token: tuple[models_protocol.UP, str] = Depends(
             get_current_user_refresh_token
         ),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
@@ -131,11 +139,13 @@ def get_auth_router(
         ),
     ):
         if not user_token:
+            logging.exception("BAD_TOKEN:%s" % user_token)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ErrorCode.REFRESH_BAD_TOKEN,
             )
         user, token = user_token
+        logging.info("success:%s" % user.id)
         return await refresh_backend.logout(strategy, user, token)
 
     return router

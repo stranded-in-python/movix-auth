@@ -9,6 +9,8 @@ from api.v1.common import ErrorCode
 from authentication import Authenticator
 from tests.conftest import UserModel, get_mock_authentication, get_user_manager
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def app_factory(get_user_manager, mock_authentication):
@@ -47,10 +49,9 @@ def app_factory(get_user_manager, mock_authentication):
 @pytest.fixture(
     params=[True, False], ids=["required_verification", "not_required_verification"]
 )
-@pytest.mark.asyncio
 async def test_app_client(
     request, get_test_client, app_factory
-) -> AsyncGenerator[Tuple[httpx.AsyncClient, bool], None]:
+) -> AsyncGenerator[tuple[httpx.AsyncClient, bool], None]:
     requires_verification = request.param
     app = app_factory(requires_verification)
 
@@ -60,10 +61,9 @@ async def test_app_client(
 
 @pytest.mark.router
 @pytest.mark.parametrize("path", ["/mock/api/v1/login", "/mock-bis/api/v1/login"])
-@pytest.mark.asyncio
 class TestLogin:
     async def test_empty_body(
-        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
+        self, path, test_app_client: tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         response = await client.post(path, data={})
@@ -71,7 +71,7 @@ class TestLogin:
         assert user_manager.on_after_login.called is False
 
     async def test_missing_username(
-        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
+        self, path, test_app_client: tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"password": "guinevere"}
@@ -80,7 +80,7 @@ class TestLogin:
         assert user_manager.on_after_login.called is False
 
     async def test_missing_password(
-        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
+        self, path, test_app_client: tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"username": "king.arthur@camelot.bt"}
@@ -89,24 +89,24 @@ class TestLogin:
         assert user_manager.on_after_login.called is False
 
     async def test_not_existing_user(
-        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
+        self, path, test_app_client: tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"username": "lancelot@camelot.bt", "password": "guinevere"}
         response = await client.post(path, data=data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.LOGIN_BAD_CREDENTIALS
         assert user_manager.on_after_login.called is False
 
     async def test_wrong_password(
-        self, path, test_app_client: Tuple[httpx.AsyncClient, bool], user_manager
+        self, path, test_app_client: tuple[httpx.AsyncClient, bool], user_manager
     ):
         client, _ = test_app_client
         data = {"username": "king.arthur@camelot.bt", "password": "percival"}
         response = await client.post(path, data=data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        data = cast(Dict[str, Any], response.json())
+        data = cast(dict[str, Any], response.json())
         assert data["detail"] == ErrorCode.LOGIN_BAD_CREDENTIALS
         assert user_manager.on_after_login.called is False
 
@@ -119,7 +119,7 @@ class TestLogin:
         path,
         username,
         status_code,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
+        test_app_client: tuple[httpx.AsyncClient, bool],
         user_manager,
         user: UserModel,
     ):
@@ -128,7 +128,7 @@ class TestLogin:
         response = await client.post(path, data=data)
         assert response.status_code == status_code
         if status_code == status.HTTP_400_BAD_REQUEST:
-            data = cast(Dict[str, Any], response.json())
+            data = cast(dict[str, Any], response.json())
             assert data["detail"] == ErrorCode.LOGIN_BAD_CREDENTIALS
             assert user_manager.on_after_login.called is False
         else:
@@ -141,10 +141,9 @@ class TestLogin:
 
 @pytest.mark.router
 @pytest.mark.parametrize("path", ["/mock/api/v1/logout", "/mock-bis/api/v1/logout"])
-@pytest.mark.asyncio
 class TestLogout:
     async def test_missing_token(
-        self, path, test_app_client: Tuple[httpx.AsyncClient, bool]
+        self, path, test_app_client: tuple[httpx.AsyncClient, bool]
     ):
         client, _ = test_app_client
         response = await client.post(path)
@@ -154,7 +153,7 @@ class TestLogout:
         self,
         mocker,
         path,
-        test_app_client: Tuple[httpx.AsyncClient, bool],
+        test_app_client: tuple[httpx.AsyncClient, bool],
         user: UserModel,
     ):
         client, requires_verification = test_app_client
@@ -164,7 +163,6 @@ class TestLogout:
         assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.asyncio
 @pytest.mark.router
 async def test_route_names(app_factory, mock_authentication):
     app = app_factory(False)

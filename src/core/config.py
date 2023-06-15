@@ -1,4 +1,3 @@
-import logging
 import os
 from logging import config as logging_config
 
@@ -30,10 +29,10 @@ class Settings(BaseSettings):
     database_adapter: str = "postgresql"
     database_sqlalchemy_adapter: str = "postgresql+asyncpg"
     # Параметры аутентификации
-    reset_password_token_secret: SecretStr
-    verification_password_token_secret: SecretStr
-    access_token_secret: SecretStr
-    refresh_token_secret: SecretStr
+    reset_password_token_secret: SecretStr = SecretStr('reset_password')
+    verification_password_token_secret: SecretStr = SecretStr('verify_password')
+    access_token_secret: SecretStr = SecretStr('access_token')
+    refresh_token_secret: SecretStr = SecretStr('refresh_token')
 
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))

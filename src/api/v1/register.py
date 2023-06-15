@@ -1,4 +1,4 @@
-from typing import Type
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import error_wrappers
@@ -6,14 +6,17 @@ from pydantic import error_wrappers
 import core.exceptions as ex
 from api import schemas
 from api.v1.common import ErrorCode, ErrorModel
+from core.logger import logger
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
+
+logger()
 
 
 def get_register_router(
     get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
-    user_schema: Type[schemas.U],
-    user_create_schema: Type[schemas.UC],
+    user_schema: type[schemas.U],
+    user_create_schema: type[schemas.UC],
 ) -> APIRouter:
     """Generate a router with the register route."""
     router = APIRouter()
@@ -83,6 +86,7 @@ def get_register_router(
         try:
             return user_schema.from_orm(created_user)
         except error_wrappers.ValidationError as e:
+            logging.exception(f"{e}:{created_user}")
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail={"code": ErrorCode.REGISTER_INVALID_PASSWORD, "reason": str(e)},
