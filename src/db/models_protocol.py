@@ -58,6 +58,21 @@ UP = TypeVar("UP", bound=UserProtocol[UUID, pydantic.EmailStr])
 UC = TypeVar("UC", bound=UserCreateProtocol[str])
 
 
+class OAuthAccountProtocol(Protocol[ID]):
+    """OAuth account protocol that ORM model should follow."""
+
+    id: ID
+    oauth_name: str
+    access_token: str
+    expires_at: int | None
+    refresh_token: str | None
+    account_id: str
+    account_email: str
+
+
+OAP = TypeVar("OAP", bound=OAuthAccountProtocol)
+
+
 class RoleProtocol(Protocol[ID]):
     """Role protocol that ORM model should follow."""
 
