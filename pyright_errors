@@ -24,5 +24,5 @@ pyright 1.1.281
   /home/sbkubric/workspace/movix/projects/movix-auth/src/api/v1/roles.py:29:1 - error: Expected parameter name
   /home/sbkubric/workspace/movix/projects/movix-auth/src/api/v1/roles.py:22:21 - error: "(" was not closed
   /home/sbkubric/workspace/movix/projects/movix-auth/src/api/v1/roles.py:33:1 - error: Expected expression
-9 errors, 0 warnings, 0 informations 
+9 errors, 0 warnings, 0 informations
 Completed in 3.29sec

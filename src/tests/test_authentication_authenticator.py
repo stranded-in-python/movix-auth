@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, List, Optional, Sequence
+from typing import AsyncGenerator, Optional, Sequence
 
 import httpx
 import pytest

@@ -425,14 +425,12 @@ class BaseUserManager(
             if not hasattr(user, "oauth_accounts"):
                 raise exceptions.AppException("Add oauth_accounts to the db schema")
 
-            user = cast(models_protocol.UserOAuthProtocol, user)
-
             for existing_oauth_account in user.oauth_accounts:
+                existing_oauth_account = cast(models_protocol.OAP, existing_oauth_account)
                 if (
                     existing_oauth_account.account_id == account_id
                     and existing_oauth_account.oauth_name == oauth_name
                 ):
-                    user = cast(models_protocol.UOAP, user)
                     user = await self.user_db.update_oauth_account(
                         user, existing_oauth_account, oauth_account_dict
                     )
@@ -453,10 +451,10 @@ UserManagerDependency = DependencyCallable[
 class UserManager(
     models_protocol.UUIDIDMixin,
     BaseUserManager[
-        models_protocol.UP,
-        models_protocol.SIHE,
-        models_protocol.OAP,
-        models_protocol.UOAP,
+        models.UserRead,
+        models.EventRead,
+        models.OAuthAccount,
+        models.UserOAuth,
     ],
 ):
     reset_password_token_secret = settings.reset_password_token_secret
@@ -464,20 +462,17 @@ class UserManager(
 
     async def get_sign_in_history(
         self, user: models.UserRead, pagination_params: PaginateQueryParams
-    ) -> Iterable[models_protocol.SIHE]:
+    ) -> Iterable[models.EventRead]:
         return await self.user_db.get_sign_in_history(user.id, pagination_params)
 
     async def _record_in_sighin_history(self, user: models.UserRead, request: Request):
         if request.client is None:
             return
-        event = cast(
-            models_protocol.SIHE,
-            models.EventRead(
-                id=uuid.uuid4(),
-                user_id=user.id,
-                timestamp=datetime.now(),
-                fingerprint=request.client.host,
-            ),
+        event = models.EventRead(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            timestamp=datetime.now(),
+            fingerprint=request.client.host,
         )
         await self.user_db.record_in_sighin_history(user_id=user.id, event=event)
 

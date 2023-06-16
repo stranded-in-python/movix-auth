@@ -176,7 +176,7 @@ def user() -> UserModel:
 @pytest.fixture
 def user_oauth(oauth_account1: OAuthAccount, oauth_account2: OAuthAccount) -> UserOAuth:
     return UserOAuth(
-        email="king.arthur@camelot.bt",
+        email=EmailStr("king.arthur@camelot.bt"),
         hashed_password=guinevere_password_hash,
         oauth_accounts=[oauth_account1, oauth_account2],
     )
@@ -185,7 +185,7 @@ def user_oauth(oauth_account1: OAuthAccount, oauth_account2: OAuthAccount) -> Us
 @pytest.fixture
 def inactive_user_oauth(oauth_account3: OAuthAccount) -> UserOAuth:
     return UserOAuth(
-        email="percival@camelot.bt",
+        email=EmailStr("percival@camelot.bt"),
         hashed_password=angharad_password_hash,
         is_active=False,
         oauth_accounts=[oauth_account3],
@@ -195,7 +195,7 @@ def inactive_user_oauth(oauth_account3: OAuthAccount) -> UserOAuth:
 @pytest.fixture
 def superuser_oauth() -> UserOAuth:
     return UserOAuth(
-        email="merlin@camelot.bt",
+        email=EmailStr("merlin@camelot.bt"),
         hashed_password=viviane_password_hash,
         is_superuser=True,
         oauth_accounts=[],
@@ -447,9 +447,9 @@ def get_test_client():
 @pytest.fixture
 def mock_user_db_oauth(
     user_oauth: UserOAuth, inactive_user_oauth: UserOAuth, superuser_oauth: UserOAuth
-) -> BaseUserDatabase[UserModel, IDType, SignInModel, UserOAuth, OAuthAccount]:
+) -> BaseUserDatabase[UserModel, IDType, SignInModel, OAuthAccount, UserOAuth]:
     class MockUserDatabase(
-        BaseUserDatabase[UserModel, IDType, SignInModel, UserOAuth, OAuthAccount]
+        BaseUserDatabase[UserModel, IDType, SignInModel, OAuthAccount, UserOAuth]
     ):
         async def get(self, id: IDType) -> Optional[UserOAuth]:
             if id == user_oauth.id:

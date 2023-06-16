@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
+from core import exceptions
 from core.pagination import PaginateQueryParams
 from db.base import BaseUserDatabase, SQLAlchemyBase
 from db.generics import GUID
@@ -64,7 +65,7 @@ class SAUser(SQLAlchemyBase):
         String(length=32), unique=False, index=True, nullable=True
     )
     signin = relationship("SASignInHistory")
-    oauth_accounts: Mapped[Sequence[SAOAuthAccount]] = relationship(
+    oauth_accounts: Mapped[list[SAOAuthAccount]] = relationship(
         "SAOAuthAccount", lazy="joined"
     )
 
@@ -217,16 +218,15 @@ class SAUserDB(
 
     async def add_oauth_account(
         self, user: models.UserRead, create_dict: dict[str, Any]
-    ) -> models.UserOAuth | None:
+    ) -> models.UserOAuth:
         user_model = await self._get_user_by_id(user.id)
-        if not user_model:
-            return None
+        if user_model is None:
+            raise exceptions.UserNotExists
 
         await self.session.refresh(user_model)
         oauth_account = self.oauth_account_table(**create_dict)
         self.session.add(oauth_account)
-        oaccounts = list(user_model.oauth_accounts)
-        oaccounts.append(oauth_account)
+        user_model.oauth_accounts.append(oauth_account)
         self.session.add(user_model)
 
         await self.session.commit()

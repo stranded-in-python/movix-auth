@@ -1,3 +1,4 @@
+from typing import TypedDict, cast
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from httpx_oauth.integrations.fastapi import OAuth2AuthorizeCallback
@@ -26,8 +27,8 @@ def generate_state_token(
 
 
 def get_oauth_router(
-    oauth_client: BaseOAuth2,
-    backend: AuthenticationBackend,
+    oauth_client: BaseOAuth2[TypedDict],
+    backend: AuthenticationBackend[models.UP, models.SIHE],
     get_user_manager: UserManagerDependency[
         models.UP, models.SIHE, models.OAP, models.UOAP
     ],
@@ -53,7 +54,7 @@ def get_oauth_router(
         name=f"oauth:{oauth_client.name}.{backend.name}.authorize",
         response_model=OAuth2AuthorizeResponse,
     )
-    async def authorize(
+    async def authorize(  # type: ignore
         request: Request, scopes: list[str] = Query(None)
     ) -> OAuth2AuthorizeResponse:
         if redirect_url is not None:
@@ -93,7 +94,7 @@ def get_oauth_router(
             }
         },
     )
-    async def callback(
+    async def callback(  # type: ignore
         request: Request,
         access_token_state: tuple[OAuth2Token, str] = Depends(
             oauth2_authorize_callback
@@ -141,7 +142,7 @@ def get_oauth_router(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.LOGIN_BAD_CREDENTIALS,
             )
-
+        user = cast(models.UP, user)
         # Authenticate
         response = await backend.login(strategy, user)
         await user_manager.on_after_login(user, request, response)

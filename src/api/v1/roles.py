@@ -1,7 +1,5 @@
-<<<<<<< HEAD
-=======
 import logging
->>>>>>> main
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -18,7 +16,7 @@ from managers.user import BaseUserManager, UserManagerDependency
 
 logger()
 
-<<<<<<< HEAD
+
 def get_roles_router(
     get_user_manager: UserManagerDependency[
         models_protocol.UP,
@@ -26,11 +24,6 @@ def get_roles_router(
         models_protocol.OAP,
         models_protocol.UOAP,
     ],
-=======
-
-def get_roles_router(  # noqa: C901
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
->>>>>>> main
     get_role_manager: RoleManagerDependency[
         models_protocol.UP, models_protocol.RP, models_protocol.URP
     ],

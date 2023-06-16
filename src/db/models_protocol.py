@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Any, Iterable, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar
 from uuid import UUID
 
 import pydantic
 
 import core.exceptions as ex
+import db.schemas.models as models
 
 ID = TypeVar("ID")
 EmailStr = TypeVar('EmailStr')
@@ -74,7 +75,7 @@ OAP = TypeVar("OAP", bound=OAuthAccountProtocol[UUID])
 
 
 class OAuthAccountsProtocol(Protocol[OAP]):
-    oauth_accounts: Iterable[OAP]
+    oauth_accounts: list[OAP]
 
 
 class UserOAuthProtocol(
@@ -85,7 +86,7 @@ class UserOAuthProtocol(
     ...
 
 
-UOAP = TypeVar("UOAP", bound=UserOAuthProtocol)
+UOAP = TypeVar("UOAP", bound=UserOAuthProtocol[UUID, pydantic.EmailStr, models.OAuthAccount])
 
 
 class RoleProtocol(Protocol[ID]):

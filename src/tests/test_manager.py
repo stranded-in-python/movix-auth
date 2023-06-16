@@ -1,19 +1,12 @@
-from typing import Callable
-
 import pytest
-from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import UUID4
-from pytest_mock import MockerFixture
-
 from api import schemas
 from authentication.strategy.jwt import decode_jwt, generate_jwt
 from core.exceptions import (
     InvalidID,
     InvalidPasswordException,
     InvalidResetPasswordToken,
-    InvalidVerifyToken,
     UserAlreadyExists,
-    UserAlreadyVerified,
     UserInactive,
     UserNotExists,
 )
