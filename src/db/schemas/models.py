@@ -1,5 +1,5 @@
 import uuid
-from typing import TypeVar
+from typing import Iterable, TypeVar
 
 from pydantic import BaseModel, EmailStr
 
@@ -37,7 +37,7 @@ class OAuthAccount(BaseModel):
 
 
 class UserOAuth(UserRead):
-    oauth_accounts: list[OAuthAccount]
+    oauth_accounts: Iterable[OAuthAccount]
 
 
 class EventRead(generics.BaseSignInHistoryEvent[uuid.UUID, uuid.UUID]):
