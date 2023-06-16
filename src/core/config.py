@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     database_adapter: str = "postgresql"
     database_sqlalchemy_adapter: str = "postgresql+asyncpg"
     # Параметры аутентификации
+    google_oauth_client_id: SecretStr = SecretStr("SECRET")
+    google_oauth_client_secret: SecretStr = SecretStr("SECRET")
+    state_secret: SecretStr = SecretStr("SECRET")
     reset_password_token_secret: SecretStr = SecretStr('reset_password')
     verification_password_token_secret: SecretStr = SecretStr('verify_password')
     access_token_secret: SecretStr = SecretStr('access_token')

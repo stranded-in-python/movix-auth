@@ -1,13 +1,16 @@
 from typing import Generic, Sequence
 
 from fastapi import APIRouter
+from httpx_oauth.oauth2 import BaseOAuth2
 
 from api import schemas
+from api.oauth import get_oauth_router
 from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
 from api.v1.user import get_users_me_router, get_users_router
 from authentication import AuthenticationBackend, Authenticator
+from core.jwt_utils import SecretType
 from db import models_protocol
 from managers.user import UserManagerDependency
 
@@ -30,7 +33,10 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
     def __init__(
         self,
         get_user_manager: UserManagerDependency[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ],
         access_backends: Sequence[
             AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
@@ -124,4 +130,32 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             user_schema,
             user_update_schema,
             self.access_authenticator,
+        )
+
+    def get_oauth_router(
+        self,
+        oauth_client: BaseOAuth2,
+        backend: AuthenticationBackend,
+        state_secret: SecretType,
+        redirect_url: str | None = None,
+        associate_by_email: bool = False,
+    ) -> APIRouter:
+        """
+        Return an OAuth router for a given OAuth client and authentication backend.
+
+        :param oauth_client: The HTTPX OAuth client instance.
+        :param backend: The authentication backend instance.
+        :param state_secret: Secret used to encode the state JWT.
+        :param redirect_url: Optional arbitrary redirect URL for the OAuth2 flow.
+        If not given, the URL to the callback endpoint will be generated.
+        :param associate_by_email: If True, any existing user with the same
+        e-mail address will be associated to this user. Defaults to False.
+        """
+        return get_oauth_router(
+            oauth_client,
+            backend,
+            self.get_user_manager,
+            state_secret,
+            redirect_url,
+            associate_by_email,
         )

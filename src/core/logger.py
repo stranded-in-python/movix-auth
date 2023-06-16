@@ -1,4 +1,5 @@
-import logging.config
+import logging
+import logging.config as lconfig
 from typing import Any
 
 LOG_FORMAT = '%(asctime)s:%(name)s:%(levelname)s:%(module)s:%(funcName)s:%(message)s'
@@ -28,7 +29,10 @@ def get_logging_config(
             },
             'access': {
                 '()': 'uvicorn.logging.AccessFormatter',
-                'fmt': "%(levelprefix)s %(client_addr)s - '%(request_line)s' %(status_code)s",
+                'fmt': (
+                    "%(levelprefix)s %(client_addr)s - '%(request_line)s'"
+                    " %(status_code)s"
+                ),
             },
         },
         'handlers': {
@@ -69,6 +73,6 @@ def get_logging_config(
 
 
 def logger():
-    logging.config.dictConfig(get_logging_config())
+    lconfig.dictConfig(get_logging_config())
     logger = logging.getLogger(__file__)
     return logger

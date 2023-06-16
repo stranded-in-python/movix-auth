@@ -2,13 +2,14 @@ import asyncio
 import dataclasses
 import datetime
 import uuid
-from typing import Any, AsyncGenerator, Callable, Dict, Generic, Optional, Type, Union
+from typing import Any, AsyncGenerator, Callable, Generic, Optional, Union
 from unittest.mock import MagicMock
 
 import httpx
 import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI, Response
+from httpx_oauth.oauth2 import OAuth2
 from pydantic import EmailStr, SecretStr
 from pytest_mock import MockerFixture
 
@@ -48,6 +49,31 @@ class UserModel:
 
 
 @dataclasses.dataclass
+class OAuthAccount:
+    oauth_name: str
+    access_token: str
+    account_id: str
+    account_email: str
+    id: uuid.UUID = dataclasses.field(default_factory=uuid.uuid4)
+    expires_at: Optional[int] = None
+    refresh_token: Optional[str] = None
+
+
+@dataclasses.dataclass
+class UserOAuth:
+    oauth_accounts: list[OAuthAccount]
+    email: EmailStr
+    hashed_password: str
+    id: IDType = dataclasses.field(default_factory=uuid.uuid4)
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    is_active: bool = True
+    is_superuser: bool = False
+    is_admin: bool = False
+
+
+@dataclasses.dataclass
 class SignInModel(models.SignInHistoryEvent[IDType]):
     id: IDType
     user_id: IDType
@@ -55,10 +81,14 @@ class SignInModel(models.SignInHistoryEvent[IDType]):
     fingerprint: str
 
 
+class User(schemas.BaseUser[IDType]):
+    first_name: Optional[str]
+
+
 class BaseTestUserManager(
-    Generic[models.UP, models.SIHE],
+    Generic[models.UP, models.SIHE, models.OAP, models.UOAP],
     models.UUIDIDMixin,
-    BaseUserManager[models.UP, models.SIHE],
+    BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP],
 ):
     reset_password_token_secret = "SECRET"  # type: ignore
     verification_token_secret = "SECRET"  # type: ignore
@@ -72,11 +102,19 @@ class BaseTestUserManager(
             )
 
 
-class UserManager(BaseTestUserManager[models.UP, models.SIHE]):
+class UserManager(BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]):
     pass
 
 
-class UserManagerMock(BaseTestUserManager[models.UP, models.SIHE]):
+class UserManagerOAuth(
+    BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]
+):
+    pass
+
+
+class UserManagerMock(
+    BaseTestUserManager[models.UP, models.SIHE, models.OAP, models.UOAP]
+):
     get_by_email: MagicMock
     forgot_password: MagicMock
     reset_password: MagicMock
@@ -136,6 +174,90 @@ def user() -> UserModel:
 
 
 @pytest.fixture
+def user_oauth(oauth_account1: OAuthAccount, oauth_account2: OAuthAccount) -> UserOAuth:
+    return UserOAuth(
+        email=EmailStr("king.arthur@camelot.bt"),
+        hashed_password=guinevere_password_hash,
+        oauth_accounts=[oauth_account1, oauth_account2],
+    )
+
+
+@pytest.fixture
+def inactive_user_oauth(oauth_account3: OAuthAccount) -> UserOAuth:
+    return UserOAuth(
+        email=EmailStr("percival@camelot.bt"),
+        hashed_password=angharad_password_hash,
+        is_active=False,
+        oauth_accounts=[oauth_account3],
+    )
+
+
+@pytest.fixture
+def superuser_oauth() -> UserOAuth:
+    return UserOAuth(
+        email=EmailStr("merlin@camelot.bt"),
+        hashed_password=viviane_password_hash,
+        is_superuser=True,
+        oauth_accounts=[],
+    )
+
+
+@pytest.fixture
+def oauth_account1() -> OAuthAccount:
+    return OAuthAccount(
+        oauth_name="service1",
+        access_token="TOKEN",
+        expires_at=1579000751,
+        account_id="user_oauth1",
+        account_email="king.arthur@camelot.bt",
+    )
+
+
+@pytest.fixture
+def oauth_account2() -> OAuthAccount:
+    return OAuthAccount(
+        oauth_name="service2",
+        access_token="TOKEN",
+        expires_at=1579000751,
+        account_id="user_oauth2",
+        account_email="king.arthur@camelot.bt",
+    )
+
+
+@pytest.fixture
+def oauth_account3() -> OAuthAccount:
+    return OAuthAccount(
+        oauth_name="service3",
+        access_token="TOKEN",
+        expires_at=1579000751,
+        account_id="inactive_user_oauth1",
+        account_email="percival@camelot.bt",
+    )
+
+
+@pytest.fixture
+def oauth_account4() -> OAuthAccount:
+    return OAuthAccount(
+        oauth_name="service4",
+        access_token="TOKEN",
+        expires_at=1579000751,
+        account_id="verified_user_oauth1",
+        account_email="lake.lady@camelot.bt",
+    )
+
+
+@pytest.fixture
+def oauth_account5() -> OAuthAccount:
+    return OAuthAccount(
+        oauth_name="service5",
+        access_token="TOKEN",
+        expires_at=1579000751,
+        account_id="verified_superuser_oauth1",
+        account_email="the.real.merlin@camelot.bt",
+    )
+
+
+@pytest.fixture
 def inactive_user() -> UserModel:
     return UserModel(
         email=EmailStr("percival@camelot.bt"),
@@ -160,7 +282,8 @@ def superuser() -> UserModel:
 
 
 class MockUserDatabase(
-    Generic[models.UP, models.SIHE], BaseUserDatabase[models.UP, IDType, models.SIHE]
+    Generic[models.UP, models.SIHE, models.OAP, models.UOAP],
+    BaseUserDatabase[models.UP, IDType, models.SIHE, models.OAP, models.UOAP],
 ):
     def __init__(self, user: UserModel, inactive_user: UserModel, superuser: UserModel):
         self.user: UserModel = user
@@ -218,8 +341,10 @@ class MockUserDatabase(
 @pytest.fixture
 def mock_user_db(
     user: UserModel, inactive_user: UserModel, superuser: UserModel
-) -> BaseUserDatabase[UserModel, IDType, SignInModel]:
-    return MockUserDatabase[UserModel, SignInModel](user, inactive_user, superuser)
+) -> BaseUserDatabase[UserModel, IDType, SignInModel, UserOAuth, OAuthAccount]:
+    return MockUserDatabase[UserModel, SignInModel, UserOAuth, OAuthAccount](
+        user, inactive_user, superuser
+    )
 
 
 @pytest.fixture
@@ -272,7 +397,7 @@ class MockStrategy(Strategy[UserModel, SignInModel]):
     async def read_token(
         self,
         token: Optional[str],
-        user_manager: BaseUserManager[UserModel, SignInModel],
+        user_manager: BaseUserManager[UserModel, SignInModel, UserOAuth, OAuthAccount],
     ) -> Optional[UserModel]:
         if token is not None:
             try:
@@ -317,3 +442,118 @@ def get_test_client():
                 yield test_client
 
     return _get_test_client
+
+
+@pytest.fixture
+def mock_user_db_oauth(
+    user_oauth: UserOAuth, inactive_user_oauth: UserOAuth, superuser_oauth: UserOAuth
+) -> BaseUserDatabase[UserModel, IDType, SignInModel, OAuthAccount, UserOAuth]:
+    class MockUserDatabase(
+        BaseUserDatabase[UserModel, IDType, SignInModel, OAuthAccount, UserOAuth]
+    ):
+        async def get(self, id: IDType) -> Optional[UserOAuth]:
+            if id == user_oauth.id:
+                return user_oauth
+            if id == inactive_user_oauth.id:
+                return inactive_user_oauth
+            if id == superuser_oauth.id:
+                return superuser_oauth
+            return None
+
+        async def get_by_email(self, email: str) -> Optional[UserOAuth]:
+            lower_email = email.lower()
+            if lower_email == user_oauth.email.lower():
+                return user_oauth
+            if lower_email == inactive_user_oauth.email.lower():
+                return inactive_user_oauth
+            if lower_email == superuser_oauth.email.lower():
+                return superuser_oauth
+            return None
+
+        async def get_by_oauth_account(
+            self, oauth: str, account_id: str
+        ) -> Optional[UserOAuth]:
+            user_oauth_account = user_oauth.oauth_accounts[0]
+            if (
+                user_oauth_account.oauth_name == oauth
+                and user_oauth_account.account_id == account_id
+            ):
+                return user_oauth
+
+            inactive_user_oauth_account = inactive_user_oauth.oauth_accounts[0]
+            if (
+                inactive_user_oauth_account.oauth_name == oauth
+                and inactive_user_oauth_account.account_id == account_id
+            ):
+                return inactive_user_oauth
+            return None
+
+        async def create(self, create_dict: dict[str, Any]) -> UserOAuth:
+            return UserOAuth(**create_dict)
+
+        async def update(
+            self, user: UserOAuth, update_dict: dict[str, Any]
+        ) -> UserOAuth:
+            for field, value in update_dict.items():
+                setattr(user, field, value)
+            return user
+
+        async def delete(self, user: UserOAuth) -> None:
+            pass
+
+        async def add_oauth_account(
+            self, user: UserOAuth, create_dict: dict[str, Any]
+        ) -> UserOAuth:
+            oauth_account = OAuthAccount(**create_dict)
+            user.oauth_accounts.append(oauth_account)
+            return user
+
+        async def update_oauth_account(  # type: ignore
+            self,
+            user: UserOAuth,
+            oauth_account: OAuthAccount,
+            update_dict: dict[str, Any],
+        ) -> UserOAuth:
+            for field, value in update_dict.items():
+                setattr(oauth_account, field, value)
+            updated_oauth_accounts = []
+            for existing_oauth_account in user.oauth_accounts:
+                if (
+                    existing_oauth_account.account_id == oauth_account.account_id
+                    and existing_oauth_account.oauth_name == oauth_account.oauth_name
+                ):
+                    updated_oauth_accounts.append(oauth_account)
+                else:
+                    updated_oauth_accounts.append(existing_oauth_account)
+            return user
+
+    return MockUserDatabase()
+
+
+@pytest.fixture
+def user_manager_oauth(make_user_manager, mock_user_db_oauth):
+    return make_user_manager(UserManagerOAuth, mock_user_db_oauth)
+
+
+@pytest.fixture
+def get_user_manager_oauth(user_manager_oauth):
+    def _get_user_manager_oauth():
+        return user_manager_oauth
+
+    return _get_user_manager_oauth
+
+
+@pytest.fixture
+def oauth_client() -> OAuth2:
+    CLIENT_ID = "CLIENT_ID"
+    CLIENT_SECRET = "CLIENT_SECRET"
+    AUTHORIZE_ENDPOINT = "https://www.camelot.bt/authorize"
+    ACCESS_TOKEN_ENDPOINT = "https://www.camelot.bt/access-token"
+
+    return OAuth2(
+        CLIENT_ID,
+        CLIENT_SECRET,
+        AUTHORIZE_ENDPOINT,
+        ACCESS_TOKEN_ENDPOINT,
+        name="service1",
+    )

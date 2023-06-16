@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, List, Optional, Sequence
+from typing import AsyncGenerator, Optional, Sequence
 
 import httpx
 import pytest
@@ -14,7 +14,7 @@ from core.dependency_types import DependencyCallable
 from db import models_protocol as models
 from managers.user import BaseUserManager
 from openapi import OpenAPIResponseType
-from tests.conftest import SignInModel, UserModel
+from tests.conftest import OAuthAccount, SignInModel, UserModel, UserOAuth
 
 pytestmark = pytest.mark.asyncio
 
@@ -52,7 +52,9 @@ class MockTransport(Transport):
 
 class MockStrategy(Strategy[models.UP, models.SIHE]):
     async def read_token(
-        self, token: str | None, user_manager: BaseUserManager[models.UP, models.SIHE]
+        self,
+        token: str | None,
+        user_manager: BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP],
     ) -> models.UP | None:
         ...
 
@@ -67,7 +69,7 @@ class NoneStrategy(MockStrategy[UserModel, SignInModel]):
     async def read_token(
         self,
         token: Optional[str],
-        user_manager: BaseUserManager[UserModel, SignInModel],
+        user_manager: BaseUserManager[UserModel, SignInModel, UserOAuth, OAuthAccount],
     ) -> Optional[UserModel]:
         return None
 
@@ -79,7 +81,7 @@ class UserStrategy(MockStrategy[UserModel, SignInModel]):
     async def read_token(
         self,
         token: Optional[str],
-        user_manager: BaseUserManager[UserModel, SignInModel],
+        user_manager: BaseUserManager[UserModel, SignInModel, UserOAuth, OAuthAccount],
     ) -> UserModel | None:
         return self.user
 

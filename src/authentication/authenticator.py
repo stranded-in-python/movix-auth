@@ -53,7 +53,9 @@ class Authenticator(Generic[models.UP, models.SIHE]):
     def __init__(
         self,
         backends: Sequence[AuthenticationBackend[models.UP, models.SIHE]],
-        get_user_manager: UserManagerDependency[models.UP, models.SIHE],
+        get_user_manager: UserManagerDependency[
+            models.UP, models.SIHE, models.OAP, models.UOAP
+        ],
     ):
         self.backends = backends
         self.get_user_manager = get_user_manager
@@ -146,7 +148,7 @@ class Authenticator(Generic[models.UP, models.SIHE]):
     async def _authenticate(  # noqa: C901
         self,
         *args: tuple[Any, ...],
-        user_manager: BaseUserManager[models.UP, models.SIHE],
+        user_manager: BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP],
         optional: bool = False,
         active: bool = False,
         superuser: bool = False,

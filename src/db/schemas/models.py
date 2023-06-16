@@ -1,7 +1,7 @@
 import uuid
 from typing import TypeVar
 
-from pydantic import EmailStr
+from pydantic import BaseModel, EmailStr
 
 from db.schemas import generics
 
@@ -21,6 +21,23 @@ class UserUpdate(generics.BaseUserUpdate[EmailStr]):
 U = TypeVar("U", bound=UserRead)
 UC = TypeVar("UC", bound=UserCreate)
 UU = TypeVar("UU", bound=UserUpdate)
+
+
+class OAuthAccount(BaseModel):
+    id: uuid.UUID
+    oauth_name: str
+    access_token: str
+    expires_at: int | None
+    refresh_token: str | None
+    account_id: str
+    account_email: str
+
+    class Config(generics.ORMModeMixin):
+        ...
+
+
+class UserOAuth(UserRead):
+    oauth_accounts: list[OAuthAccount]
 
 
 class EventRead(generics.BaseSignInHistoryEvent[uuid.UUID, uuid.UUID]):

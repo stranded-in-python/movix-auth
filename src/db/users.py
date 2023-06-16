@@ -5,16 +5,42 @@ from typing import Any, Iterable, Sequence
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Row, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 from sqlalchemy.sql import Select
 
 from cache.cache import cache_decorator
+from core import exceptions
 from core.pagination import PaginateQueryParams
 from db.base import BaseUserDatabase, SQLAlchemyBase
 from db.generics import GUID
 from db.schemas import models
 
 UUID_ID = uuid.UUID
+
+
+class SAOAuthAccount(SQLAlchemyBase):
+    """Base SQLAlchemy OAuth account table definition."""
+
+    __tablename__ = "oauth_account"
+    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    oauth_name: Mapped[str] = mapped_column(
+        String(length=100), index=True, nullable=False
+    )
+    access_token: Mapped[str] = mapped_column(String(length=1024), nullable=False)
+    expires_at: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    refresh_token: Mapped[str | None] = mapped_column(
+        String(length=1024), nullable=True
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(length=320), index=True, nullable=False
+    )
+    account_email: Mapped[str] = mapped_column(String(length=320), nullable=False)
+
+    @declared_attr
+    def user_id(cls) -> Mapped[GUID]:
+        return mapped_column(
+            GUID, ForeignKey("user.id", ondelete="cascade"), nullable=False
+        )
 
 
 class SAUser(SQLAlchemyBase):
@@ -39,6 +65,9 @@ class SAUser(SQLAlchemyBase):
         String(length=32), unique=False, index=True, nullable=True
     )
     signin = relationship("SASignInHistory")
+    oauth_accounts: Mapped[list[SAOAuthAccount]] = relationship(
+        "SAOAuthAccount", lazy="joined"
+    )
 
 
 class SASignInHistory(SQLAlchemyBase):
@@ -50,27 +79,15 @@ class SASignInHistory(SQLAlchemyBase):
     user_id: Mapped[UUID_ID] = mapped_column("user", ForeignKey("user.id"))
 
 
-class SQLAlchemyOAuthAccountTable(SQLAlchemyBase):
-    """Base SQLAlchemy OAuth account table definition."""
-
-    __tablename__ = "oauth_account"
-
-    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    oauth_name: Mapped[str] = mapped_column(
-        String(length=100), index=True, nullable=False
-    )
-    access_token: Mapped[str] = mapped_column(String(length=1024), nullable=False)
-    expires_at: Mapped[None | int] = mapped_column(Integer, nullable=True)
-    refresh_token: Mapped[str | None] = mapped_column(
-        String(length=1024), nullable=True
-    )
-    account_id: Mapped[str] = mapped_column(
-        String(length=320), index=True, nullable=False
-    )
-    account_email: Mapped[str] = mapped_column(String(length=320), nullable=False)
-
-
-class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
+class SAUserDB(
+    BaseUserDatabase[
+        models.UserRead,
+        uuid.UUID,
+        models.EventRead,
+        models.OAuthAccount,
+        models.UserOAuth,
+    ]
+):
     """
     Database adapter for SQLAlchemy.
 
@@ -85,10 +102,12 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
         session: AsyncSession,
         user_table: type[SAUser],
         history_table: type[SASignInHistory],
+        oauth_account_table: type[SAOAuthAccount],
     ):
         self.session = session
         self.user_table = user_table
         self.history_table = history_table
+        self.oauth_account_table = oauth_account_table
 
     @cache_decorator()
     async def get(self, user_id: uuid.UUID) -> models.UserRead | None:
@@ -150,6 +169,16 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
         statement = select(self.user_table).where(self.user_table.id == user_id)
         return await self._get_user(statement)
 
+    async def _get_oauth_account_by_id(
+        self, row_id: uuid.UUID
+    ) -> SAOAuthAccount | None:
+        statement = select(self.oauth_account_table).where(
+            self.oauth_account_table.id == row_id
+        )
+        results = await self.session.execute(statement)
+
+        return results.unique().scalar_one_or_none()
+
     async def record_in_sighin_history(
         self, user_id: uuid.UUID, event: models.EventRead
     ):
@@ -172,6 +201,53 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
         if not events:
             return []
         return list(models.EventRead.from_orm(event[0]) for event in events)
+
+    async def get_by_oauth_account(
+        self, oauth: str, account_id: str
+    ) -> models.UserOAuth | None:
+        statement: Select[Any] = (
+            select(self.user_table)
+            .join(self.oauth_account_table)
+            .where(self.oauth_account_table.oauth_name == oauth)
+            .where(self.oauth_account_table.account_id == account_id)
+        )
+        user = await self._get_user(statement)
+        if not user:
+            return None
+        return models.UserOAuth.from_orm(user)
+
+    async def add_oauth_account(
+        self, user: models.UserRead, create_dict: dict[str, Any]
+    ) -> models.UserOAuth:
+        user_model = await self._get_user_by_id(user.id)
+        if user_model is None:
+            raise exceptions.UserNotExists
+
+        await self.session.refresh(user_model)
+        oauth_account = self.oauth_account_table(**create_dict)
+        self.session.add(oauth_account)
+        user_model.oauth_accounts.append(oauth_account)
+        self.session.add(user_model)
+
+        await self.session.commit()
+
+        return models.UserOAuth.from_orm(user_model)
+
+    async def update_oauth_account(
+        self,
+        user: models.UserRead,
+        oauth_account: models.OAuthAccount,
+        update_dict: dict[str, Any],
+    ) -> models.UserOAuth:
+        user_model = await self._get_user_by_id(user.id)
+        oauth_account_model = await self._get_oauth_account_by_id(oauth_account.id)
+
+        for key, value in update_dict.items():
+            setattr(oauth_account_model, key, value)
+        self.session.add(oauth_account_model)
+        await self.session.commit()
+
+        return models.UserOAuth.from_orm(user_model)
 
     async def _get_events(self, statement: Select[Any]) -> Sequence[Row[Any]]:
         results = await self.session.execute(statement)

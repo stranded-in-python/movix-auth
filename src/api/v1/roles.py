@@ -16,8 +16,13 @@ from managers.user import BaseUserManager, UserManagerDependency
 logger()
 
 
-def get_roles_router(  # noqa: C901
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
+def get_roles_router(
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ],
     get_role_manager: RoleManagerDependency[
         models_protocol.UP, models_protocol.RP, models_protocol.URP
     ],
@@ -201,7 +206,10 @@ def get_roles_router(  # noqa: C901
     async def check_user_role(  # pyright: ignore
         user_role: user_role_update_schema,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -245,7 +253,10 @@ def get_roles_router(  # noqa: C901
     async def assign_role(  # pyright: ignore
         user_role: user_role_update_schema,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -292,7 +303,10 @@ def get_roles_router(  # noqa: C901
     async def remove_user_role(  # pyright: ignore
         user_role: user_role_schema,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
@@ -332,7 +346,10 @@ def get_roles_router(  # noqa: C901
     async def user_roles(  # pyright: ignore
         user_id: UUID,
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
