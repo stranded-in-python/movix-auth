@@ -431,7 +431,7 @@ class BaseUserManager(
                 )
                 if (
                     existing_oauth_account.account_id == account_id
-                    and existing_oauth_account.oauth_name == oauth_name
+                    and existing_oauth_account.oauth_name == oauth_name  # noqa W503
                 ):
                     user = await self.user_db.update_oauth_account(
                         user, existing_oauth_account, oauth_account_dict
@@ -453,7 +453,7 @@ UserManagerDependency = DependencyCallable[
 class UserManager(
     models_protocol.UUIDIDMixin,
     BaseUserManager[
-        models.UserRead, models.EventRead, models.OAuthAccount, models.UserOAuth,
+        models.UserRead, models.EventRead, models.OAuthAccount, models.UserOAuth
     ],
 ):
     reset_password_token_secret = settings.reset_password_token_secret
