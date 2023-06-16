@@ -1,4 +1,5 @@
 from typing import TypedDict, cast
+
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from httpx_oauth.integrations.fastapi import OAuth2AuthorizeCallback

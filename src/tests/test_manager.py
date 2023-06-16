@@ -1,5 +1,6 @@
 import pytest
 from pydantic import UUID4
+
 from api import schemas
 from authentication.strategy.jwt import decode_jwt, generate_jwt
 from core.exceptions import (

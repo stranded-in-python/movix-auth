@@ -426,7 +426,9 @@ class BaseUserManager(
                 raise exceptions.AppException("Add oauth_accounts to the db schema")
 
             for existing_oauth_account in user.oauth_accounts:
-                existing_oauth_account = cast(models_protocol.OAP, existing_oauth_account)
+                existing_oauth_account = cast(
+                    models_protocol.OAP, existing_oauth_account
+                )
                 if (
                     existing_oauth_account.account_id == account_id
                     and existing_oauth_account.oauth_name == oauth_name
@@ -451,10 +453,7 @@ UserManagerDependency = DependencyCallable[
 class UserManager(
     models_protocol.UUIDIDMixin,
     BaseUserManager[
-        models.UserRead,
-        models.EventRead,
-        models.OAuthAccount,
-        models.UserOAuth,
+        models.UserRead, models.EventRead, models.OAuthAccount, models.UserOAuth,
     ],
 ):
     reset_password_token_secret = settings.reset_password_token_secret

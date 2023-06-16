@@ -86,7 +86,9 @@ class UserOAuthProtocol(
     ...
 
 
-UOAP = TypeVar("UOAP", bound=UserOAuthProtocol[UUID, pydantic.EmailStr, models.OAuthAccount])
+UOAP = TypeVar(
+    "UOAP", bound=UserOAuthProtocol[UUID, pydantic.EmailStr, models.OAuthAccount]
+)
 
 
 class RoleProtocol(Protocol[ID]):

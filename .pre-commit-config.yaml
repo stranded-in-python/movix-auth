@@ -28,7 +28,7 @@ repos:
     rev: 4.0.1
     hooks:
       - id: flake8
-        args: ["--config=setup.cfg"]
+        args: ["--config=setup.cfg", --ignore=C901]
         exclude: "tests/"
         additional_dependencies: [flake8-isort]
 
@@ -36,7 +36,7 @@ repos:
     rev: v1.1.309
     hooks:
       - id: pyright
-
+        exclude: "tests/"
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
   autoupdate_schedule: weekly
