@@ -103,10 +103,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.TOKEN }}
 
-      - name: Copy .dockerignore
-        run: |
-          cp ./compose/production/api/.dockerignore ./
-
       - name: Build Docker image
         uses: docker/build-push-action@v4
         with:
