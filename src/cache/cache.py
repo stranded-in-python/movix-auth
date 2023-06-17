@@ -38,7 +38,7 @@ class RedisCacheStorage(CacheStorageABC):
             raise TypeError(
                 f"Expected bytes or None value for key {key}, but have {type(value)}"
             )
-        return self._client.set(key, value)
+        return await self._client.set(key, value)
 
 
 class Cache(metaclass=utils.Singleton):
