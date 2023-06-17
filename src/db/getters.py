@@ -25,7 +25,9 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    yield users.SAUserDB(session, users.SAUser, users.SASignInHistory)
+    yield users.SAUserDB(
+        session, users.SAUser, users.SASignInHistory, users.SAOAuthAccount
+    )
 
 
 async def get_role_db(session: AsyncSession = Depends(get_async_session)):

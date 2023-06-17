@@ -4,7 +4,6 @@ from authentication.strategy import (
     JWTBlacklistStrategy,
     JWTStrategy,
     Strategy,
-    TokenBlacklistManager,
     get_manager,
 )
 from authentication.transport import (
@@ -24,6 +23,5 @@ __all__ = [
     "JWTBlacklistStrategy",
     "Strategy",
     "Transport",
-    "TokenBlacklistManager",
     "get_manager",
 ]

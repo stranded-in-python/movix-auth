@@ -15,8 +15,6 @@ current_active_user = api_users.current_user(active=True)
 api_roles = APIRoles[models.RoleRead, models.UserRead, models.EventRead](
     get_user_manager, get_role_manager, [access_backend]
 )
-
-
 api_access_rights = APIAccessRight[
     models.AccessRight,
     models.RoleAccessRight,

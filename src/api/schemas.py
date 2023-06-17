@@ -79,6 +79,27 @@ UC = TypeVar("UC", bound=UserCreate)
 UU = TypeVar("UU", bound=UserUpdate)
 
 
+class BaseOAuthAccount(Generic[UserID], BaseModel):
+    """Base OAuth account model."""
+
+    id: UserID
+    oauth_name: str
+    access_token: str
+    expires_at: int | None = None
+    refresh_token: str | None = None
+    account_id: str
+    account_email: str
+
+    class Config:
+        orm_mode = True
+
+
+class BaseOAuthAccountMixin(BaseModel):
+    """Adds OAuth accounts list to a User model."""
+
+    oauth_accounts: list[BaseOAuthAccount] = []
+
+
 class BaseSignInHistoryEvent(CreateUpdateDictModel):
     timestamp: datetime.datetime | None
     fingerprint: str | None

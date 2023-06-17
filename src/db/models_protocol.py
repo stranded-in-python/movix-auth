@@ -5,6 +5,7 @@ from uuid import UUID
 import pydantic
 
 import core.exceptions as ex
+import db.schemas.models as models
 
 ID = TypeVar("ID")
 EmailStr = TypeVar('EmailStr')
@@ -56,6 +57,38 @@ class UserProtocol(Protocol[ID, EmailStr]):
 
 UP = TypeVar("UP", bound=UserProtocol[UUID, pydantic.EmailStr])
 UC = TypeVar("UC", bound=UserCreateProtocol[str])
+
+
+class OAuthAccountProtocol(Protocol[ID]):
+    """OAuth account protocol that ORM model should follow."""
+
+    id: ID
+    oauth_name: str
+    access_token: str
+    expires_at: int | None
+    refresh_token: str | None
+    account_id: str
+    account_email: str
+
+
+OAP = TypeVar("OAP", bound=OAuthAccountProtocol[UUID])
+
+
+class OAuthAccountsProtocol(Protocol[OAP]):
+    oauth_accounts: list[OAP]
+
+
+class UserOAuthProtocol(
+    UserProtocol[ID, EmailStr], OAuthAccountsProtocol[OAP], Protocol
+):
+    """User protocol including a list of OAuth accounts."""
+
+    ...
+
+
+UOAP = TypeVar(
+    "UOAP", bound=UserOAuthProtocol[UUID, pydantic.EmailStr, models.OAuthAccount]
+)
 
 
 class RoleProtocol(Protocol[ID]):

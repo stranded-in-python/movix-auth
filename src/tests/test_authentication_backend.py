@@ -19,7 +19,7 @@ class MockStrategyDestroyNotSupported(Strategy, Generic[models.UP, models.SIHE])
     async def read_token(
         self,
         token: Optional[str],
-        user_manager: BaseUserManager[models.UP, models.SIHE],
+        user_manager: BaseUserManager[models.UP, models.SIHE, models.OAP, models.UOAP],
     ) -> Optional[models.UP]:
         return None
 

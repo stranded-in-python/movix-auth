@@ -3,6 +3,7 @@ from fastapi.responses import ORJSONResponse
 
 from api import container, schemas
 from core.config import settings
+from managers.user import google_oauth_client
 
 app = FastAPI(
     title=settings.project_name,
@@ -50,6 +51,13 @@ app.include_router(
         schemas.RoleAccessRightUpdate,
     ),
     tags=["access rights"],
+)
+app.include_router(
+    container.api_users.get_oauth_router(
+        google_oauth_client, container.access_backend, settings.state_secret
+    ),
+    prefix="/auth/google",
+    tags=["auth"],
 )
 
 

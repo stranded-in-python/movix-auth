@@ -16,7 +16,12 @@ logger()
 def get_auth_router(  # noqa: C901
     access_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
     refresh_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ],
     access_authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
     refresh_authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
     requires_verification: bool = False,
@@ -54,7 +59,10 @@ def get_auth_router(  # noqa: C901
         request: Request,
         credentials: OAuth2PasswordRequestForm = Depends(),
         user_manager: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
             refresh_backend.get_strategy

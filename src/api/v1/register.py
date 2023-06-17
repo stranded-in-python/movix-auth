@@ -14,7 +14,12 @@ logger()
 
 
 def get_register_router(
-    get_user_manager: UserManagerDependency[models_protocol.UP, models_protocol.SIHE],
+    get_user_manager: UserManagerDependency[
+        models_protocol.UP,
+        models_protocol.SIHE,
+        models_protocol.OAP,
+        models_protocol.UOAP,
+    ],
     user_schema: type[schemas.U],
     user_create_schema: type[schemas.UC],
 ) -> APIRouter:
@@ -62,7 +67,10 @@ def get_register_router(
         request: Request,
         user_create: user_create_schema,
         user_service: BaseUserManager[
-            models_protocol.UP, models_protocol.SIHE
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
     ) -> user_schema:
         try:

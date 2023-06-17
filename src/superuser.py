@@ -25,11 +25,22 @@ if __name__ == '__main__':
     with closing(psycopg2.connect(**dsl)) as pg_conn:
         curs = pg_conn.cursor()
         query = """
-            INSERT INTO users.user (id, username, email, hashed_password, is_active, is_superuser, first_name, last_name)
+            INSERT INTO users.user
+            (
+                id, username, email, hashed_password, is_active, is_superuser,
+                first_name, last_name
+            )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO UPDATE SET
-            (id, username, email, hashed_password, is_active, is_superuser, first_name, last_name)
-            = (EXCLUDED.id, EXCLUDED.username, EXCLUDED.email, EXCLUDED.hashed_password, EXCLUDED.is_active, EXCLUDED.is_superuser, EXCLUDED.first_name, EXCLUDED.last_name);
+            (
+                id, username, email, hashed_password, is_active, is_superuser,
+                first_name, last_name
+            )
+            = (
+                EXCLUDED.id, EXCLUDED.username, EXCLUDED.email,
+                EXCLUDED.hashed_password, EXCLUDED.is_active,
+                EXCLUDED.is_superuser, EXCLUDED.first_name, EXCLUDED.last_name
+            );
         """
         values = (
             superuser_id,
