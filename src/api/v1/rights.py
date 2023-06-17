@@ -12,7 +12,7 @@ from core.pagination import PaginateQueryParams
 from db import models_protocol
 from managers.rights import AccessRightManagerDependency, BaseAccessRightManager
 from managers.role import BaseRoleManager, RoleManagerDependency
-from managers.user import UserManagerDependency
+from managers.user import BaseUserManager, UserManagerDependency
 
 logger()
 
@@ -48,7 +48,6 @@ def get_access_rights_router(
         summary="View all access rights",
         description="View all access rights",
         response_description="Access entities",
-        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def search(  # pyright: ignore
@@ -69,7 +68,6 @@ def get_access_rights_router(
         summary="Get an access right",
         description="Get a item from the access right directory",
         response_description="Access Right entity",
-        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def get_access_right(  # pyright: ignore
@@ -201,7 +199,6 @@ def get_access_rights_router(
         summary="Check roles access right",
         description="Check if role is assigned to the access right",
         response_description="Message entity",
-        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def check_access_right(  # pyright: ignore
@@ -214,7 +211,7 @@ def get_access_rights_router(
             if not await access_right_manager.check_role_access_right(
                 role_access_right
             ):
-                raise exceptions.UserHaveNotRole
+                raise exceptions.UserHasNoRole
 
             logging.info("success:%s" % role_access_right.access_right_id)
 
@@ -318,7 +315,6 @@ def get_access_rights_router(
         summary="List the role's access right",
         description="Get list the role's access right",
         response_description="Message entity",
-        dependencies=[Depends(get_current_adminuser)],
         tags=['Access right'],
     )
     async def get_role_rights(  # pyright: ignore
@@ -342,6 +338,67 @@ def get_access_rights_router(
             logging.exception("RoleNotExists:%s" % role_id)
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
+            )
+
+    @router.get(
+        "/users/{user_id}/rights",
+        response_model=list[schemas.AR],
+        status_code=status.HTTP_200_OK,
+        responses={
+            status.HTTP_204_NO_CONTENT: {"description": "User have no rights."},
+            status.HTTP_404_NOT_FOUND: {"description": "User or role not found."},
+        },
+        summary="List user rights",
+        description="List all user's rights",
+        tags=['Rights'],
+    )
+    async def get_user_rights(  # pyright: ignore
+        user_id: UUID,
+        user_manager: BaseUserManager[
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
+        ] = Depends(get_user_manager),
+        role_manager: BaseRoleManager[
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
+        ] = Depends(get_role_manager),
+        rights_manager: BaseAccessRightManager[
+            models_protocol.ARP, models_protocol.RARP
+        ] = Depends(get_access_right_manager),
+    ) -> list[schemas.AR]:
+        try:
+            if not await user_manager.get(user_id):
+                raise exceptions.UserNotExists
+
+            roles = await role_manager.get_user_roles(user_id)
+            if not roles:
+                raise exceptions.UserHasNoRole
+
+            roles_ids = [role.id for role in roles]
+
+            rights = await rights_manager.get_roles_access_rights(roles_ids)
+            if not rights:
+                raise exceptions.UserHasNoRight
+
+            logging.info(f"success:{user_id}")
+
+            return list(schemas.AR.from_orm(right) for right in rights)
+
+        except exceptions.UserNotExists:
+            logging.exception(f"UserNotExists:{user_id}")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, detail=ErrorCode.USER_IS_NOT_EXISTS
+            )
+        except exceptions.UserHasNoRole:
+            logging.exception(f"UserHasNoRole:{user_id}")
+            raise HTTPException(
+                status.HTTP_204_NO_CONTENT, detail=ErrorCode.USER_HAS_NO_ROLE
+            )
+        except exceptions.UserHasNoRight:
+            logging.exception(f"UserHasNoRight:{user_id}")
+            raise HTTPException(
+                status.HTTP_204_NO_CONTENT, detail=ErrorCode.USER_HAS_NO_RIGHTS
             )
 
     return router

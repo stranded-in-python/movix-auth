@@ -59,11 +59,19 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
 
     @cache_decorator()
     async def get(self, access_right_id: uuid.UUID) -> models.AccessRight | None:
-        model = self._get_access_right_by_id(access_right_id)
+        model = await self._get_access_right_by_id(access_right_id)
 
         if model:
             return models.AccessRight.from_orm(model)
         return None
+
+    @cache_decorator()
+    async def get_multiple(
+        self, access_right_ids: Iterable[uuid.UUID]
+    ) -> Iterable[models.AccessRight]:
+        rights = await self._get_access_rights_by_ids(access_right_ids)
+
+        return [models.AccessRight.from_orm(right) for right in rights]
 
     async def create(self, create_dict: Mapping[str, Any]) -> models.AccessRight:
         access_right = self.access_right_table(**create_dict)
@@ -111,6 +119,16 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
         if not results:
             return results
         return results.unique().fetchall()
+
+    async def _get_access_rights_by_ids(
+        self, access_right_ids: Iterable[uuid.UUID]
+    ) -> Iterable[Row[tuple[SAAccessRight]]]:
+        if not access_right_ids:
+            return []
+        statement = select(self.access_right_table).where(
+            self.access_right_table.id.in_(access_right_ids)
+        )
+        return await self._get_access_rights(statement)
 
     def __getstate__(self):
         """pickle.dumps()"""
@@ -165,6 +183,21 @@ class SARoleAccessRightDB(
         if not model:
             return None
         return models.RoleAccessRight.from_orm(model)
+
+    @cache_decorator()
+    async def get_by_role_ids(
+        self, role_ids: Iterable[uuid.UUID]
+    ) -> Iterable[models.RoleAccessRight]:
+        if not role_ids:
+            return []
+        statement = select(self.role_access_right_table).where(
+            self.role_access_right_table.role_id.in_(role_ids)
+        )
+        role_rights = await self._get_role_access_rights(statement)
+
+        return [
+            models.RoleAccessRight.from_orm(role_right) for role_right in role_rights
+        ]
 
     async def create(self, create_dict: Mapping[str, Any]) -> models.RoleAccessRight:
         role_access_right = self.role_access_right_table(**create_dict)

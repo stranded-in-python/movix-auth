@@ -23,7 +23,7 @@ def get_refresh_strategy() -> JWTBlacklistStrategy[models.UserRead, models.Event
 def get_access_strategy() -> JWTBlacklistStrategy[models.UserRead, models.EventRead]:
     return JWTBlacklistStrategy(
         secret=settings.access_token_secret,
-        lifetime_seconds=119,
+        lifetime_seconds=3599,
         blacklist_manager=get_manager('jwt_access'),
     )
 

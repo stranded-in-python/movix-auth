@@ -57,11 +57,18 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
 
     @cache_decorator()
     async def get_by_id(self, role_id: UUID_ID) -> models.RoleRead | None:
-
-        model = self._get_role_by_id(role_id)
+        model = await self._get_role_by_id(role_id)
         if not model:
             return None
         return models.RoleRead.from_orm(model)
+
+    @cache_decorator()
+    async def get_multiple(
+        self, role_ids: Iterable[uuid.UUID]
+    ) -> Iterable[models.AccessRight]:
+        role_rights = await self._get_roles_by_id(access_right_ids)
+
+        return [models.AccessRight.from_orm(right) for right in rights]
 
     @cache_decorator()
     async def get_by_name(self, name: str) -> models.RoleRead | None:
@@ -141,13 +148,28 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
         self.session = session
         self.user_role_table = user_role_table
 
-    @cache_decorator()
-    async def get_user_role(self, user_role_id: UUID_ID) -> models.UserRole | None:
+    async def get_user_role(self, user_id: UUID_ID, role_id: UUID_ID) -> models.UserRole | None:
+        statement = select(
+            self.user_role_table
+        ).where(
+            (self.user_role_table.user_id == user_id)
+            and (self.user_role_table.role_id == role_id)
+        )
+        results = await self.session.execute(statement)
+        results = results.unique().scalar_one_or_none()
+
+        if not results:
+            return None
+        return models.UserRole.from_orm(results)
+
+    async def get_user_role_by_id(self, user_role_id: UUID_ID) -> models.UserRole | None:
         statement = select(self.user_role_table).where(
-            self.user_role_table.id == user_role_id
+            (self.user_role_table.id == user_role_id)
         )
 
         results = await self.session.execute(statement)
+        if not results:
+            return None
         return models.UserRole.from_orm(results.unique().scalar_one_or_none())
 
     async def assign_user_role(
@@ -160,10 +182,17 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
 
         return models.UserRole.from_orm(user_role)
 
-    async def remove_user_role(self, user_role_id: UUID_ID) -> None:
-        instance = await self.get_user_role(user_role_id)
-
-        await self.session.delete(instance)
+    async def remove_user_role(
+        self, user_id: UUID_ID, role_id: UUID_ID
+    ) -> None:
+        statement = select(
+            self.user_role_table
+        ).where(
+            (self.user_role_table.user_id == user_id)
+            and (self.user_role_table.role_id == role_id)
+        )
+        role_to_delete = await self._get_user_role(statement)
+        await self.session.delete(role_to_delete)
         await self.session.commit()
 
     @cache_decorator()
@@ -180,6 +209,10 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
 
         return list(models.UserRole.from_orm(result) for result in results.fetchall())
 
+    async def _get_user_role(self, statement: Select[tuple[SAUserRole]]) -> SAUserRole | None:
+        results = await self.session.execute(statement)
+        return results.unique().scalar_one_or_none()
+    
     def __getstate__(self):
         """pickle.dumps()"""
         # Определяем, какие атрибуты должны быть сериализованы

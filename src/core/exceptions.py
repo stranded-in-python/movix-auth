@@ -25,6 +25,10 @@ class UserNotExists(AppException):
     pass
 
 
+class UserHasNoRights(AppException):
+    ...
+
+
 class UserInactive(AppException):
     pass
 
@@ -71,4 +75,12 @@ class AccessRightAlreadyAssign(AppException):
 
 
 class TokenInBlacklist(AppException):
+    pass
+
+
+class UserHasNoRight(AppException):
+    pass
+
+
+class UserHasNoRole(AppException):
     pass
