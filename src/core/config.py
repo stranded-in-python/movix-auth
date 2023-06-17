@@ -42,6 +42,9 @@ class Settings(BaseSettings):
 
     log_level: str = LOG_LEVEL
 
+    jaeger_host = 'jaeger'
+    jaeger_port = 6831
+
 
 settings = Settings()  # type: ignore
 
