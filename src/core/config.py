@@ -13,7 +13,7 @@ class ModelConfig:
 
 class Settings(BaseSettings):
     # Название проекта. Используется в Swagger-документации
-    project_name: str = 'movies'
+    project_name: str = 'movix-auth'
 
     # Настройки Redis
     redis_host: str = 'localhost'
@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     base_dir = os.path.dirname(os.path.dirname(__file__))
 
     log_level: str = LOG_LEVEL
+
+    jaeger_host = 'jaeger'
+    jaeger_port = 6831
 
 
 settings = Settings()  # type: ignore
