@@ -59,7 +59,7 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
 
     @cache_decorator()
     async def get(self, access_right_id: uuid.UUID) -> models.AccessRight | None:
-        model = self._get_access_right_by_id(access_right_id)
+        model = await self._get_access_right_by_id(access_right_id)
 
         if model:
             return models.AccessRight.from_orm(model)

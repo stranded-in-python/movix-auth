@@ -342,6 +342,7 @@ def get_access_rights_router(
 
     @router.get(
         "/users/{user_id}/rights",
+        response_model=list[schemas.AR],
         status_code=status.HTTP_200_OK,
         responses={
             status.HTTP_204_NO_CONTENT: {"description": "User have no rights."},
@@ -365,7 +366,7 @@ def get_access_rights_router(
         rights_manager: BaseAccessRightManager[
             models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
-    ) -> None:
+    ) -> list[schemas.AR]:
         try:
             if not await user_manager.get(user_id):
                 raise exceptions.UserNotExists
@@ -382,6 +383,8 @@ def get_access_rights_router(
 
             logging.info(f"success:{user_id}")
 
+            return list(schemas.AR.from_orm(right) for right in rights)
+
         except exceptions.UserNotExists:
             logging.exception(f"UserNotExists:{user_id}")
             raise HTTPException(
@@ -389,7 +392,9 @@ def get_access_rights_router(
             )
         except exceptions.UserHasNoRole:
             logging.exception(f"UserHasNoRole:{user_id}")
-
+            raise HTTPException(
+                status.HTTP_204_NO_CONTENT, detail=ErrorCode.USER_HAS_NO_ROLE
+            )
         except exceptions.UserHasNoRight:
             logging.exception(f"UserHasNoRight:{user_id}")
             raise HTTPException(

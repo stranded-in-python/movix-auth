@@ -256,10 +256,6 @@ def get_roles_router(
         ] = Depends(get_role_manager),
     ) -> None:
         try:
-            # TODO Проверить доступ пользователя
-            if not await user_manager.get(user_role.user_id):
-                raise exceptions.UserNotExists()
-
             if not await role_manager.get(user_role.role_id):
                 raise exceptions.RoleNotExists()
 
@@ -273,12 +269,17 @@ def get_roles_router(
         except exceptions.UserNotExists:
             logging.exception("UserNotExists:%s" % user_role)
             raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
+                status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.RoleNotExists:
             logging.exception("RoleNotExists:%s" % user_role)
             raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
+                status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ROLE_IS_NOT_EXISTS
+            )
+        except exceptions.RoleAlreadyAssign:
+            logging.exception("RoleNotExists:%s" % user_role)
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail=ErrorCode.USER_ROLE_IS_EXISTS
             )
 
     @router.delete(
@@ -313,19 +314,19 @@ def get_roles_router(
             if not await role_manager.get(user_role.role_id):
                 raise exceptions.RoleNotExists()
 
-            await role_manager.remove_user_role(user_role.id)
+            await role_manager.remove_user_role(user_role)
 
             logging.info("success:%s" % user_role)
 
         except exceptions.UserNotExists:
             logging.exception("UserNotExists:%s" % user_role)
             raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
+                status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
         except exceptions.RoleNotExists:
             logging.exception("RoleNotExists:%s" % user_role)
             raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
+                status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
 
     @router.get(
