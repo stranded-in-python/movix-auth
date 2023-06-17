@@ -1,9 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
 
 from api import container, schemas
 from core.config import settings
+from core.logger import logger
 from managers.user import google_oauth_client
+
+logger()
 
 app = FastAPI(
     title=settings.project_name,
@@ -11,6 +14,17 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json",
     default_response_class=ORJSONResponse,
 )
+
+
+@app.middleware("http")
+async def require_request_id(request: Request, call_next):
+    request_id = request.headers.get('X-Request-Id')
+    if not request_id:
+        logger.exception('RuntimeError: HEADER X-Request-Id is required')
+        raise RuntimeError('RuntimeError: HEADER X-Request-Id is required')
+    response = await call_next(request)
+    return response
+
 
 app.include_router(
     container.api_users.get_register_router(schemas.UserRead, schemas.UserCreate),

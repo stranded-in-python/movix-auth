@@ -6,6 +6,7 @@ skip-magic-trailing-comma = true
 [tool.pyright]
 venv = '.venv'
 venvPath = '.'
+useLibraryCodeForTypes = "true"
 
 
 [tool.alembic]
