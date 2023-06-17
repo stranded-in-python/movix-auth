@@ -11,9 +11,7 @@ logger()
 
 configure_tracer()
 
-app = FastAPI(title=settings.project_name, default_response_class=ORJSONResponse)
-
-subapp = FastAPI(
+app = FastAPI(
     title=settings.project_name,
     docs_url="/api/v1/openapi",
     openapi_url="/api/v1/openapi.json",
@@ -21,27 +19,27 @@ subapp = FastAPI(
 )
 
 
-subapp.include_router(
+app.include_router(
     container.api_users.get_register_router(schemas.UserRead, schemas.UserCreate),
     tags=["register"],
 )
-subapp.include_router(
+app.include_router(
     container.api_users.get_auth_router(
         container.access_backend, refresh_backend=container.refresh_backend
     ),
     tags=["auth"],
 )
-subapp.include_router(
+app.include_router(
     container.api_users.get_users_me_router(
         schemas.UserRead, schemas.UserUpdate, schemas.EventRead
     ),
     tags=["users"],
 )
-subapp.include_router(
+app.include_router(
     container.api_users.get_users_router(schemas.UserRead, schemas.UserUpdate),
     tags=["users"],
 )
-subapp.include_router(
+app.include_router(
     container.api_roles.get_roles_router(
         schemas.RoleRead,
         schemas.RoleCreate,
@@ -51,7 +49,7 @@ subapp.include_router(
     ),
     tags=["roles"],
 )
-subapp.include_router(
+app.include_router(
     container.api_access_rights.get_access_rights_router(
         schemas.AccessRightRead,
         schemas.AccessRightCreate,
@@ -61,7 +59,7 @@ subapp.include_router(
     ),
     tags=["access rights"],
 )
-subapp.include_router(
+app.include_router(
     container.api_users.get_oauth_router(
         google_oauth_client, container.access_backend, settings.state_secret
     ),
@@ -70,7 +68,7 @@ subapp.include_router(
 )
 
 
-@subapp.middleware("http")
+@app.middleware("http")
 async def require_request_id(request: Request, call_next):
     request_id = request.headers.get('X-Request-Id')
     if not request_id:
@@ -79,7 +77,5 @@ async def require_request_id(request: Request, call_next):
     response = await call_next(request)
     return response
 
-
-app.mount("/auth", subapp)
 
 instrumentor().instrument_app(app)  # type: ignore
