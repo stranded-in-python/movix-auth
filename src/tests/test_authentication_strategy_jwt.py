@@ -82,7 +82,7 @@ def jwt_strategy(request, secret: SecretType):
 @pytest.fixture
 def token(jwt_strategy: JWTStrategy[UserModel, SignInModel]):
     def _token(user_id=None, lifetime=LIFETIME):
-        data = {"aud": "fastapi-users:auth"}
+        data = {"aud": "movix:auth"}
         if user_id is not None:
             data["sub"] = str(user_id)
         return generate_jwt(

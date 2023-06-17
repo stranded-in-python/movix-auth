@@ -21,8 +21,8 @@ from db.base import BaseUserDatabase
 from db.schemas import models
 from db.users import SAUserDB
 
-RESET_PASSWORD_TOKEN_AUDIENCE = "fastapi-users:reset"
-VERIFY_USER_TOKEN_AUDIENCE = "fastapi-users:verify"
+RESET_PASSWORD_TOKEN_AUDIENCE = "movix:reset"
+VERIFY_USER_TOKEN_AUDIENCE = "movix:verify"
 
 google_oauth_client = GoogleOAuth2(
     str(settings.google_oauth_client_id), str(settings.google_oauth_client_secret)
