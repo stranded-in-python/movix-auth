@@ -13,7 +13,7 @@ from core.jwt_utils import SecretType, decode_jwt, generate_jwt
 from db import models_protocol as models
 from managers.user import BaseUserManager, UserManagerDependency
 
-STATE_TOKEN_AUDIENCE = "fastapi-users:oauth-state"
+STATE_TOKEN_AUDIENCE = "movix:oauth-state"
 
 
 class OAuth2AuthorizeResponse(BaseModel):
