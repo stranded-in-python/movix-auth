@@ -204,17 +204,17 @@ def upgrade() -> None:
         schema='users',
     )
     op.execute(
-        """CREATE TABLE signins_history_2023 PARTITION OF signins_history
+        """CREATE TABLE users.signins_history_2023 PARTITION OF users.signins_history
         FOR VALUES FROM ('2023-01-01 00:00:00') TO ('2023-12-31 23:59:59')
     """
     )
     op.execute(
-        """CREATE TABLE signins_history_2024 PARTITION OF signins_history
+        """CREATE TABLE users.signins_history_2024 PARTITION OF users.signins_history
         FOR VALUES FROM ('2024-01-01 00:00:00') TO ('2024-12-31 23:59:59')
     """
     )
     op.execute(
-        """CREATE TABLE signins_history_2025 PARTITION OF signins_history
+        """CREATE TABLE users.signins_history_2025 PARTITION OF users.signins_history
         FOR VALUES FROM ('2025-01-01 00:00:00') TO ('2025-12-31 23:59:59')
     """
     )
