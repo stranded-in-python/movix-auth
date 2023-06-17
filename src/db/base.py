@@ -1,3 +1,4 @@
+import datetime
 import typing as t
 
 from sqlalchemy import MetaData
@@ -46,7 +47,11 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE]):
         raise NotImplementedError
 
     async def get_sign_in_history(
-        self, user_id: ID, pagination_params: PaginateQueryParams
+        self,
+        user_id: ID,
+        pagination_params: PaginateQueryParams,
+        since: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
     ) -> t.Iterable[SIHE]:
         """Get recorded events in users sigh-in history"""
         raise NotImplementedError

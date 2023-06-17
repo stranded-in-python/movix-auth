@@ -3,7 +3,17 @@ import uuid
 from datetime import datetime
 from typing import Any, Iterable, Sequence
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Row, String, func, select
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Row,
+    String,
+    UniqueConstraint,
+    func,
+    select,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import Select
@@ -44,10 +54,16 @@ class SAUser(SQLAlchemyBase):
 class SASignInHistory(SQLAlchemyBase):
     __tablename__ = 'signins_history'
 
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime, primary_key=True, nullable=False
+    )
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     fingerprint: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     user_id: Mapped[UUID_ID] = mapped_column("user", ForeignKey("user.id"))
+
+    __table_args__ = (
+        UniqueConstraint('timestamp', 'user', 'fingerprint', name='uix_1'),
+    )
 
 
 class SQLAlchemyOAuthAccountTable(SQLAlchemyBase):
@@ -159,10 +175,20 @@ class SAUserDB(BaseUserDatabase[models.UserRead, uuid.UUID, models.EventRead]):
 
     @cache_decorator()
     async def get_sign_in_history(
-        self, user_id: uuid.UUID, pagination_params: PaginateQueryParams
+        self,
+        user_id: uuid.UUID,
+        pagination_params: PaginateQueryParams,
+        since: datetime | None = None,
+        to: datetime | None = None,
     ) -> Iterable[models.EventRead]:
+        if not since:
+            since = datetime(datetime.now().year - 1, 1, 1, 0, 0, 0, 0)
+        if not to:
+            to = datetime.now()
         statement: Select[Any] = (
             select(self.history_table)
+            .where(self.history_table.timestamp >= since)
+            .where(self.history_table.timestamp <= to)
             .where(self.history_table.user_id == user_id)
             .limit(pagination_params.page_size)
             .offset((pagination_params.page_number - 1) * pagination_params.page_size)

@@ -208,7 +208,11 @@ class BaseUserManager(Generic[models_protocol.UP, models_protocol.SIHE]):
         await self.on_after_delete(user, request)
 
     async def get_sign_in_history(
-        self, user: models_protocol.UP, pagination_params: PaginateQueryParams
+        self,
+        user: models_protocol.UP,
+        pagination_params: PaginateQueryParams,
+        since: datetime | None = None,
+        to: datetime | None = None,
     ) -> Iterable[models_protocol.SIHE]:
         raise NotImplementedError()
 
@@ -326,9 +330,15 @@ class UserManager(
     verification_token_secret = settings.verification_password_token_secret
 
     async def get_sign_in_history(
-        self, user: models.UserRead, pagination_params: PaginateQueryParams
+        self,
+        user: models.UserRead,
+        pagination_params: PaginateQueryParams,
+        since: datetime | None = None,
+        to: datetime | None = None,
     ) -> Iterable[models.EventRead]:
-        return await self.user_db.get_sign_in_history(user.id, pagination_params)
+        return await self.user_db.get_sign_in_history(
+            user.id, pagination_params, since=since, to=to
+        )
 
     async def _record_in_sighin_history(self, user: models.UserRead, request: Request):
         if request.client is None:

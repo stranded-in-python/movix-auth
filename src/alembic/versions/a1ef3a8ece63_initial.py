@@ -179,13 +179,44 @@ def upgrade() -> None:
     )
     op.create_table(
         'signins_history',
-        sa.Column('id', db.generics.GUID(), nullable=False),
         sa.Column('timestamp', sa.DateTime(), nullable=False),
+        sa.Column('id', db.generics.GUID(), nullable=False),
         sa.Column('fingerprint', sa.String(length=1024), nullable=False),
         sa.Column('user', db.generics.GUID(), nullable=False),
         sa.ForeignKeyConstraint(['user'], ['users.user.id']),
-        sa.PrimaryKeyConstraint('id'),
+        sa.PrimaryKeyConstraint('timestamp', 'id'),
+        sa.UniqueConstraint('timestamp', 'user', 'fingerprint', name='uix_1'),
+        postgresql_partition_by='RANGE (timestamp)',
         schema='users',
+    )
+    op.create_index(
+        op.f('ix_sih_timestamp_id'),
+        'signins_history',
+        ['timestamp', 'id'],
+        unique=True,
+        schema='users',
+    )
+    op.create_index(
+        op.f('ix_sih_timestamp_user_fingerprint'),
+        'signins_history',
+        ['timestamp', 'user', 'fingerprint'],
+        unique=True,
+        schema='users',
+    )
+    op.execute(
+        """CREATE TABLE signins_history_2023 PARTITION OF signins_history
+        FOR VALUES FROM ('2023-01-01 00:00:00') TO ('2023-12-31 23:59:59')
+    """
+    )
+    op.execute(
+        """CREATE TABLE signins_history_2024 PARTITION OF signins_history
+        FOR VALUES FROM ('2024-01-01 00:00:00') TO ('2024-12-31 23:59:59')
+    """
+    )
+    op.execute(
+        """CREATE TABLE signins_history_2025 PARTITION OF signins_history
+        FOR VALUES FROM ('2025-01-01 00:00:00') TO ('2025-12-31 23:59:59')
+    """
     )
     op.create_table(
         'user_role',
