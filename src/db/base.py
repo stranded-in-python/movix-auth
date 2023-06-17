@@ -118,6 +118,10 @@ class BaseAccessRightDatabase(t.Generic[ARP, ID]):
         """Get a single access right by id."""
         ...
 
+    async def get_multiple(self, access_right_ids: t.Iterable[ID]) -> t.Iterable[ARP]:
+        """Get multiple rights by ids"""
+        ...
+
     async def create(self, create_dict: dict[str, t.Any]) -> ARP:
         """Create an access right."""
         ...
@@ -145,6 +149,10 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
     async def get(self, role_id: ID, access_right_id: ID) -> RARP | None:
         """Get a single access right by id."""
         ...
+
+     async def get_by_role_ids(self, role_ids: t.Iterable[ID]) -> t.Iterable[RARP]:
+        """Get multiple rights by ids"""
+        ...   
 
     async def create(self, create_dict: dict[str, t.Any]) -> RARP:
         """Create an access right."""

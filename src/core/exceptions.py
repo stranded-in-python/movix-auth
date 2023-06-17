@@ -25,6 +25,10 @@ class UserNotExists(AppException):
     pass
 
 
+class UserHasNoRights(AppException):
+    ...
+
+
 class UserInactive(AppException):
     pass
 

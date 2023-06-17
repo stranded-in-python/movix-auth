@@ -57,11 +57,18 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
 
     @cache_decorator()
     async def get_by_id(self, role_id: UUID_ID) -> models.RoleRead | None:
-
         model = self._get_role_by_id(role_id)
         if not model:
             return None
         return models.RoleRead.from_orm(model)
+
+    @cache_decorator()
+    async def get_multiple(
+        self, role_ids: Iterable[uuid.UUID]
+    ) -> Iterable[models.AccessRight]:
+        role_rights = await self._get_roles_by_id(access_right_ids)
+
+        return [models.AccessRight.from_orm(right) for right in rights]
 
     @cache_decorator()
     async def get_by_name(self, name: str) -> models.RoleRead | None:

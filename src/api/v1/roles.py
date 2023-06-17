@@ -37,6 +37,7 @@ def get_roles_router(
     router.prefix = "/api/v1"
 
     get_current_adminuser = authenticator.current_user(active=True, admin=True)
+    get_current_user = authenticator.current_user(active=True)
 
     @router.get(
         "/roles/search",
@@ -44,7 +45,6 @@ def get_roles_router(
         summary="View all roles",
         description="View all roles",
         response_description="Role entities",
-        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def search(  # pyright: ignore
@@ -97,7 +97,6 @@ def get_roles_router(
         summary="Get a role",
         description="Get a item from the role directory",
         response_description="Role entity",
-        dependencies=[Depends(get_current_adminuser)],
         tags=['Roles'],
     )
     async def get_role(  # pyright: ignore
@@ -107,7 +106,6 @@ def get_roles_router(
             models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
     ) -> role_schema:
-        # TODO Проверить права доступа у пользователя
         try:
             role = await role_manager.get(role_id)
             logging.info("success:%s" % role_id)
@@ -137,8 +135,6 @@ def get_roles_router(
         ] = Depends(get_role_manager),
     ) -> role_schema:
         try:
-            # TODO Проверить доступ пользователя
-
             role = await role_manager.get(role_update.id)
 
             role = await role_manager.update(role_update, role, request=request)
@@ -177,8 +173,6 @@ def get_roles_router(
         ] = Depends(get_role_manager),
     ) -> role_schema:
         try:
-            # TODO Проверить доступ пользователя
-
             role = await role_manager.get(role_id)
 
             role = await role_manager.delete(role, request=request)
@@ -216,12 +210,11 @@ def get_roles_router(
         ] = Depends(get_role_manager),
     ) -> None:
         try:
-            # TODO Проверить доступ пользователя
             if not await user_manager.get(user_role.user_id):
                 raise exceptions.UserNotExists
 
             if not await role_manager.check_user_role(user_role):
-                raise exceptions.UserHaveNotRole
+                raise exceptions.UserHasNoRole
 
             logging.info("success:%s" % user_role)
 
@@ -235,7 +228,7 @@ def get_roles_router(
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, detail=ErrorCode.ROLE_IS_NOT_EXISTS
             )
-        except exceptions.UserHaveNotRole:
+        except exceptions.UserHasNoRole:
             logging.exception("UserHaveNotRole:%s" % user_role)
             raise HTTPException(
                 status.HTTP_204_NO_CONTENT, detail=ErrorCode.ROLE_IS_NOT_EXISTS
@@ -340,7 +333,7 @@ def get_roles_router(
         response_model=list[UUID],
         summary="List the user's roles",
         description="Get list the user's roles",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[Depends(get_current_user)],
         tags=['Roles'],
     )
     async def user_roles(  # pyright: ignore
@@ -356,7 +349,6 @@ def get_roles_router(
         ] = Depends(get_role_manager),
     ) -> list[user_role_schema]:
         try:
-            # TODO Проверить доступ пользователя
             user = await user_manager.get(user_id)
             roles = await role_manager.get_user_roles(user.id)
 

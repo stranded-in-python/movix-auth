@@ -116,6 +116,16 @@ class BaseAccessRightManager(Generic[models_protocol.ARP, models_protocol.RARP])
         ids = await self.role_access_rights_db.get_role_access_rights(role_id)
         return ids
 
+    async def get_roles_access_rights(
+        self, role_ids: Iterable[UUID]
+    ) -> Iterable[models_protocol.ARP]:
+        ids = await self.role_access_rights_db.get_multiple(role_ids)
+        if not ids:
+            return []
+        ids = [rarp.access_right_id for rarp in ids]
+        ids = await self.access_rights_db.get_multiple(ids)
+        return ids
+
     async def on_after_create(
         self, access_right: models_protocol.ARP, request: Request | None = None
     ) -> None:
