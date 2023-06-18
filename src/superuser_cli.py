@@ -1,22 +1,46 @@
 import os
 import uuid
-import typer
+from contextlib import closing
+
 import psycopg2
+import typer
+from psycopg2.errors import UniqueViolation
 
 from core.password.password import PasswordHelper
-from contextlib import closing
 
 dsl = {
     'dbname': os.getenv('POSTGRES_DB'),
     'user': os.getenv('POSTGRES_USER'),
     'password': os.getenv('POSTGRES_PASSWORD'),
-    'host': os.getenv('POSTGRES_HOST'),
-    'port': os.getenv('POSTGRES_PORT'),
+    # 'host': os.getenv('POSTGRES_HOST'),
+    # 'port': os.getenv('POSTGRES_PORT'),
+    "host": "localhost",
+    "port": 5434,
 }
 
-def create_super_user(pg_conn, superuser_login, superuser_email, superuser_password, superuser_fn, superuser_ln):
+
+def create_super_user(
+    pg_conn,
+    superuser_login,
+    superuser_email,
+    superuser_password,
+    superuser_fn,
+    superuser_ln,
+):
     superuser_id = str(uuid.uuid4())
     curs = pg_conn.cursor()
+    curs.execute(
+        curs.mogrify(
+            "select id, username from users.user where id = '%s';" % superuser_id
+        )
+    )
+    duplicates = curs.fetchone()
+    while duplicates:
+        superuser_id = str(uuid.uuid4())
+        curs.execute(
+            curs.mogrify("select id from users.user where id = '%s';" % superuser_id)
+        )
+        duplicates = curs.fetchone()
     query = """
         INSERT INTO users.user
         (
@@ -45,27 +69,41 @@ def main():
     Create superuser.
 
     If y is typed in first prompt, superuser is created with default values (from env),
-    otherwise - you are promted with values 
+    otherwise - you are promted with values
     """
-    automatic = typer.prompt('Create superuser automatically? (y/n): ').lower().strip() == 'y'
+    automatic = (
+        typer.prompt('Create superuser automatically? (y/n)').lower().strip() == 'y'
+    )
     password_hasher = PasswordHelper()
     if automatic:
         superuser_login = os.getenv('SUPER_USER_LOGIN', 'superuser')
         superuser_email = os.getenv('SUPER_USER_EMAIL', 'superuser@movix.com')
-        superuser_password = password_hasher.hash(os.getenv('SUPER_USER_PW', 'qweasd123'))
+        superuser_password = password_hasher.hash(
+            os.getenv('SUPER_USER_PW', 'qweasd123')
+        )
         superuser_fn = 'super'
         superuser_ln = 'user'
     else:
-        superuser_login = typer.prompt('Superuser login: ')
-        superuser_password = password_hasher.hash(typer.prompt('Superuser password: '))
-        superuser_email = typer.prompt('Superuser email: ')
-        superuser_fn = typer.prompt('Superuser first name: ')
-        superuser_ln = typer.prompt('Superuser last name: ')
-    superuser_attrs = {"superuser_login": superuser_login, "superuser_password": superuser_password, "superuser_email": superuser_email,
-            "superuser_fn": superuser_fn, "superuser_ln": superuser_ln}
-    
+        superuser_login = typer.prompt('Superuser login')
+        superuser_password = password_hasher.hash(typer.prompt('Superuser password'))
+        superuser_email = typer.prompt('Superuser email')
+        superuser_fn = typer.prompt('Superuser first name')
+        superuser_ln = typer.prompt('Superuser last name')
+    superuser_attrs = {
+        "superuser_login": superuser_login,
+        "superuser_password": superuser_password,
+        "superuser_email": superuser_email,
+        "superuser_fn": superuser_fn,
+        "superuser_ln": superuser_ln,
+    }
+
     with closing(psycopg2.connect(**dsl)) as pg_conn:
-        create_super_user(pg_conn, **superuser_attrs)
+        try:
+            create_super_user(pg_conn, **superuser_attrs)
+        except UniqueViolation:
+            print("Username or email are already in the db. Please try again.")
+            main()
+
 
 if __name__ == "__main__":
     typer.run(main)
