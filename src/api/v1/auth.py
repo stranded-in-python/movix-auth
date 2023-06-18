@@ -2,7 +2,6 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi_framework import RateLimiter, RateLimitTime
 
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
@@ -10,6 +9,7 @@ from core.logger import logger
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
+from rate_limiter import RateLimiter, RateLimitTime
 
 logger()
 

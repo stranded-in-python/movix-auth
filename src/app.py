@@ -1,7 +1,7 @@
-import fastapi_framework as fastapi_fwk
 from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
 
+import rate_limiter
 from api import container, schemas
 from core.config import settings
 from core.logger import logger
@@ -42,7 +42,7 @@ app.include_router(
     tags=["users"],
 )
 app.include_router(
-    container.api_roles.get_roles_router(
+    container.api_roles.return_roles_router(
         schemas.RoleRead,
         schemas.RoleCreate,
         schemas.RoleUpdate,
@@ -52,7 +52,7 @@ app.include_router(
     tags=["roles"],
 )
 app.include_router(
-    container.api_access_rights.get_access_rights_router(
+    container.api_access_rights.return_access_rights_router(
         schemas.AccessRightRead,
         schemas.AccessRightCreate,
         schemas.AccessRightUpdate,
@@ -82,12 +82,15 @@ async def require_request_id(request: Request, call_next):
 
 @app.on_event("startup")
 async def on_startup():
-    await fastapi_fwk.redis_dependency.init()
-    redis = await fastapi_fwk.redis_dependency()
+    if not settings.rate_limits:
+        return
+
+    await rate_limiter.redis_dependency.init()
+    redis = await rate_limiter.redis_dependency()
     if not redis:
         logger.exception("Failed to init redis")
         raise RuntimeError("Failed to init redis")
-    await fastapi_fwk.RateLimitManager.init(redis)
+    await rate_limiter.RateLimitManager.init(redis)
 
 
 if settings.jaeger_enabled:

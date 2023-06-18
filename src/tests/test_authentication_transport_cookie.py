@@ -8,8 +8,6 @@ from authentication.transport import CookieTransport
 COOKIE_MAX_AGE = 3600
 COOKIE_NAME = "COOKIE_NAME"
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture(
     params=[
