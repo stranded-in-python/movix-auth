@@ -12,6 +12,7 @@ from core.pagination import PaginateQueryParams
 from db import models_protocol
 from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import BaseUserManager, UserManagerDependency
+from rate_limiter import RateLimiter, RateLimitTime
 
 logger()
 
@@ -38,6 +39,7 @@ def get_roles_router(
 
     get_current_adminuser = authenticator.current_user(active=True, admin=True)
     get_current_user = authenticator.current_user(active=True)
+    get_current_id = authenticator.current_user_uuid(active=True)
 
     @router.get(
         "/roles/search",
@@ -46,6 +48,9 @@ def get_roles_router(
         description="View all roles",
         response_description="Role entities",
         tags=['Roles'],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
     )
     async def search(  # pyright: ignore
         request: Request,
@@ -67,7 +72,10 @@ def get_roles_router(
         summary="Create a role",
         description="Create a new item to the role directory",
         response_description="Role entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Roles'],
     )
     async def create_role(  # pyright: ignore
@@ -98,6 +106,9 @@ def get_roles_router(
         description="Get a item from the role directory",
         response_description="Role entity",
         tags=['Roles'],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
     )
     async def get_role(  # pyright: ignore
         request: Request,
@@ -124,7 +135,10 @@ def get_roles_router(
         summary="Update a role",
         description="Update a role",
         response_description="Update role entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Roles'],
     )
     async def update_role(  # pyright: ignore
@@ -162,7 +176,10 @@ def get_roles_router(
         summary="Delete a role",
         description="Delete a role",
         response_description="Deleted role entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Roles'],
     )
     async def delete_role(  # pyright: ignore
@@ -194,7 +211,9 @@ def get_roles_router(
         },
         summary="Check user role",
         description="Check if user is assigned to the role",
-        dependencies=[Depends(get_current_user)],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
         tags=['Roles'],
     )
     async def check_user_role(  # pyright: ignore
@@ -240,7 +259,10 @@ def get_roles_router(
         response_model=user_role_schema,
         summary="Assign a role",
         description="Assign a role to a user",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Roles'],
     )
     async def assign_role(  # pyright: ignore
@@ -291,7 +313,10 @@ def get_roles_router(
         summary="Unassign a role",
         description="Unassign user's role",
         response_description="Message entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Roles'],
     )
     async def remove_user_role(  # pyright: ignore
@@ -334,7 +359,9 @@ def get_roles_router(
         response_model=list[UUID],
         summary="List the user's roles",
         description="Get list the user's roles",
-        dependencies=[Depends(get_current_user)],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
         tags=['Roles'],
     )
     async def user_roles(  # pyright: ignore

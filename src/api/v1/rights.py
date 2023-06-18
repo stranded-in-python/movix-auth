@@ -13,6 +13,7 @@ from db import models_protocol
 from managers.rights import AccessRightManagerDependency, BaseAccessRightManager
 from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import BaseUserManager, UserManagerDependency
+from rate_limiter import RateLimiter, RateLimitTime
 
 logger()
 
@@ -41,6 +42,7 @@ def get_access_rights_router(
     router.prefix = "/api/v1"
 
     get_current_adminuser = authenticator.current_user(active=True, admin=True)
+    get_current_id = authenticator.current_user_uuid(active=True)
 
     @router.get(
         "/rights/search",
@@ -49,6 +51,9 @@ def get_access_rights_router(
         description="View all access rights",
         response_description="Access entities",
         tags=['Access right'],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
     )
     async def search(  # pyright: ignore
         request: Request,
@@ -94,7 +99,10 @@ def get_access_rights_router(
         summary="Create a access right",
         description="Create a new item to the access rights directory",
         response_description="Access right entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Access right'],
     )
     async def create_access(  # pyright: ignore
@@ -124,7 +132,10 @@ def get_access_rights_router(
         summary="Change a access right",
         description="Change a access right",
         response_description="Changed access right entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Access right'],
     )
     async def update_access_right(  # pyright: ignore
@@ -163,7 +174,10 @@ def get_access_rights_router(
         summary="Delete a access right",
         description="Delete a access right",
         response_description="Deleted access right entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Access right'],
     )
     async def delete_access_right(  # pyright: ignore
@@ -200,6 +214,9 @@ def get_access_rights_router(
         description="Check if role is assigned to the access right",
         response_description="Message entity",
         tags=['Access right'],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
     )
     async def check_access_right(  # pyright: ignore
         role_access_right: role_access_right_update_schema,
@@ -227,7 +244,10 @@ def get_access_rights_router(
         summary="Assign a access right",
         description="Assign a access right to a role",
         response_description="Message entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Access right'],
     )
     async def assign_access_right(  # pyright: ignore
@@ -275,7 +295,10 @@ def get_access_rights_router(
         summary="Unassign a access right",
         description="Unassign role's access right",
         response_description="Message entity",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[
+            Depends(get_current_adminuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         tags=['Access right'],
     )
     async def remove_role_access(  # pyright: ignore
@@ -316,6 +339,9 @@ def get_access_rights_router(
         description="Get list the role's access right",
         response_description="Message entity",
         tags=['Access right'],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
     )
     async def get_role_rights(  # pyright: ignore
         role_id: UUID,
@@ -351,6 +377,9 @@ def get_access_rights_router(
         summary="List user rights",
         description="List all user's rights",
         tags=['Rights'],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
     )
     async def get_user_rights(  # pyright: ignore
         user_id: UUID,
