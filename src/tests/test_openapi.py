@@ -19,15 +19,15 @@ def fastapi_users(get_user_manager, mock_authentication) -> FastAPIUsers:
 @pytest.fixture
 def test_app(fastapi_users: FastAPIUsers, mock_authentication) -> FastAPI:
     app = FastAPI()
-    app.include_router(fastapi_users.get_register_router(schemas.U, schemas.UC))
-    app.include_router(fastapi_users.get_reset_password_router())
+    app.include_router(fastapi_users.return_register_router(schemas.U, schemas.UC))
+    app.include_router(fastapi_users.return_reset_password_router())
     app.include_router(
-        fastapi_users.get_auth_router(mock_authentication, mock_authentication)
+        fastapi_users.return_auth_router(mock_authentication, mock_authentication)
     )
     app.include_router(
-        fastapi_users.get_users_me_router(schemas.U, schemas.UU, schemas.EventRead)
+        fastapi_users.return_users_me_router(schemas.U, schemas.UU, schemas.EventRead)
     )
-    app.include_router(fastapi_users.get_users_router(schemas.U, schemas.UU))
+    app.include_router(fastapi_users.return_users_router(schemas.U, schemas.UU))
 
     return app
 
