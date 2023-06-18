@@ -44,6 +44,8 @@ class Settings(BaseSettings):
 
     jaeger_host = 'jaeger'
     jaeger_port = 6831
+    jaeger_enabled = False
+    tracer_enabled = False
 
 
 settings = Settings()  # type: ignore

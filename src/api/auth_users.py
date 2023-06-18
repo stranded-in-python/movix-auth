@@ -51,7 +51,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         self.current_user = self.access_authenticator.current_user
         self.auth_current_user = self.refresh_authenticator.current_user
 
-    def get_register_router(
+    def create_register_router(
         self, user_schema: type[schemas.U], user_create_schema: type[schemas.UC]
     ) -> APIRouter:
         """
@@ -64,11 +64,11 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             self.get_user_manager, user_schema, user_create_schema
         )
 
-    def get_reset_password_router(self) -> APIRouter:
+    def create_reset_password_router(self) -> APIRouter:
         """Return a reset pw process router."""
         return get_reset_password_router(self.get_user_manager)
 
-    def get_auth_router(
+    def create_auth_router(
         self,
         access_backend: AuthenticationBackend[models_protocol.UP, models_protocol.SIHE],
         refresh_backend: AuthenticationBackend[
@@ -92,7 +92,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             requires_verification,
         )
 
-    def get_users_me_router(
+    def create_users_me_router(
         self,
         user_schema: type[schemas.UserRead],
         user_update_schema: type[schemas.UserUpdate],
@@ -113,7 +113,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             self.access_authenticator,
         )
 
-    def get_users_router(
+    def create_users_router(
         self,
         user_schema: type[schemas.UserRead],
         user_update_schema: type[schemas.UserUpdate],
@@ -132,7 +132,7 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             self.access_authenticator,
         )
 
-    def get_oauth_router(
+    def create_oauth_router(
         self,
         oauth_client: BaseOAuth2,
         backend: AuthenticationBackend,
