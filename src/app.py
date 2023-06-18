@@ -1,3 +1,4 @@
+import fastapi_framework as fastapi_fwk
 from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
 
@@ -41,7 +42,7 @@ app.include_router(
     tags=["users"],
 )
 app.include_router(
-    container.api_roles.return_roles_router(
+    container.api_roles.get_roles_router(
         schemas.RoleRead,
         schemas.RoleCreate,
         schemas.RoleUpdate,
@@ -51,7 +52,7 @@ app.include_router(
     tags=["roles"],
 )
 app.include_router(
-    container.api_access_rights.return_access_rights_router(
+    container.api_access_rights.get_access_rights_router(
         schemas.AccessRightRead,
         schemas.AccessRightCreate,
         schemas.AccessRightUpdate,
@@ -77,6 +78,16 @@ async def require_request_id(request: Request, call_next):
         raise RuntimeError('RuntimeError: HEADER X-Request-Id is required')
     response = await call_next(request)
     return response
+
+
+@app.on_event("startup")
+async def on_startup():
+    await fastapi_fwk.redis_dependency.init()
+    redis = await fastapi_fwk.redis_dependency()
+    if not redis:
+        logger.exception("Failed to init redis")
+        raise RuntimeError("Failed to init redis")
+    await fastapi_fwk.RateLimitManager.init(redis)
 
 
 if settings.jaeger_enabled:
