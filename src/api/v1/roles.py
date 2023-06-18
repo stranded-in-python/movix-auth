@@ -38,7 +38,6 @@ def get_roles_router(
     router.prefix = "/api/v1"
 
     get_current_adminuser = authenticator.current_user(active=True, admin=True)
-    get_current_user = authenticator.current_user(active=True)
     get_current_id = authenticator.current_user_uuid(active=True)
 
     @router.get(
