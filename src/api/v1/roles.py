@@ -194,7 +194,7 @@ def get_roles_router(
         },
         summary="Check user role",
         description="Check if user is assigned to the role",
-        dependencies=[Depends(get_current_adminuser)],
+        dependencies=[Depends(get_current_user)],
         tags=['Roles'],
     )
     async def check_user_role(  # pyright: ignore
