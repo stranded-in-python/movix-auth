@@ -1,14 +1,11 @@
 from typing import Any, Optional
 from typing import Set as tset
 
-from dotenv import load_dotenv
 from redis.asyncio import Redis as RedisConnection
 
 from core.config import settings
 
 from .memory_backend import InMemoryBackend
-
-load_dotenv()
 
 Redis = InMemoryBackend
 
