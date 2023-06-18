@@ -1,19 +1,18 @@
 import typing as t
-from typing import Any, Callable, Coroutine, Dict, Optional, Union
+from typing import Any, Callable, Coroutine, Optional, Union
 
 from fastapi import HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from authentication.strategy.jwt import decode_jwt
 from core.config import settings
-from core.jwt_utils import decode_jwt
 
 from .memory_backend import InMemoryBackend
 
 RATE_LIMITS = settings.rate_limits
 
 
-async def default_callback(headers: Dict):
+async def default_callback(headers: dict):
     """Default Error Callback when get Raid Limited"""
     raise HTTPException(429, detail="Too Many Requests", headers=headers)
 
@@ -127,9 +126,9 @@ class RateLimiter:
         for key in headers.keys():
             response.headers[key] = headers[key]
 
-    async def get_headers(self, redis_key: str) -> Dict:
+    async def get_headers(self, redis_key: str) -> dict:
         """Generates Rate Limit Headers"""
-        headers: Dict = {}
+        headers: dict = {}
         redis_value = await RateLimitManager.redis.get(redis_key)
         redis_value = (
             redis_value if redis_value is None else redis_value.decode("utf-8")
@@ -137,7 +136,7 @@ class RateLimiter:
         headers["X-Rate-Limit-Limit"] = f"{self.count}"
         headers["X-Rate-Limit-Remaining"] = str(
             redis_value
-            or (
+            or (  # noqa: W503
                 0
                 if await RateLimitManager.redis.exists(f"{redis_key}:lock")
                 else self.count

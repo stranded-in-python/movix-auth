@@ -2,8 +2,7 @@ from typing import List
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, FastAPI, HTTPException
 from httpx import AsyncClient, Response
 
 from core.config import settings
@@ -162,7 +161,7 @@ class TestRateLimit(IsolatedAsyncioTestCase):
     @patch("rate_limiter.rate_limit.RATE_LIMITS", True)
     async def test_spam_limited_route(self):
         self.testing_uuid = "test_spam_limited_route"
-        responses: List[Response] = []
+        responses: list[Response] = []
 
         async with AsyncClient(app=app, base_url="https://test") as ac:
             for _ in range(4):

@@ -1,4 +1,5 @@
-from typing import Any, Optional, Set
+from typing import Any, Optional
+from typing import Set as tset
 
 from aioredis import Redis as RedisConnection
 from aioredis import create_redis_pool
@@ -62,7 +63,7 @@ class RedisBackend(InMemoryBackend):
         """Delete value of a Key"""
         return await self.redis_connection.delete(key)
 
-    async def smembers(self, key: str) -> Set:
+    async def smembers(self, key: str) -> tset:
         """Gets Set Members"""
         return set(await self.redis_connection.smembers(key))
 

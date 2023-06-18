@@ -1,5 +1,7 @@
 import time
-from typing import Any, Dict, List, Optional, Protocol, Set, Union
+from typing import Any, Optional, Protocol
+from typing import Set as tset
+from typing import Union
 
 
 class InMemoryBackend(Protocol):
@@ -41,7 +43,7 @@ class InMemoryBackend(Protocol):
         """Delete value of a Key"""
         ...
 
-    async def smembers(self, key: str) -> Set:
+    async def smembers(self, key: str) -> tset:
         """Gets Set Members"""
         ...
 
@@ -61,7 +63,7 @@ class InMemoryBackend(Protocol):
 class RAMBackendItem:
     """Key-Value Item for the RAM Backend"""
 
-    value: Union[bytes, List]
+    value: Union[bytes, list]
     pexpire: int
     timestamp: int
 
@@ -74,7 +76,7 @@ class RAMBackendItem:
 class RAMBackend(InMemoryBackend):
     """Python In Memory Backend"""
 
-    data: Dict[str, RAMBackendItem] = {}
+    data: dict[str, RAMBackendItem] = {}
     SET_IF_NOT_EXIST = "SET_IF_NOT_EXIST"  # NX
     SET_IF_EXIST = "SET_IF_EXIST"  # XX
 
@@ -90,7 +92,7 @@ class RAMBackend(InMemoryBackend):
         self, key: str, value: Any, expire: int = 0, pexpire: int = 0, exists=None
     ):
         """Set Key to Value"""
-        if not isinstance(value, bytes) and not isinstance(value, List):
+        if not isinstance(value, bytes) and not isinstance(value, list):
             value = bytes(str(value), "utf-8")
         if exists == self.SET_IF_NOT_EXIST:
             if key in self.data:
@@ -185,9 +187,9 @@ class RAMBackend(InMemoryBackend):
             return
         del self.data[key]
 
-    async def smembers(self, key: str) -> Set:
+    async def smembers(self, key: str) -> tset:
         """Gets Set Members"""
-        data: Optional[Union[bytes, List]] = await self.get(key)
+        data: Optional[Union[bytes, list]] = await self.get(key)
         if not data:
             return set()
         if not isinstance(data, list):
@@ -196,8 +198,8 @@ class RAMBackend(InMemoryBackend):
 
     async def sadd(self, key: str, value: Any) -> bool:
         """Adds a Member to a Set"""
-        data: Union[Optional[Union[bytes, List]], Set] = await self.get(key)
-        if not data or not isinstance(data, List):
+        data: Union[Optional[Union[bytes, list]], set] = await self.get(key)
+        if not data or not isinstance(data, list):
             data = {value}
         else:
             data = set(data)
@@ -207,8 +209,8 @@ class RAMBackend(InMemoryBackend):
 
     async def srem(self, key: str, member: Any) -> bool:
         """Removes a Member from a Set"""
-        data: Union[Optional[Union[bytes, List]], Set] = await self.get(key)
-        if not data or not isinstance(data, List):
+        data: Union[Optional[Union[bytes, list]], set] = await self.get(key)
+        if not data or not isinstance(data, list):
             return False
         data = set(data)
         if member not in data:
