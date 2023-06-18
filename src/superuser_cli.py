@@ -10,10 +10,8 @@ dsl = {
     'dbname': os.getenv('POSTGRES_DB'),
     'user': os.getenv('POSTGRES_USER'),
     'password': os.getenv('POSTGRES_PASSWORD'),
-    # 'host': os.getenv('POSTGRES_HOST'),
-    # 'port': os.getenv('POSTGRES_PORT'),
-    'host': 'localhost',
-    'port': 5434
+    'host': os.getenv('POSTGRES_HOST'),
+    'port': os.getenv('POSTGRES_PORT'),
 }
 
 def create_super_user(pg_conn, superuser_login, superuser_email, superuser_password, superuser_fn, superuser_ln):
