@@ -48,6 +48,14 @@ class BaseAccessRightManager(Generic[models_protocol.ARP, models_protocol.RARP])
             raise exceptions.AccessRightNotExists()
         return access_right
 
+    async def get_multiple(
+        self, access_right_ids: Iterable[UUID]
+    ) -> Iterable[models_protocol.ARP]:
+        if not access_right_ids:
+            return []
+
+        return await self.access_rights_db.get_multiple(access_right_ids)
+
     async def update(
         self,
         access_right_update: schemas.BaseAccessRightUpdate[UUID],
@@ -119,7 +127,7 @@ class BaseAccessRightManager(Generic[models_protocol.ARP, models_protocol.RARP])
     async def get_roles_access_rights(
         self, role_ids: Iterable[UUID]
     ) -> Iterable[models_protocol.ARP]:
-        ids = await self.role_access_rights_db.get_multiple(role_ids)
+        ids = await self.role_access_rights_db.get_roles_access_rights(role_ids)
         if not ids:
             return []
         ids = [rarp.access_right_id for rarp in ids]

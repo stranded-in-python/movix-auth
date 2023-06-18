@@ -1,7 +1,7 @@
 import uuid
 from typing import Any, Iterable, Mapping, TypeVar
 
-from sqlalchemy import ForeignKey, String, func, select
+from sqlalchemy import ForeignKey, Row, String, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import Select
@@ -66,9 +66,15 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
     async def get_multiple(
         self, role_ids: Iterable[uuid.UUID]
     ) -> Iterable[models.AccessRight]:
-        role_rights = await self._get_roles_by_id(access_right_ids)
+        if not role_ids:
+            return []
+        statement = select(self.role_table).where(self.role_table.id.in_(role_ids))
+        role_rights = await self._get_roles(statement)
 
-        return [models.AccessRight.from_orm(right) for right in rights]
+        if not role_rights:
+            return []
+
+        return [models.AccessRight.from_orm(right) for right in role_rights]
 
     @cache_decorator()
     async def get_by_name(self, name: str) -> models.RoleRead | None:
@@ -109,6 +115,12 @@ class SARoleDB(BaseRoleDatabase[models.RoleRead, UUID_ID]):
     async def _get_role(self, statement: Select[tuple[SARole]]) -> SARole | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+
+    async def _get_roles(
+        self, statement: Select[tuple[SARole]]
+    ) -> Iterable[Row[tuple[SARole]]]:
+        results = await self.session.execute(statement)
+        return results.unique().fetchall()
 
     async def _get_role_by_id(self, role_id: uuid.UUID) -> SARole | None:
         statement = select(self.role_table).where(self.role_table.id == role_id)
@@ -151,9 +163,10 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
     async def get_user_role(
         self, user_id: UUID_ID, role_id: UUID_ID
     ) -> models.UserRole | None:
-        statement = select(self.user_role_table).where(
-            (self.user_role_table.user_id == user_id)
-            and (self.user_role_table.role_id == role_id)
+        statement = (
+            select(self.user_role_table)
+            .where(self.user_role_table.user_id == user_id)
+            .where(self.user_role_table.role_id == role_id)
         )
         results = await self.session.execute(statement)
         results = results.unique().scalar_one_or_none()
@@ -185,10 +198,12 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
         return models.UserRole.from_orm(user_role)
 
     async def remove_user_role(self, user_id: UUID_ID, role_id: UUID_ID) -> None:
-        statement = select(self.user_role_table).where(
-            (self.user_role_table.user_id == user_id)
-            and (self.user_role_table.role_id == role_id)
+        statement = (
+            select(self.user_role_table)
+            .where(self.user_role_table.user_id == user_id)
+            .where(self.user_role_table.role_id == role_id)
         )
+
         role_to_delete = await self._get_user_role(statement)
         await self.session.delete(role_to_delete)
         await self.session.commit()

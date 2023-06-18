@@ -150,10 +150,6 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
         """Get a single access right by id."""
         ...
 
-    async def get_by_role_ids(self, role_ids: t.Iterable[ID]) -> t.Iterable[RARP]:
-        """Get multiple rights by ids"""
-        ...
-
     async def create(self, create_dict: dict[str, t.Any]) -> RARP:
         """Create an access right."""
         ...
@@ -173,6 +169,13 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
         ...
 
     async def get_role_access_rights(self, role_id: ID) -> t.Iterable[RARP]:
+        """Get rights assigned to a role"""
+        ...
+
+    async def get_roles_access_rights(
+        self, role_id: t.Iterable[ID]
+    ) -> t.Iterable[RARP]:
+        """Get multiple rights by ids"""
         ...
 
 

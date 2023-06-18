@@ -185,7 +185,22 @@ class SARoleAccessRightDB(
         return models.RoleAccessRight.from_orm(model)
 
     @cache_decorator()
-    async def get_by_role_ids(
+    async def get_role_access_rights(
+        self, role_id: uuid.UUID
+    ) -> Iterable[models.RoleAccessRight]:
+        statement = select(self.role_access_right_table).where(
+            self.role_access_right_table.role_id == role_id
+        )
+        role_rights = await self._get_role_access_rights(statement)
+
+        return (
+            [models.RoleAccessRight.from_orm(role_right) for role_right in role_rights]
+            if role_rights
+            else []
+        )
+
+    @cache_decorator()
+    async def get_roles_access_rights(
         self, role_ids: Iterable[uuid.UUID]
     ) -> Iterable[models.RoleAccessRight]:
         if not role_ids:
@@ -195,9 +210,11 @@ class SARoleAccessRightDB(
         )
         role_rights = await self._get_role_access_rights(statement)
 
-        return [
-            models.RoleAccessRight.from_orm(role_right) for role_right in role_rights
-        ]
+        return (
+            [models.RoleAccessRight.from_orm(role_right) for role_right in role_rights]
+            if role_rights
+            else []
+        )
 
     async def create(self, create_dict: Mapping[str, Any]) -> models.RoleAccessRight:
         role_access_right = self.role_access_right_table(**create_dict)

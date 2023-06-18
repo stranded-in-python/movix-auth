@@ -120,7 +120,7 @@ class BaseRoleManager(
     async def remove_user_role(
         self, user_role: models_protocol.UserRoleUpdateProtocol[UUID]
     ):
-        await self.user_role_db.remove_user_role(user_role)
+        await self.user_role_db.remove_user_role(user_role.user_id, user_role.role_id)
 
     async def get_user_roles(self, user_id: UUID) -> Iterable[models_protocol.URP]:
         ids = await self.user_role_db.get_user_roles(user_id)
