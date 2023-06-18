@@ -148,10 +148,10 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
         self.session = session
         self.user_role_table = user_role_table
 
-    async def get_user_role(self, user_id: UUID_ID, role_id: UUID_ID) -> models.UserRole | None:
-        statement = select(
-            self.user_role_table
-        ).where(
+    async def get_user_role(
+        self, user_id: UUID_ID, role_id: UUID_ID
+    ) -> models.UserRole | None:
+        statement = select(self.user_role_table).where(
             (self.user_role_table.user_id == user_id)
             and (self.user_role_table.role_id == role_id)
         )
@@ -162,9 +162,11 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
             return None
         return models.UserRole.from_orm(results)
 
-    async def get_user_role_by_id(self, user_role_id: UUID_ID) -> models.UserRole | None:
+    async def get_user_role_by_id(
+        self, user_role_id: UUID_ID
+    ) -> models.UserRole | None:
         statement = select(self.user_role_table).where(
-            (self.user_role_table.id == user_role_id)
+            self.user_role_table.id == user_role_id
         )
 
         results = await self.session.execute(statement)
@@ -182,12 +184,8 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
 
         return models.UserRole.from_orm(user_role)
 
-    async def remove_user_role(
-        self, user_id: UUID_ID, role_id: UUID_ID
-    ) -> None:
-        statement = select(
-            self.user_role_table
-        ).where(
+    async def remove_user_role(self, user_id: UUID_ID, role_id: UUID_ID) -> None:
+        statement = select(self.user_role_table).where(
             (self.user_role_table.user_id == user_id)
             and (self.user_role_table.role_id == role_id)
         )
@@ -209,10 +207,12 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
 
         return list(models.UserRole.from_orm(result) for result in results.fetchall())
 
-    async def _get_user_role(self, statement: Select[tuple[SAUserRole]]) -> SAUserRole | None:
+    async def _get_user_role(
+        self, statement: Select[tuple[SAUserRole]]
+    ) -> SAUserRole | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
-    
+
     def __getstate__(self):
         """pickle.dumps()"""
         # Определяем, какие атрибуты должны быть сериализованы
