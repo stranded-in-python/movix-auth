@@ -26,11 +26,13 @@ async def test_app_client(
 
     app = FastAPI()
     app.include_router(
-        fastapi_users.get_register_router(schemas.UserRead, schemas.UserCreate)
+        fastapi_users.return_register_router(schemas.UserRead, schemas.UserCreate)
     )
-    app.include_router(fastapi_users.get_reset_password_router())
+    app.include_router(fastapi_users.return_reset_password_router())
     app.include_router(
-        fastapi_users.get_auth_router(mock_authentication, refresh_mock_authentication)
+        fastapi_users.return_auth_router(
+            mock_authentication, refresh_mock_authentication
+        )
     )
 
     @app.delete("/users/me")
@@ -38,7 +40,7 @@ async def test_app_client(
         return None
 
     app.include_router(
-        fastapi_users.get_users_router(schemas.UserRead, schemas.UserUpdate)
+        fastapi_users.return_users_router(schemas.UserRead, schemas.UserUpdate)
     )
 
     @app.get("/current-user", response_model=schemas.UserRead)
