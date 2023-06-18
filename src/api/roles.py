@@ -33,7 +33,7 @@ class APIRoles(Generic[models_protocol.RP, models_protocol.UP, models_protocol.S
         self.get_role_manager = get_role_manager
         self.current_user = self.authenticator.current_user
 
-    def get_roles_router(
+    def return_roles_router(
         self,
         role_schema: type[schemas.R],
         role_create_schema: type[schemas.RC],

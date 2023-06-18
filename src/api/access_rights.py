@@ -44,7 +44,7 @@ class APIAccessRight(
         self.authenticator = Authenticator(auth_backends, get_user_manager)
         self.current_user = self.authenticator.current_user
 
-    def get_access_rights_router(
+    def return_access_rights_router(
         self,
         access_right_schema: type[schemas.AR],
         access_right_create_schema: type[schemas.ARC],
