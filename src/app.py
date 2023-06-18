@@ -9,7 +9,8 @@ from managers.user import google_oauth_client
 
 logger()
 
-configure_tracer()
+if settings.tracer_enabled:
+    configure_tracer()
 
 app = FastAPI(
     title=settings.project_name,
@@ -20,27 +21,27 @@ app = FastAPI(
 
 
 app.include_router(
-    container.api_users.get_register_router(schemas.UserRead, schemas.UserCreate),
+    container.api_users.return_register_router(schemas.UserRead, schemas.UserCreate),
     tags=["register"],
 )
 app.include_router(
-    container.api_users.get_auth_router(
+    container.api_users.return_auth_router(
         container.access_backend, refresh_backend=container.refresh_backend
     ),
     tags=["auth"],
 )
 app.include_router(
-    container.api_users.get_users_me_router(
+    container.api_users.return_users_me_router(
         schemas.UserRead, schemas.UserUpdate, schemas.EventRead
     ),
     tags=["users"],
 )
 app.include_router(
-    container.api_users.get_users_router(schemas.UserRead, schemas.UserUpdate),
+    container.api_users.return_users_router(schemas.UserRead, schemas.UserUpdate),
     tags=["users"],
 )
 app.include_router(
-    container.api_roles.get_roles_router(
+    container.api_roles.return_roles_router(
         schemas.RoleRead,
         schemas.RoleCreate,
         schemas.RoleUpdate,
@@ -50,7 +51,7 @@ app.include_router(
     tags=["roles"],
 )
 app.include_router(
-    container.api_access_rights.get_access_rights_router(
+    container.api_access_rights.return_access_rights_router(
         schemas.AccessRightRead,
         schemas.AccessRightCreate,
         schemas.AccessRightUpdate,
@@ -60,7 +61,7 @@ app.include_router(
     tags=["access rights"],
 )
 app.include_router(
-    container.api_users.get_oauth_router(
+    container.api_users.return_oauth_router(
         google_oauth_client, container.access_backend, settings.state_secret
     ),
     prefix="/auth/google",
@@ -78,4 +79,5 @@ async def require_request_id(request: Request, call_next):
     return response
 
 
-instrumentor().instrument_app(app)  # type: ignore
+if settings.jaeger_enabled:
+    instrumentor().instrument_app(app)  # type: ignore
