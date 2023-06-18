@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_framework import RateLimiter, RateLimitTime
 
 from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
@@ -34,6 +35,8 @@ def get_auth_router(  # noqa: C901
     get_current_user_refresh_token = refresh_authenticator.current_user_token(
         active=True
     )
+    get_access_user_id = access_authenticator.current_user_uuid(active=True)
+    get_refresh_user_id = refresh_authenticator.current_user_uuid(active=True)
 
     login_responses: OpenAPIResponseType = {
         status.HTTP_400_BAD_REQUEST: {
@@ -84,6 +87,11 @@ def get_auth_router(  # noqa: C901
         "/refresh",
         name=f"auth:{access_backend.name}.refresh",
         responses=login_responses,
+        dependencies=[
+            Depends(
+                RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_refresh_user_id)
+            )
+        ],
     )
     async def refresh(  # pyright: ignore
         user_token: tuple[models_protocol.UP, str] = Depends(
@@ -118,6 +126,11 @@ def get_auth_router(  # noqa: C901
         "/blacklist",
         name=f"auth:{access_backend.name}.blacklist",
         responses=logout_responses,
+        dependencies=[
+            Depends(
+                RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_access_user_id)
+            )
+        ],
     )
     async def blacklist(  # pyright: ignore
         user_token: tuple[models_protocol.UP, str] = Depends(get_current_user_token),
@@ -136,7 +149,14 @@ def get_auth_router(  # noqa: C901
         return await access_backend.logout(strategy, user, token)
 
     @router.post(
-        "/logout", name=f"auth:{access_backend.name}.logout", responses=logout_responses
+        "/logout",
+        name=f"auth:{access_backend.name}.logout",
+        responses=logout_responses,
+        dependencies=[
+            Depends(
+                RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_refresh_user_id)
+            )
+        ],
     )
     async def logout(  # pyright: ignore
         user_token: tuple[models_protocol.UP, str] = Depends(
