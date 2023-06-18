@@ -1,15 +1,11 @@
 from typing import Any, Optional
 from typing import Set as tset
 
-from aioredis import Redis as RedisConnection
-from aioredis import create_redis_pool
-from dotenv import load_dotenv
+from redis.asyncio import Redis as RedisConnection
 
 from core.config import settings
 
 from .memory_backend import InMemoryBackend
-
-load_dotenv()
 
 Redis = InMemoryBackend
 
@@ -18,9 +14,11 @@ class RedisBackend(InMemoryBackend):
     redis_connection: RedisConnection
 
     @staticmethod
-    async def init(url: str) -> "RedisBackend":
+    async def init(
+        host: str = settings.redis_host, port: int = settings.redis_port
+    ) -> "RedisBackend":
         redis = RedisBackend()
-        redis.redis_connection = await create_redis_pool(url)
+        redis.redis_connection = await RedisConnection(host=host, port=port)
         return redis
 
     async def get(self, key: str):
@@ -32,7 +30,7 @@ class RedisBackend(InMemoryBackend):
     ):
         """Set Key to Value"""
         return await self.redis_connection.set(
-            key, value, expire=expire, pexpire=pexpire, exist=exists
+            key, value, ex=expire, px=pexpire, xx=bool(exists)
         )
 
     async def pttl(self, key: str) -> int:
@@ -93,7 +91,7 @@ class RedisDependency:
     async def init(self):
         """Initialises the Redis Dependency"""
         self.redis = await RedisBackend.init(
-            f"redis://{settings.redis_host}:{settings.redis_port}"
+            host=settings.redis_host, port=settings.redis_port
         )
 
 
@@ -102,6 +100,4 @@ redis_dependency: RedisDependency = RedisDependency()
 
 async def get_redis() -> RedisBackend:
     """Returns a NEW Redis connection"""
-    return await RedisBackend.init(
-        f"redis://{settings.redis_host}:{settings.redis_port}"
-    )
+    return await RedisBackend.init(host=settings.redis_host, port=settings.redis_port)
