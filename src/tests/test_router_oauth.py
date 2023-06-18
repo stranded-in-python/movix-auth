@@ -4,6 +4,7 @@ import httpx
 import pytest
 from fastapi import FastAPI, status
 from httpx_oauth.oauth2 import BaseOAuth2
+from pydantic import SecretStr
 
 from api.oauth import generate_state_token, get_oauth_router
 from api.v1.common import ErrorCode
@@ -45,14 +46,12 @@ def test_app_requires_verification(app_factory):
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def test_app_client(test_app, get_test_client):
     async for client in get_test_client(test_app):
         yield client
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def test_app_client_redirect_url(test_app_redirect_url, get_test_client):
     async for client in get_test_client(test_app_redirect_url):
         yield client
@@ -60,7 +59,6 @@ async def test_app_client_redirect_url(test_app_redirect_url, get_test_client):
 
 @pytest.mark.router
 @pytest.mark.oauth
-@pytest.mark.asyncio
 class TestAuthorize:
     async def test_success(
         self,
@@ -105,7 +103,6 @@ class TestAuthorize:
 
 @pytest.mark.router
 @pytest.mark.oauth
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "access_token",
     [
@@ -143,7 +140,7 @@ class TestCallback:
         user_manager_oauth: UserManagerMock,
         access_token: str,
     ):
-        state_jwt = generate_state_token({}, "SECRET")
+        state_jwt = generate_state_token({}, SecretStr("SECRET"))
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
             oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
@@ -172,7 +169,7 @@ class TestCallback:
         user_manager_oauth: UserManagerMock,
         access_token: str,
     ):
-        state_jwt = generate_state_token({}, "SECRET")
+        state_jwt = generate_state_token({}, SecretStr("SECRET"))
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
             oauth_client, "get_id_email", return_value=("user_oauth1", user_oauth.email)
@@ -201,7 +198,7 @@ class TestCallback:
         user_manager_oauth: UserManagerMock,
         access_token: str,
     ):
-        state_jwt = generate_state_token({}, "SECRET")
+        state_jwt = generate_state_token({}, SecretStr("SECRET"))
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
             oauth_client,
@@ -228,7 +225,7 @@ class TestCallback:
         user_manager_oauth: UserManagerMock,
         access_token: str,
     ):
-        state_jwt = generate_state_token({}, "SECRET")
+        state_jwt = generate_state_token({}, SecretStr("SECRET"))
         get_access_token_mock = async_method_mocker(
             oauth_client, "get_access_token", return_value=access_token
         )
@@ -262,7 +259,7 @@ class TestCallback:
         user_manager_oauth: UserManagerMock,
         access_token: str,
     ):
-        state_jwt = generate_state_token({}, "SECRET")
+        state_jwt = generate_state_token({}, SecretStr("SECRET"))
         async_method_mocker(oauth_client, "get_access_token", return_value=access_token)
         async_method_mocker(
             oauth_client, "get_id_email", return_value=("user_oauth1", None)

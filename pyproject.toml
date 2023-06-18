@@ -53,3 +53,13 @@ datefmt = "%H:%M:%S"
 
 [tool.pytest.ini_options]
 asyncio_mode = 'auto'
+markers = [
+    "authentication",
+    "openapi",
+    "oauth",
+    "fastapi_users",
+    "jwt",
+    "manager",
+    "router",
+    "asyncio",
+]

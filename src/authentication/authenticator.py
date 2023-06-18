@@ -145,6 +145,53 @@ class Authenticator(Generic[models.UP, models.SIHE]):
 
         return current_user_dependency
 
+    def current_user_uuid(
+        self,
+        optional: bool = False,
+        active: bool = False,
+        superuser: bool = False,
+        admin: bool = False,
+        get_enabled_backends: Optional[
+            EnabledBackendsDependency[models.UP, models.SIHE]
+        ] = None,
+    ):
+        """
+        Return a dependency callable to retrieve currently authenticated user.
+
+        :param optional: If `True`, `None` is returned if there is no authenticated user
+        or if it doesn't pass the other requirements.
+        Otherwise, throw `401 Unauthorized`. Defaults to `False`.
+        Otherwise, an exception is raised. Defaults to `False`.
+        :param active: If `True`, throw `401 Unauthorized` if
+        the authenticated user is inactive. Defaults to `False`.
+        :param superuser: If `True`, throw `403 Forbidden` if
+        the authenticated user is not a superuser. Defaults to `False`.
+        :param get_enabled_backends: Optional dependency callable returning
+        a list of enabled authentication backends.
+        Useful if you want to dynamically enable some authentication backends
+        based on external logic, like a configuration in database.
+        By default, all specified authentication backends are enabled.
+        Please not however that every backend will appear in the OpenAPI documentation,
+        as FastAPI resolves it statically.
+        """
+        signature = self._get_dependency_signature(get_enabled_backends)
+
+        @with_signature(signature)
+        async def current_user_uuid_dependency(*args: Any, **kwargs: Any):
+            user, _ = await self._authenticate(
+                *args,
+                optional=optional,
+                active=active,
+                superuser=superuser,
+                admin=admin,
+                **kwargs,
+            )
+            if not user:
+                return None
+            return user.id
+
+        return current_user_uuid_dependency
+
     async def _authenticate(  # noqa: C901
         self,
         *args: tuple[Any, ...],

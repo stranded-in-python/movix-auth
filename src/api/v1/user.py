@@ -10,6 +10,7 @@ from core.logger import logger
 from core.pagination import PaginateQueryParams
 from db import models_protocol
 from managers.user import BaseUserManager, UserManagerDependency
+from rate_limiter import RateLimiter, RateLimitTime
 
 logger()
 
@@ -30,11 +31,14 @@ def get_users_me_router(
     router.prefix = "/api/v1/users/me"
 
     get_current_active_user = authenticator.current_user(active=True)
+    get_current_id = authenticator.current_user_uuid(active=True)
 
     @router.get(
         "",
         response_model=user_schema,
-        dependencies=[Depends(get_current_active_user)],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
         name="users:current_user",
         summary="Get current user",
         description="Get sensitive data of current user",
@@ -54,7 +58,9 @@ def get_users_me_router(
     @router.patch(
         "",
         response_model=user_schema,
-        dependencies=[Depends(get_current_active_user)],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
         name="users:patch_current_user",
         summary="Update current user",
         description="Update sensitive data of current user",
@@ -127,6 +133,9 @@ def get_users_me_router(
     @router.get(
         "/history",
         response_model=list[schemas.BaseSignInHistoryEvent],
+        dependencies=[
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id))
+        ],
         summary="Get sign-in history",
         description="Get user's account sign-in history",
         response_description="list of sign-ins",
@@ -165,6 +174,7 @@ def get_users_router(
     router.prefix = "/api/v1/users"
 
     get_current_superuser = authenticator.current_user(active=True, superuser=True)
+    get_current_id = authenticator.current_user_uuid(active=True)
 
     async def get_user_or_404(
         id: str,
@@ -186,7 +196,10 @@ def get_users_router(
     @router.get(
         "/{id}",
         response_model=user_schema,
-        dependencies=[Depends(get_current_superuser)],
+        dependencies=[
+            Depends(get_current_superuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         name="users:user",
         responses={
             status.HTTP_401_UNAUTHORIZED: {
@@ -205,7 +218,10 @@ def get_users_router(
     @router.patch(
         "/{id}",
         response_model=user_schema,
-        dependencies=[Depends(get_current_superuser)],
+        dependencies=[
+            Depends(get_current_superuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         name="users:patch_user",
         responses={
             status.HTTP_401_UNAUTHORIZED: {
@@ -275,7 +291,10 @@ def get_users_router(
         "/{id}",
         status_code=status.HTTP_204_NO_CONTENT,
         response_class=Response,
-        dependencies=[Depends(get_current_superuser)],
+        dependencies=[
+            Depends(get_current_superuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
         name="users:delete_user",
         responses={
             status.HTTP_401_UNAUTHORIZED: {

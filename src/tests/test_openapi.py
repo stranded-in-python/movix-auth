@@ -6,8 +6,6 @@ from api import schemas
 from api.container import APIUsers as FastAPIUsers
 from tests.conftest import SignInModel, UserModel
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def fastapi_users(get_user_manager, mock_authentication) -> FastAPIUsers:

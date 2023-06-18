@@ -51,7 +51,6 @@ def backend(
     )
 
 
-@pytest.mark.asyncio
 @pytest.mark.authentication
 async def test_logout(backend: AuthenticationBackend, user: UserModel):
     strategy = cast(Strategy, backend.get_strategy())
