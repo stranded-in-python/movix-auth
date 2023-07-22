@@ -48,8 +48,15 @@ class Settings(BaseSettings):
     tracer_enabled = False
     rate_limits = False
 
+    sentry_dsn_auth: str = ""
+
 
 settings = Settings()  # type: ignore
+
+if settings.sentry_dsn_auth:
+    import sentry_sdk
+
+    sentry_sdk.init(dsn=settings.sentry_dsn_auth, traces_sample_rate=1.0)
 
 
 def get_database_url() -> str:
