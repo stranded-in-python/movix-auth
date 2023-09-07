@@ -51,6 +51,7 @@ class UserProtocol(Protocol[ID, EmailStr]):
     last_name: str | None
     hashed_password: str
     is_active: bool
+    is_verified: bool
     is_superuser: bool
     is_admin: bool
 

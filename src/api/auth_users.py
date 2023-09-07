@@ -9,6 +9,7 @@ from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
 from api.v1.user import get_users_me_router, get_users_router
+from api.v1.verify import get_verify_router
 from authentication import AuthenticationBackend, Authenticator
 from core.jwt_utils import SecretType
 from db import models_protocol
@@ -158,4 +159,13 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             state_secret,
             redirect_url,
             associate_by_email,
+        )
+    
+    def return_verify_router(
+        self,
+        user_schema: type[schemas.UserRead]   
+    ) -> APIRouter:
+        return get_verify_router(
+            self.get_user_manager,
+            user_schema
         )

@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     tracer_enabled = False
     rate_limits = False
 
+    # notifications
+    url_notification_event_registration_on: str = "localhost:8005/api/v1/notifications/events/registration/on"
 
 settings = Settings()  # type: ignore
 
