@@ -30,7 +30,12 @@ def get_verify_router(
     async def request_verify_token(
         request: Request,
         email: EmailStr = Body(..., embed=True),
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.ID] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
+        ] = Depends(get_user_manager),
     ):
         try:
             user = await user_manager.get_by_email(email)
@@ -74,7 +79,12 @@ def get_verify_router(
     async def verify(
         request: Request,
         token: str = Body(..., embed=True),
-        user_manager: BaseUserManager[models_protocol.UP, models_protocol.ID] = Depends(get_user_manager),
+        user_manager: BaseUserManager[
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,    
+        ] = Depends(get_user_manager),
     ):
         try:
             user = await user_manager.verify(token, request)

@@ -45,6 +45,7 @@ class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False
+    is_verified: bool = False
 
     class Config(ORMModeMixin):
         ...
@@ -69,6 +70,7 @@ class BaseUserUpdate(Generic[EmailString], CreateUpdateUserDictModel):
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False
+    is_verified: bool = False
 
 
 class BaseSignInHistoryEvent(Generic[EventID, UserID], CreateUpdateDictModel):

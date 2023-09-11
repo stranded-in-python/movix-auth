@@ -68,6 +68,7 @@ class SAUser(SQLAlchemyBase):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     first_name: Mapped[str] = mapped_column(
         String(length=32), unique=False, index=True, nullable=True
     )
@@ -158,6 +159,8 @@ class SAUserDB(
         user_model = self.user_table(**create_dict)
         self.session.add(user_model)
         await self.session.commit()
+        await self.session.refresh(user_model)
+        
         return models.UserRead.from_orm(user_model)
 
     async def update(

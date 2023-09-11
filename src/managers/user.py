@@ -373,7 +373,7 @@ class BaseUserManager(
         ...
 
     async def on_after_request_verify(
-        self, user: models.UP, token: str, request: Request | None = None
+        self, user: models_protocol.UP, token: str, request: Request | None = None
     ) -> None:
         """
         Perform logic after successful verification request.
@@ -620,6 +620,7 @@ class UserManager(
         self, user: models.UserRead, request: Request | None = None
     ):
         logging.info("%s registered" % user.id)
+        await self.request_verify(user, request)
 
     async def on_after_request_verify(
         self, user: models.UserRead, token: str, request: Request | None = None
@@ -628,13 +629,13 @@ class UserManager(
         data = orjson.dumps(
             {
                 "email": user.email,
-                "token": token,
-                "id_user": user.id,
+                "verification_token": token,
+                "id_user": str(user.id),
             }
         )
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=data)
+            response = await client.post(url, data=data)
 
         if response.status_code == 200:
             return response.json()
