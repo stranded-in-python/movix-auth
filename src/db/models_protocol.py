@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Protocol, TypeVar
+from typing import Any, Iterable, Protocol, TypeVar
 from uuid import UUID
 
 import pydantic
@@ -51,12 +51,34 @@ class UserProtocol(Protocol[ID, EmailStr]):
     last_name: str | None
     hashed_password: str
     is_active: bool
+    is_verified: bool
     is_superuser: bool
     is_admin: bool
 
 
 UP = TypeVar("UP", bound=UserProtocol[UUID, pydantic.EmailStr])
 UC = TypeVar("UC", bound=UserCreateProtocol[str])
+
+
+class ChannelProtocol(Protocol):
+    """Channel protocol that ORM model should follow."""
+
+    type: str
+    value: str
+    extra: dict | None
+
+
+CHP = TypeVar("CHP", bound=ChannelProtocol)
+
+
+class UserChannelProtocol(Protocol[ID]):
+    """User/Channel protocol that ORM model should follow."""
+
+    user_id: ID
+    channels: Iterable[ChannelProtocol]
+
+
+UCHP = TypeVar("UCHP", bound=UserChannelProtocol[UUID])
 
 
 class OAuthAccountProtocol(Protocol[ID]):

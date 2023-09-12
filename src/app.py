@@ -32,6 +32,11 @@ app.include_router(
     tags=["auth"],
 )
 app.include_router(
+    container.api_users.return_verify_router(schemas.UserRead),
+    prefix="/auth",
+    tags=["auth"],
+)
+app.include_router(
     container.api_users.return_users_me_router(
         schemas.UserRead, schemas.UserUpdate, schemas.EventRead
     ),

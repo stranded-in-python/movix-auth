@@ -9,6 +9,7 @@ from api.v1.auth import get_auth_router
 from api.v1.register import get_register_router
 from api.v1.reset import get_reset_password_router
 from api.v1.user import get_users_me_router, get_users_router
+from api.v1.verify import get_verify_router
 from authentication import AuthenticationBackend, Authenticator
 from core.jwt_utils import SecretType
 from db import models_protocol
@@ -44,12 +45,16 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         refresh_backends: Sequence[
             AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
         ],
+        user_channels_schema: type[schemas.UCH],
+        channel_schema: type[schemas.CH],
     ):
         self.access_authenticator = Authenticator(access_backends, get_user_manager)
         self.refresh_authenticator = Authenticator(refresh_backends, get_user_manager)
         self.get_user_manager = get_user_manager
         self.current_user = self.access_authenticator.current_user
         self.auth_current_user = self.refresh_authenticator.current_user
+        self.user_channels_schema = user_channels_schema
+        self.channel_schema = channel_schema
 
     def return_register_router(
         self, user_schema: type[schemas.U], user_create_schema: type[schemas.UC]
@@ -129,6 +134,8 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             self.get_user_manager,
             user_schema,
             user_update_schema,
+            self.user_channels_schema,
+            self.channel_schema,
             self.access_authenticator,
         )
 
@@ -159,3 +166,6 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             redirect_url,
             associate_by_email,
         )
+
+    def return_verify_router(self, user_schema: type[schemas.UserRead]) -> APIRouter:
+        return get_verify_router(self.get_user_manager, user_schema)

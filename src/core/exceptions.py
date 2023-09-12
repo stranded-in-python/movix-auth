@@ -13,6 +13,10 @@ class AccessRightNotExists(AppException):
     pass
 
 
+class ChannelNotExists(AppException):
+    pass
+
+
 class InvalidID(AppException):
     pass
 

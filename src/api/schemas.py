@@ -1,5 +1,6 @@
 import datetime
-from typing import Generic, TypeVar
+import enum
+from typing import Any, Generic, Iterable, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -21,7 +22,8 @@ class CreateUpdateDictModel(BaseModel):
 class CreateUpdateUserDictModel(CreateUpdateDictModel):
     def create_update_dict(self):
         return self.dict(
-            exclude_unset=True, exclude={"id", "is_superuser", "is_active"}
+            exclude_unset=True,
+            exclude={"id", "is_superuser", "is_active", "is_verified"},
         )
 
 
@@ -36,6 +38,7 @@ class BaseUser(Generic[UserID], CreateUpdateUserDictModel):
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False
+    is_verified: bool = False
 
 
 class BaseUserCreate(CreateUpdateUserDictModel):
@@ -47,6 +50,7 @@ class BaseUserCreate(CreateUpdateUserDictModel):
     is_active: bool | None = True
     is_superuser: bool | None = False
     is_admin: bool = False
+    is_verified: bool = False
 
 
 class BaseUserUpdate(CreateUpdateUserDictModel):
@@ -57,6 +61,33 @@ class BaseUserUpdate(CreateUpdateUserDictModel):
     is_active: bool | None = None
     is_superuser: bool | None = None
     is_admin: bool = False
+    is_verified: bool | None = False
+
+
+class ChannelEnum(enum.Enum):
+    email = "email"
+
+
+class NotificationChannel(BaseModel):
+    """Notification Channel model."""
+
+    type: ChannelEnum
+    value: str
+    extra: Any | None = None
+
+
+class BaseUserChannels(Generic[UserID], BaseModel):
+    user_id: UserID
+    channels: Iterable[NotificationChannel]
+
+
+class UserChannels(BaseUserChannels[UUID]):
+    class Config:
+        orm_mode = True
+
+
+UCH = TypeVar("UCH", bound=UserChannels)
+CH = TypeVar("CH", bound=NotificationChannel)
 
 
 class UserRead(BaseUser[UUID]):

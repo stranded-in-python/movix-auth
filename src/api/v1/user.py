@@ -1,4 +1,5 @@
 import logging
+import typing
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
@@ -168,6 +169,8 @@ def get_users_router(
     ],
     user_schema: type[schemas.U],
     user_update_schema: type[schemas.UU],
+    user_channels_schema: type[schemas.UCH],
+    channel_schema: type[schemas.CH],
     authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
 ) -> APIRouter:
     router = APIRouter()
@@ -191,6 +194,60 @@ def get_users_router(
             return await user_manager.get(parsed_id)
         except (exceptions.UserNotExists, exceptions.InvalidID) as e:
             logging.exception("UserNotExists:invalidid:%s" % id)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
+
+    async def get_users_or_404(
+        ids: typing.Iterable[str],
+        user_manager: BaseUserManager[
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
+        ] = Depends(get_user_manager),
+    ) -> typing.Iterable[models_protocol.UP]:
+        try:
+            parsed_ids = [user_manager.parse_id(id) for id in ids]
+            return await user_manager.get_multiple(parsed_ids)
+        except (exceptions.UserNotExists, exceptions.InvalidID) as e:
+            logging.exception(f"UserNotExists:invalidid:{tuple(ids)}")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
+
+    async def user_2_channels(user: models_protocol.UP) -> typing.Iterable[schemas.CH]:
+        channels: list[schemas.CH] = []
+        if not user.is_active or not user.is_verified:
+            return channels
+        if user.email:
+            channels.append(
+                channel_schema(type=schemas.ChannelEnum.email, value=user.email)
+            )
+        return channels
+
+    async def users_2_channels(
+        users: typing.Iterable[models_protocol.UP],
+        user_manager: BaseUserManager[
+            models_protocol.UP,
+            models_protocol.SIHE,
+            models_protocol.OAP,
+            models_protocol.UOAP,
+        ] = Depends(get_user_manager),
+    ) -> typing.Iterable[schemas.UCH]:
+        try:
+            channels: list[schemas.UCH] = [
+                user_channels_schema(
+                    user_id=user.id, channels=await user_2_channels(user)
+                )
+                for user in users
+            ]
+            if not channels:
+                raise exceptions.ChannelNotExists()
+            logging.info(f"success:{tuple(channels)}")
+            return channels
+        except (
+            exceptions.UserNotExists,
+            exceptions.InvalidID,
+            exceptions.ChannelNotExists,
+        ) as e:
+            logging.exception(f"UserNotExists:invalidid:{tuple(users)}")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
     @router.get(
@@ -316,5 +373,28 @@ def get_users_router(
         await user_manager.delete(user)
         logging.info("success:%s" % user.id)
         return None
+
+    @router.get(
+        "/channels",
+        response_model=user_schema,
+        dependencies=[
+            Depends(get_current_superuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
+        name="users:user",
+        responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                "description": "Missing token or inactive user."
+            },
+            status.HTTP_403_FORBIDDEN: {"description": "Not a superuser."},
+            status.HTTP_404_NOT_FOUND: {"description": "The user does not exist."},
+        },
+    )
+    async def get_channels(  # pyright: ignore
+        users: typing.Iterable[models_protocol.UP] = Depends(get_users_or_404),
+    ):
+        user_ids = tuple(user.id for user in users)
+        logging.info(f"success:{user_ids}")
+        return await users_2_channels(users)
 
     return router

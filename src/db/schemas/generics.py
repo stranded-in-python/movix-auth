@@ -1,6 +1,7 @@
 import datetime
+import enum
 import uuid
-from typing import Generic, TypeVar
+from typing import Generic, Iterable, TypeVar
 
 from pydantic import BaseModel, EmailStr
 
@@ -45,6 +46,7 @@ class BaseUser(Generic[UserID, EmailString], CreateUpdateUserDictModel):
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False
+    is_verified: bool = False
 
     class Config(ORMModeMixin):
         ...
@@ -69,6 +71,26 @@ class BaseUserUpdate(Generic[EmailString], CreateUpdateUserDictModel):
     is_active: bool = True
     is_superuser: bool = False
     is_admin: bool = False
+    is_verified: bool = False
+
+
+class ChannelEnum(enum.Enum):
+    email = "email"
+
+
+class BaseNotificationChannel(BaseModel):
+    """Notification Channel model."""
+
+    type: ChannelEnum
+    value: str
+
+
+class BaseUserChannels(Generic[UserID], BaseModel):
+    user_id: UserID
+    channels: Iterable[BaseNotificationChannel]
+
+    class Config(ORMModeMixin):
+        ...
 
 
 class BaseSignInHistoryEvent(Generic[EventID, UserID], CreateUpdateDictModel):

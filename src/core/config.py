@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     tracer_enabled = False
     rate_limits = False
 
+    # notifications
+    url_notification_event_registration_on: str = (
+        "http://localhost:8005/api/v1/notification/events/registration/on"
+    )
     sentry_dsn_auth: str = ""
 
 
