@@ -22,6 +22,10 @@ class BaseUserDatabase(t.Generic[UP, ID, SIHE, OAP, UOAP]):
         """Get a single user by id."""
         raise NotImplementedError
 
+    async def get_multiple(self, user_ids: t.Iterable[ID]) -> t.Iterable[UP] | None:
+        """Get multiple users by ids."""
+        raise NotImplementedError
+
     async def get_by_username(self, username: str) -> UP | None:
         """Get a single user by username."""
         raise NotImplementedError

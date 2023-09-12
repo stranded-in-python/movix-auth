@@ -23,6 +23,15 @@ UC = TypeVar("UC", bound=UserCreate)
 UU = TypeVar("UU", bound=UserUpdate)
 
 
+class EmailNotificationChannel(generics.BaseNotificationChannel):
+    type: generics.ChannelEnum = generics.ChannelEnum.email
+    value: EmailStr
+
+
+class UserChannels(generics.BaseUserChannels[uuid.UUID]):
+    ...
+
+
 class OAuthAccount(BaseModel):
     id: uuid.UUID
     oauth_name: str

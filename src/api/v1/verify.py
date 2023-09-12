@@ -1,8 +1,5 @@
-from typing import Type
-
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import EmailStr
-
 
 import core.exceptions as exceptions
 from api import schemas
@@ -16,9 +13,9 @@ def get_verify_router(
         models_protocol.UP,
         models_protocol.SIHE,
         models_protocol.OAP,
-        models_protocol.UOAP
+        models_protocol.UOAP,
     ],
-    user_schema: Type[schemas.U],
+    user_schema: type[schemas.U],
 ):
     router = APIRouter()
 
@@ -83,13 +80,13 @@ def get_verify_router(
             models_protocol.UP,
             models_protocol.SIHE,
             models_protocol.OAP,
-            models_protocol.UOAP,    
+            models_protocol.UOAP,
         ] = Depends(get_user_manager),
     ):
         try:
             user = await user_manager.verify(token, request)
             return user_schema.from_orm(user)
-        
+
         except (exceptions.InvalidVerifyToken, exceptions.UserNotExists):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

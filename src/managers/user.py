@@ -2,11 +2,10 @@ import logging
 import uuid
 from datetime import datetime
 from typing import Any, Generic, Iterable, cast
+
 import httpx
-
-import orjson
-
 import jwt
+import orjson
 from fastapi import Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from httpx_oauth.clients.google import GoogleOAuth2
@@ -128,6 +127,16 @@ class BaseUserManager(
 
         return user
 
+    async def get_multiple(
+        self, user_ids: Iterable[uuid.UUID]
+    ) -> Iterable[models_protocol.UP]:
+        users = await self.user_db.get_multiple(user_ids)
+
+        if users is None:
+            raise exceptions.UserNotExists()
+
+        return users
+
     async def get_by_username(self, username: str) -> models_protocol.UP:
         user = await self.user_db.get_by_username(username)
 
@@ -175,7 +184,9 @@ class BaseUserManager(
         )
         await self.on_after_request_verify(user, token, request)
 
-    async def verify(self, token: str, request: Request | None = None) -> models_protocol.UP:
+    async def verify(
+        self, token: str, request: Request | None = None
+    ) -> models_protocol.UP:
         """
         Validate a verification request.
 
@@ -226,7 +237,7 @@ class BaseUserManager(
         await self.on_after_verify(verified_user, request)
 
         return verified_user
-    
+
     async def forgot_password(
         self, user: models_protocol.UP, request: Request | None = None
     ) -> None:
@@ -627,19 +638,15 @@ class UserManager(
     ) -> None:
         url = settings.url_notification_event_registration_on
         data = orjson.dumps(
-            {
-                "email": user.email,
-                "verification_token": token,
-                "id_user": str(user.id),
-            }
+            {"email": user.email, "verification_token": token, "id_user": str(user.id)}
         )
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, data=data)
+            response = await client.post(url, data=data)  # type: ignore
 
         if response.status_code == 200:
             return response.json()
-   
+
         response.raise_for_status()
 
     async def on_after_forgot_password(

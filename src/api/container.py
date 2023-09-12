@@ -1,3 +1,4 @@
+from api import schemas
 from api.access_rights import APIAccessRight
 from api.auth_users import APIUsers
 from api.roles import APIRoles
@@ -8,7 +9,7 @@ from managers.role import get_role_manager
 from managers.user import get_user_manager
 
 api_users = APIUsers[models.UserRead, models.EventRead](
-    get_user_manager, [access_backend], [refresh_backend]
+    get_user_manager, [access_backend], [refresh_backend], schemas.UCH, schemas.CH
 )
 
 current_active_user = api_users.current_user(active=True)

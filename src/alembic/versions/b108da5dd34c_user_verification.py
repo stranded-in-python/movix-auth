@@ -5,9 +5,9 @@ Revises: 0b4ad69c631c
 Create Date: 2023-09-11 19:50:57.653374
 
 """
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'b108da5dd34c'
@@ -24,14 +24,10 @@ def upgrade() -> None:
             name='is_verified',
             type_=sa.Boolean(),
             nullable=False,
-            server_default=sa.false()
-        )
+            server_default=sa.false(),
+        ),
     )
 
 
 def downgrade() -> None:
-    op.drop_column(
-        schema='users',
-        table_name='user',
-        column_name='is_verified'
-    )
+    op.drop_column(schema='users', table_name='user', column_name='is_verified')
