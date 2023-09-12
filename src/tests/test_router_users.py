@@ -34,7 +34,12 @@ def app_factory(get_user_manager, mock_authentication):
 
         app.include_router(
             get_users_router(
-                get_user_manager, schemas.UserRead, schemas.UserUpdate, authenticator
+                get_user_manager,
+                schemas.UserRead,
+                schemas.UserUpdate,
+                schemas.UCH,
+                schemas.CH,
+                authenticator,
             )
         )
         return app

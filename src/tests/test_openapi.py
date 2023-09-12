@@ -10,7 +10,11 @@ from tests.conftest import SignInModel, UserModel
 @pytest.fixture
 def fastapi_users(get_user_manager, mock_authentication) -> FastAPIUsers:
     return FastAPIUsers[UserModel, SignInModel](
-        get_user_manager, [mock_authentication], [mock_authentication]
+        get_user_manager,
+        [mock_authentication],
+        [mock_authentication],
+        schemas.UCH,
+        schemas.CH,
     )
 
 
