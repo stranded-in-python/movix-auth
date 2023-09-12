@@ -1,3 +1,4 @@
 -r base.txt
 
 gunicorn==20.1.0  # https://github.com/benoitc/gunicorn
+sentry_sdk==1.28.1
