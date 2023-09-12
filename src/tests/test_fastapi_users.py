@@ -21,7 +21,11 @@ async def test_app_client(
     get_test_client,
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
     fastapi_users = FastAPIUsers[models.UserRead, models.SIHE](
-        get_user_manager, [mock_authentication], [refresh_mock_authentication]
+        get_user_manager,
+        [mock_authentication],
+        [refresh_mock_authentication],
+        schemas.UCH,
+        schemas.CH,
     )
 
     app = FastAPI()
