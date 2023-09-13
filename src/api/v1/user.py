@@ -251,6 +251,27 @@ def get_users_router(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
     @router.get(
+        "",
+        response_model=list[user_schema],
+        dependencies=[
+            Depends(get_current_superuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
+        name="users:users",
+        responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                "description": "Missing token or inactive user."
+            },
+            status.HTTP_403_FORBIDDEN: {"description": "Not a superuser."},
+            status.HTTP_404_NOT_FOUND: {"description": "The user does not exist."},
+        },
+    )
+    async def get_users(  # pyright: ignore
+        users: typing.Iterable[models_protocol.UP] = Depends(get_users_or_404),
+    ):
+        return users
+
+    @router.get(
         "/channels",
         response_model=list[user_channels_schema],
         dependencies=[
