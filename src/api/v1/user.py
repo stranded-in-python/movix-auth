@@ -212,7 +212,7 @@ def get_users_router(
             logging.exception(f"UserNotExists:invalidid:{tuple(ids)}")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
-    async def user_2_channels(user: models_protocol.UP) -> typing.Iterable[schemas.CH]:
+    async def user_2_channels(user: models_protocol.UP) -> typing.Sequence[schemas.CH]:
         channels: list[schemas.CH] = []
         if not user.is_active or not user.is_verified:
             return channels
@@ -230,7 +230,7 @@ def get_users_router(
             models_protocol.OAP,
             models_protocol.UOAP,
         ] = Depends(get_user_manager),
-    ) -> typing.Iterable[schemas.UCH]:
+    ) -> typing.Sequence[schemas.UCH]:
         try:
             channels: list[schemas.UCH] = [
                 user_channels_schema(

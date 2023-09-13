@@ -58,7 +58,7 @@ class Settings(BaseSettings):
 settings = Settings()  # type: ignore
 
 if settings.sentry_dsn_auth:
-    import sentry_sdk
+    import sentry_sdk  # type: ignore
 
     sentry_sdk.init(dsn=settings.sentry_dsn_auth, traces_sample_rate=1.0)
 
