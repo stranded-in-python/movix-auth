@@ -197,7 +197,7 @@ def get_users_router(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
     async def get_users_or_404(
-        ids: typing.Iterable[str],
+        ids: typing.Mapping[str, typing.Iterable[str]],
         user_manager: BaseUserManager[
             models_protocol.UP,
             models_protocol.SIHE,
@@ -206,7 +206,7 @@ def get_users_router(
         ] = Depends(get_user_manager),
     ) -> typing.Iterable[models_protocol.UP]:
         try:
-            parsed_ids = [user_manager.parse_id(id) for id in ids]
+            parsed_ids = [user_manager.parse_id(id) for id in ids.get("ids", [])]
             return await user_manager.get_multiple(parsed_ids)
         except (exceptions.UserNotExists, exceptions.InvalidID) as e:
             logging.exception(f"UserNotExists:invalidid:{tuple(ids)}")
@@ -240,7 +240,8 @@ def get_users_router(
             ]
             if not channels:
                 raise exceptions.ChannelNotExists()
-            logging.info(f"success:{tuple(channels)}")
+            logging.info(f"success:{channels}")
+            breakpoint()
             return channels
         except (
             exceptions.UserNotExists,
@@ -249,6 +250,27 @@ def get_users_router(
         ) as e:
             logging.exception(f"UserNotExists:invalidid:{tuple(users)}")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
+
+    @router.get(
+        "/channels",
+        response_model=list[user_channels_schema],
+        dependencies=[
+            Depends(get_current_superuser),
+            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
+        ],
+        name="users:channels",
+        responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                "description": "Missing token or inactive user."
+            },
+            status.HTTP_403_FORBIDDEN: {"description": "Not a superuser."},
+            status.HTTP_404_NOT_FOUND: {"description": "The user does not exist."},
+        },
+    )
+    async def get_channels(  # pyright: ignore
+        users: typing.Iterable[models_protocol.UP] = Depends(get_users_or_404),
+    ):
+        return await users_2_channels(users)
 
     @router.get(
         "/{id}",
@@ -373,28 +395,5 @@ def get_users_router(
         await user_manager.delete(user)
         logging.info("success:%s" % user.id)
         return None
-
-    @router.get(
-        "/channels",
-        response_model=user_schema,
-        dependencies=[
-            Depends(get_current_superuser),
-            Depends(RateLimiter(2, RateLimitTime(seconds=10), get_uuid=get_current_id)),
-        ],
-        name="users:user",
-        responses={
-            status.HTTP_401_UNAUTHORIZED: {
-                "description": "Missing token or inactive user."
-            },
-            status.HTTP_403_FORBIDDEN: {"description": "Not a superuser."},
-            status.HTTP_404_NOT_FOUND: {"description": "The user does not exist."},
-        },
-    )
-    async def get_channels(  # pyright: ignore
-        users: typing.Iterable[models_protocol.UP] = Depends(get_users_or_404),
-    ):
-        user_ids = tuple(user.id for user in users)
-        logging.info(f"success:{user_ids}")
-        return await users_2_channels(users)
 
     return router
