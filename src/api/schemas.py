@@ -1,6 +1,6 @@
 import datetime
 import enum
-from typing import Any, Generic, Iterable, TypeVar
+from typing import Any, Generic, Sequence, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -78,7 +78,7 @@ class NotificationChannel(BaseModel):
 
 class BaseUserChannels(Generic[UserID], BaseModel):
     user_id: UserID
-    channels: Iterable[NotificationChannel]
+    channels: Sequence[NotificationChannel]
 
 
 class UserChannels(BaseUserChannels[UUID]):

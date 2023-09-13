@@ -9,7 +9,11 @@ from managers.role import get_role_manager
 from managers.user import get_user_manager
 
 api_users = APIUsers[models.UserRead, models.EventRead](
-    get_user_manager, [access_backend], [refresh_backend], schemas.UCH, schemas.CH
+    get_user_manager,
+    [access_backend],
+    [refresh_backend],
+    schemas.UserChannels,
+    schemas.NotificationChannel,
 )
 
 current_active_user = api_users.current_user(active=True)

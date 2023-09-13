@@ -139,9 +139,10 @@ class SAUserDB(
         self, user_ids: Iterable[uuid.UUID]
     ) -> Iterable[models.UserRead] | None:
         user_models = await self._get_users_by_ids(user_ids)
-
         if user_models:
-            return [models.UserRead.from_orm(user_model) for user_model in user_models]
+            return [
+                models.UserRead.from_orm(user_model[0]) for user_model in user_models
+            ]
         return None
 
     @cache_decorator()
@@ -196,7 +197,7 @@ class SAUserDB(
 
     async def _get_users(self, statement: Select[Any]) -> Sequence[Row[Any]] | None:
         results = await self.session.execute(statement)
-        return results.fetchall()
+        return results.unique().fetchall()
 
     async def _get_user_by_id(self, user_id: uuid.UUID) -> SAUser | None:
         statement = select(self.user_table).where(self.user_table.id == user_id)
