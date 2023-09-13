@@ -241,7 +241,6 @@ def get_users_router(
             if not channels:
                 raise exceptions.ChannelNotExists()
             logging.info(f"success:{channels}")
-            breakpoint()
             return channels
         except (
             exceptions.UserNotExists,
