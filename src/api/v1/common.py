@@ -46,9 +46,7 @@ class ErrorCode(str, Enum):
 
 
 async def _get_user_rigths(
-    user_id: UUID,
-    role_manager,
-    access_right_manager,
+    user_id: UUID, role_manager, access_right_manager
 ) -> Iterable[models_protocol.AccessRightProtocol]:
     roles_list = await role_manager.get_user_roles(user_id)
     role_ids = [role.role_id for role in roles_list]

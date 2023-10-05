@@ -1,6 +1,4 @@
 import logging
-from typing import Iterable
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -125,7 +123,12 @@ def get_auth_router(  # noqa: C901
                 detail=ErrorCode.REFRESH_BAD_TOKEN,
             )
         user, _ = user_token
-        access_rights_ids = [right.id for right in await _get_user_rigths(user.id, role_manager, access_right_manager)]
+        access_rights_ids = [
+            right.id
+            for right in await _get_user_rigths(
+                user.id, role_manager, access_right_manager
+            )
+        ]
 
         response = await access_backend.login(strategy, user, access_rights_ids)
         logging.info("success:%s" % user.id)
