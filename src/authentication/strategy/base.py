@@ -1,4 +1,5 @@
-from typing import Protocol
+from typing import Iterable, Protocol
+from uuid import UUID
 
 from db import models_protocol
 from managers.user import BaseUserManager
@@ -21,7 +22,9 @@ class Strategy(Protocol[models_protocol.UP, models_protocol.SIHE]):
     ) -> models_protocol.UP | None:
         ...
 
-    async def write_token(self, user: models_protocol.UP) -> str:
+    async def write_token(
+        self, user: models_protocol.UP, access_right_ids: Iterable[UUID]
+    ) -> str:
         ...
 
     async def destroy_token(self, token: str, user: models_protocol.UP) -> None:

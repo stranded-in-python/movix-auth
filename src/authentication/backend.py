@@ -1,4 +1,5 @@
-from typing import Generic
+from typing import Generic, Iterable
+from uuid import UUID
 
 from fastapi import Response, status
 
@@ -39,8 +40,9 @@ class AuthenticationBackend(Generic[models_protocol.UP, models_protocol.SIHE]):
         self,
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE],
         user: models_protocol.UP,
+        access_right_ids: Iterable[UUID],
     ) -> Response:
-        token = await strategy.write_token(user)
+        token = await strategy.write_token(user, access_right_ids)
         return await self.transport.get_login_response(token)
 
     async def logout(

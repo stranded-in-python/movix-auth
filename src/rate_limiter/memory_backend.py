@@ -193,7 +193,7 @@ class RAMBackend(InMemoryBackend):
         if not data:
             return set()
         if not isinstance(data, list):
-            return {data}
+            return {data}  # type: ignore
         return set(data)
 
     async def sadd(self, key: str, value: Any) -> bool:

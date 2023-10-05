@@ -125,8 +125,10 @@ class SAAccessRightDB(base.BaseAccessRightDatabase[models.AccessRight, uuid.UUID
     ) -> Iterable[Row[tuple[SAAccessRight]]]:
         if not access_right_ids:
             return []
-        statement = select(self.access_right_table).where(
-            self.access_right_table.id.in_(access_right_ids)
+        statement = (
+            select("*")
+            .select_from(self.access_right_table)
+            .where(self.access_right_table.id.in_(access_right_ids))
         )
         return await self._get_access_rights(statement)
 
@@ -188,8 +190,10 @@ class SARoleAccessRightDB(
     async def get_role_access_rights(
         self, role_id: uuid.UUID
     ) -> Iterable[models.RoleAccessRight]:
-        statement = select(self.role_access_right_table).where(
-            self.role_access_right_table.role_id == role_id
+        statement = (
+            select("*")
+            .select_from(self.role_access_right_table)
+            .where(self.role_access_right_table.role_id == role_id)
         )
         role_rights = await self._get_role_access_rights(statement)
 
@@ -205,8 +209,10 @@ class SARoleAccessRightDB(
     ) -> Iterable[models.RoleAccessRight]:
         if not role_ids:
             return []
-        statement = select(self.role_access_right_table).where(
-            self.role_access_right_table.role_id.in_(role_ids)
+        statement = (
+            select("*")
+            .select_from(self.role_access_right_table)
+            .where(self.role_access_right_table.role_id.in_(role_ids))
         )
         role_rights = await self._get_role_access_rights(statement)
 

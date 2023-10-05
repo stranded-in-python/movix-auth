@@ -182,6 +182,10 @@ class BaseRoleAccessRightDatabase(t.Generic[RARP, ID]):
         """Get multiple rights by ids"""
         ...
 
+    async def get_user_rigts(self, user_id: ID) -> t.Iterable[ID]:
+        """Get rights assigned to a user"""
+        ...
+
 
 RETURN_TYPE = t.TypeVar("RETURN_TYPE")
 

@@ -333,8 +333,8 @@ def get_access_rights_router(
             )
 
     @router.get(
-        "/roles/{roles_id}/rights",
-        response_model=list[schemas.AR],
+        "/roles/{role_id}/rights",
+        response_model=list[role_access_right_schema],
         summary="List the role's access right",
         description="Get list the role's access right",
         response_description="Message entity",
@@ -351,14 +351,14 @@ def get_access_rights_router(
         role_manager: BaseRoleManager[
             models_protocol.UP, models_protocol.RP, models_protocol.URP
         ] = Depends(get_role_manager),
-    ) -> list[schemas.AR]:
+    ) -> list[role_access_right_schema]:
         try:
             role = await role_manager.get(role_id)
 
             rights = await access_right_manager.get_role_access_rights(role.id)
 
             logging.info("success:%s" % role_id)
-            return list(access_right_schema.from_orm(right) for right in rights)
+            return list(role_access_right_schema.from_orm(right) for right in rights)
 
         except exceptions.RoleNotExists:
             logging.exception("RoleNotExists:%s" % role_id)

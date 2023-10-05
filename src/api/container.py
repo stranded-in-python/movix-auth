@@ -10,6 +10,8 @@ from managers.user import get_user_manager
 
 api_users = APIUsers[models.UserRead, models.EventRead](
     get_user_manager,
+    get_role_manager,
+    get_access_right_manager,
     [access_backend],
     [refresh_backend],
     schemas.UserChannels,

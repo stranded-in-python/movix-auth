@@ -1,5 +1,6 @@
 import logging
-from typing import Generic
+from typing import Generic, Iterable
+from uuid import UUID
 
 import jwt
 
@@ -67,7 +68,9 @@ class JWTStrategy(
         except (exceptions.UserNotExists, exceptions.InvalidID):
             return None
 
-    async def write_token(self, user: models_protocol.UP) -> str:
+    async def write_token(
+        self, user: models_protocol.UP, access_right_ids: Iterable[UUID]
+    ) -> str:
         data = {"sub": str(user.id), "aud": self.token_audience}
         return generate_jwt(
             data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
@@ -95,6 +98,18 @@ class JWTBlacklistStrategy(
         self.blacklist_manager = blacklist_manager
         super().__init__(
             secret, lifetime_seconds, token_audience, algorithm, public_key
+        )
+
+    async def write_token(
+        self, user: models_protocol.UP, access_right_ids: Iterable[UUID]
+    ) -> str:
+        data = {
+            "sub": str(user.id),
+            "aud": self.token_audience,
+            "acr": [str(id) for id in access_right_ids],
+        }
+        return generate_jwt(
+            data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
         )
 
     async def read_token(

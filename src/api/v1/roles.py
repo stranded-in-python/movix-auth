@@ -355,7 +355,7 @@ def get_roles_router(
 
     @router.get(
         "/users/{user_id}/roles",
-        response_model=list[UUID],
+        response_model=list[user_role_schema],
         summary="List the user's roles",
         description="Get list the user's roles",
         dependencies=[
