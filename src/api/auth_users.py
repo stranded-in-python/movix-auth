@@ -13,6 +13,8 @@ from api.v1.verify import get_verify_router
 from authentication import AuthenticationBackend, Authenticator
 from core.jwt_utils import SecretType
 from db import models_protocol
+from managers.rights import AccessRightManagerDependency
+from managers.role import RoleManagerDependency
 from managers.user import UserManagerDependency
 
 
@@ -39,6 +41,12 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             models_protocol.OAP,
             models_protocol.UOAP,
         ],
+        get_role_manager: RoleManagerDependency[
+            models_protocol.UP, models_protocol.RP, models_protocol.URP,
+        ],
+        get_access_rights_manager: AccessRightManagerDependency[
+            models_protocol.ARP, models_protocol.RARP,
+        ],
         access_backends: Sequence[
             AuthenticationBackend[models_protocol.UP, models_protocol.SIHE]
         ],
@@ -51,6 +59,8 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
         self.access_authenticator = Authenticator(access_backends, get_user_manager)
         self.refresh_authenticator = Authenticator(refresh_backends, get_user_manager)
         self.get_user_manager = get_user_manager
+        self.get_role_manager = get_role_manager
+        self.get_access_right_manager = get_access_rights_manager
         self.current_user = self.access_authenticator.current_user
         self.auth_current_user = self.refresh_authenticator.current_user
         self.user_channels_schema = user_channels_schema
@@ -92,6 +102,8 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             access_backend,
             refresh_backend,
             self.get_user_manager,
+            self.get_role_manager,
+            self.get_access_right_manager,
             self.access_authenticator,
             self.refresh_authenticator,
             requires_verification,

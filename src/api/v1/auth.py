@@ -1,4 +1,6 @@
 import logging
+from typing import Iterable
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,6 +9,8 @@ from api.v1.common import ErrorCode, ErrorModel
 from authentication import AuthenticationBackend, Authenticator, Strategy
 from core.logger import logger
 from db import models_protocol
+from managers.rights import AccessRightManagerDependency, BaseAccessRightManager
+from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import BaseUserManager, UserManagerDependency
 from openapi import OpenAPIResponseType
 from rate_limiter import RateLimiter, RateLimitTime
@@ -22,6 +26,12 @@ def get_auth_router(  # noqa: C901
         models_protocol.SIHE,
         models_protocol.OAP,
         models_protocol.UOAP,
+    ],
+    get_role_manager: RoleManagerDependency[
+        models_protocol.UP, models_protocol.RP, models_protocol.URP
+    ],
+    get_access_right_manager: AccessRightManagerDependency[
+        models_protocol.ARP, models_protocol.RARP
     ],
     access_authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
     refresh_authenticator: Authenticator[models_protocol.UP, models_protocol.SIHE],
@@ -78,7 +88,8 @@ def get_auth_router(  # noqa: C901
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.LOGIN_BAD_CREDENTIALS,
             )
-        response = await refresh_backend.login(strategy, user)
+
+        response = await refresh_backend.login(strategy, user, [])
         await user_manager.on_after_login(user, request, response)
         logging.info("success:%s" % user.id)
         return response
@@ -100,7 +111,22 @@ def get_auth_router(  # noqa: C901
         strategy: Strategy[models_protocol.UP, models_protocol.SIHE] = Depends(
             access_backend.get_strategy
         ),
+        role_manager: BaseRoleManager[
+            models_protocol.UP, models_protocol.RP, models_protocol.URP
+        ] = Depends(get_role_manager),
+        access_right_manager: BaseAccessRightManager[
+            models_protocol.ARP, models_protocol.RARP
+        ] = Depends(get_access_right_manager),
     ):
+        async def _get_user_rigths(
+            user_id: UUID,
+        ) -> Iterable[models_protocol.AccessRightProtocol]:
+            roles_list = await role_manager.get_user_roles(user_id)
+            role_ids = [role.role_id for role in roles_list]
+            user_rights = await access_right_manager.get_roles_access_rights(role_ids)
+
+            return user_rights
+
         if not user_token:
             logging.exception("BAD_TOKEN:%s" % user_token)
             raise HTTPException(
@@ -108,8 +134,9 @@ def get_auth_router(  # noqa: C901
                 detail=ErrorCode.REFRESH_BAD_TOKEN,
             )
         user, _ = user_token
+        access_rights_ids = [right.id for right in await _get_user_rigths(user.id)]
 
-        response = await access_backend.login(strategy, user)
+        response = await access_backend.login(strategy, user, access_rights_ids)
         logging.info("success:%s" % user.id)
         return response
 

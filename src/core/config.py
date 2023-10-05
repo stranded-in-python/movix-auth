@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Настройки PSQL
     pghost: str = "localhost"
-    pgport: str = "5434"
+    pgport: str = "5432"
     pgdb: str = "yamp_movies_db"
     pguser: str = "yamp_dummy"
     pgpassword: str = "qweasd123"

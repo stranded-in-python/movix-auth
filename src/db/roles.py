@@ -212,15 +212,17 @@ class SAUserRoleDB(BaseUserRoleDatabase[models.UserRole, UUID_ID]):
     async def get_user_roles(
         self, user_id: UUID_ID
     ) -> Iterable[models.UserRole] | None:
-        statement = select(self.user_role_table).where(
-            self.user_role_table.user_id == user_id
+        statement = (
+            select("*")
+            .select_from(self.user_role_table)
+            .where(self.user_role_table.user_id == user_id)
         )
-        results = await self.session.execute(statement)
+        result = await self.session.execute(statement)
 
-        if not results:
+        if not result:
             return
 
-        return list(models.UserRole.from_orm(result) for result in results.fetchall())
+        return list(models.UserRole.from_orm(row) for row in result.fetchall())
 
     async def _get_user_role(
         self, statement: Select[tuple[SAUserRole]]
