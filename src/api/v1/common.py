@@ -1,7 +1,10 @@
 from enum import Enum
-from typing import Union
+from typing import Iterable, Union
+from uuid import UUID
 
 from pydantic import BaseModel
+
+from db import models_protocol
 
 
 class ErrorModel(BaseModel):
@@ -40,3 +43,15 @@ class ErrorCode(str, Enum):
     # Access rights
     UPDATE_ACCESS_NAME_ALREADY_EXISTS = "UPDATE_ACCESS_NAME_ALREADY_EXISTS"
     ACCESS_IS_NOT_EXISTS = "ACCESS_DOES_NOT_EXIST"
+
+
+async def _get_user_rigths(
+    user_id: UUID,
+    role_manager,
+    access_right_manager,
+) -> Iterable[models_protocol.AccessRightProtocol]:
+    roles_list = await role_manager.get_user_roles(user_id)
+    role_ids = [role.role_id for role in roles_list]
+    user_rights = await access_right_manager.get_roles_access_rights(role_ids)
+
+    return user_rights

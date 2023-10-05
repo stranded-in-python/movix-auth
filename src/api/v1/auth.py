@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from api.v1.common import ErrorCode, ErrorModel
+from api.v1.common import ErrorCode, ErrorModel, _get_user_rigths
 from authentication import AuthenticationBackend, Authenticator, Strategy
 from core.logger import logger
 from db import models_protocol
@@ -118,15 +118,6 @@ def get_auth_router(  # noqa: C901
             models_protocol.ARP, models_protocol.RARP
         ] = Depends(get_access_right_manager),
     ):
-        async def _get_user_rigths(
-            user_id: UUID,
-        ) -> Iterable[models_protocol.AccessRightProtocol]:
-            roles_list = await role_manager.get_user_roles(user_id)
-            role_ids = [role.role_id for role in roles_list]
-            user_rights = await access_right_manager.get_roles_access_rights(role_ids)
-
-            return user_rights
-
         if not user_token:
             logging.exception("BAD_TOKEN:%s" % user_token)
             raise HTTPException(
@@ -134,7 +125,7 @@ def get_auth_router(  # noqa: C901
                 detail=ErrorCode.REFRESH_BAD_TOKEN,
             )
         user, _ = user_token
-        access_rights_ids = [right.id for right in await _get_user_rigths(user.id)]
+        access_rights_ids = [right.id for right in await _get_user_rigths(user.id, role_manager, access_right_manager)]
 
         response = await access_backend.login(strategy, user, access_rights_ids)
         logging.info("success:%s" % user.id)

@@ -6,11 +6,13 @@ from httpx_oauth.integrations.fastapi import OAuth2AuthorizeCallback
 from httpx_oauth.oauth2 import BaseOAuth2, OAuth2Token
 from pydantic import BaseModel
 
-from api.v1.common import ErrorCode, ErrorModel
+from api.v1.common import ErrorCode, ErrorModel, _get_user_rigths
 from authentication import AuthenticationBackend, Strategy
 from core.exceptions import UserAlreadyExists
 from core.jwt_utils import SecretType, decode_jwt, generate_jwt
 from db import models_protocol as models
+from managers.rights import AccessRightManagerDependency, BaseAccessRightManager, get_access_right_manager
+from managers.role import BaseRoleManager, RoleManagerDependency
 from managers.user import BaseUserManager, UserManagerDependency
 
 STATE_TOKEN_AUDIENCE = "movix:oauth-state"
@@ -32,6 +34,12 @@ def get_oauth_router(
     backend: AuthenticationBackend[models.UP, models.SIHE],
     get_user_manager: UserManagerDependency[
         models.UP, models.SIHE, models.OAP, models.UOAP
+    ],
+    get_role_manager: RoleManagerDependency[
+            models.UP, models.RP, models.URP,
+        ],
+    get_access_rights_manager: AccessRightManagerDependency[
+        models.ARP, models.RARP,
     ],
     state_secret: SecretType,
     redirect_url: str | None = None,
@@ -103,6 +111,12 @@ def get_oauth_router(
         user_manager: BaseUserManager[
             models.UP, models.SIHE, models.OAP, models.UOAP
         ] = Depends(get_user_manager),
+        role_manager: BaseRoleManager[
+            models.UP, models.RP, models.URP
+        ] = Depends(get_role_manager),
+        access_right_manager: BaseAccessRightManager[
+            models.ARP, models.RARP
+        ] = Depends(get_access_right_manager),
         strategy: Strategy[models.UP, models.SIHE] = Depends(backend.get_strategy),
     ):
         token, state = access_token_state
@@ -144,8 +158,9 @@ def get_oauth_router(
                 detail=ErrorCode.LOGIN_BAD_CREDENTIALS,
             )
         user = cast(models.UP, user)
+        access_rights_ids = [right.id for right in await _get_user_rigths(user.id, role_manager, access_right_manager)]
         # Authenticate
-        response = await backend.login(strategy, user)
+        response = await backend.login(strategy, user, access_rights_ids)
         await user_manager.on_after_login(user, request, response)
         return response
 

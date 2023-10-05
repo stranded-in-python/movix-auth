@@ -174,6 +174,8 @@ class APIUsers(Generic[models_protocol.UP, models_protocol.SIHE]):
             oauth_client,
             backend,
             self.get_user_manager,
+            self.get_role_manager,
+            self.get_access_right_manager,
             state_secret,
             redirect_url,
             associate_by_email,
